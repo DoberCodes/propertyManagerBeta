@@ -86,8 +86,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 		<FormContainer onSubmit={handleSubmit}>
 			<FormTitle>Share Your Feedback</FormTitle>
 			<FormDescription>
-				Help us improve Property Manager by sharing your thoughts, reporting
-				bugs, or requesting new features.
+				Help us improve Maintley by sharing your thoughts, reporting bugs, or
+				requesting new features.
 			</FormDescription>
 
 			<FormGroup>

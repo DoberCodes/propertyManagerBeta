@@ -12,7 +12,7 @@ export const LandingNavbar = () => {
 	return (
 		<NavWrapper>
 			<IconWrapper></IconWrapper>
-			<NavTitle>My Property Manager</NavTitle>
+			<NavTitle>Maintley</NavTitle>
 			<ButtonWrapper>
 				<NavAnchor
 					to='#About'

@@ -420,7 +420,7 @@ const LandingPageComponent = () => {
 				<FooterSection>
 					<FooterContent>
 						<div>
-							<h3>My Property Manager</h3>
+							<h3>Maintley</h3>
 							<p>
 								Simple, friendly maintenance tracking for homeowners, small
 								landlords, and folks who like to take care of their own.
@@ -478,8 +478,7 @@ const LandingPageComponent = () => {
 						</FooterLinks>
 					</FooterContent>
 					<FooterCopyright>
-						&copy; 2026 My Property Manager. Built with ❤️ for property owners
-						everywhere.
+						&copy; 2026 Maintley. Built with ❤️ for property owners everywhere.
 					</FooterCopyright>
 				</FooterSection>
 			</Wrapper>

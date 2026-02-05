@@ -281,8 +281,8 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({
 				</span>
 			</NotificationTitle>
 			<NotificationText>
-				A new version of My Property Manager is ready to download. Get the
-				latest features and improvements.
+				A new version of Maintley is ready to download. Get the latest features
+				and improvements.
 			</NotificationText>
 			<HelpLink onClick={handleOpenHelp}>
 				Need help enabling installs from unknown sources?

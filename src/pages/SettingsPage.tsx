@@ -369,8 +369,8 @@ const SettingsPage: React.FC = () => {
 			<AccountSection>
 				<SectionTitle>Feedback & Support</SectionTitle>
 				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
-					Help us improve Property Manager by sharing your feedback, reporting
-					bugs, or requesting new features.
+					Help us improve Maintley by sharing your feedback, reporting bugs, or
+					requesting new features.
 				</p>
 				<AccountButton onClick={() => setShowFeedbackModal(true)}>
 					Submit Feedback

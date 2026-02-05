@@ -8,7 +8,7 @@ import {
 export const HeroImage = () => {
 	return (
 		<HeroImageWrapper>
-			<HeroImageTitle>Welcome to My Property Manager</HeroImageTitle>
+			<HeroImageTitle>Welcome to Maintley</HeroImageTitle>
 			<HeroImageSubtitle>
 				We are here to help manage your property tasks
 			</HeroImageSubtitle>

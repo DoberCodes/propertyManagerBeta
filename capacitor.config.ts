@@ -2,8 +2,9 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
 	appId: 'com.doberfamily.propertymanager',
-	appName: 'Property Manager',
+	appName: 'Maintley',
 	webDir: 'build',
+	icon: 'icons/icon.png',
 	server: {
 		cleartext: true,
 	},

@@ -80,7 +80,7 @@ export const TopNav = () => {
 						title='Open menu'>
 						☰
 					</HamburgerButton>
-					<Title className='mobile-title'>My Property Manager</Title>
+					<Title className='mobile-title'>Maintley</Title>
 					{currentUser && (
 						<div className='desktop-profile'>
 							<UserProfile
@@ -93,7 +93,7 @@ export const TopNav = () => {
 					)}
 				</LeftSection>
 				<RightSection>
-					<Title className='desktop-title'>My Property Manager</Title>
+					<Title className='desktop-title'>Maintley</Title>
 					{currentUser && (
 						<div
 							className='mobile-profile'
