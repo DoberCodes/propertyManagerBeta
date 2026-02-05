@@ -2747,6 +2747,40 @@ export const apiSlice = createApi({
 			},
 			providesTags: ['TenantProfiles'],
 		}),
+
+		// Feedback
+		submitFeedback: builder.mutation<
+			{ id: string; message: string },
+			{
+				type: 'feedback' | 'feature_request' | 'bug_report';
+				subject: string;
+				message: string;
+				userId?: string;
+				userEmail?: string;
+				userName?: string;
+			}
+		>({
+			async queryFn(feedbackData) {
+				try {
+					const feedbackRef = collection(db, 'feedback');
+					const docRef = await addDoc(feedbackRef, {
+						...feedbackData,
+						status: 'pending',
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					});
+
+					return {
+						data: {
+							id: docRef.id,
+							message: 'Feedback submitted successfully',
+						},
+					};
+				} catch (error: any) {
+					return { error: error.message || 'Failed to submit feedback' };
+				}
+			},
+		}),
 	}),
 });
 
@@ -2845,4 +2879,6 @@ export const {
 	useCreateTenantProfileMutation,
 	useUpdateTenantProfileMutation,
 	useGetPublicTenantProfilesQuery,
+	// Feedback
+	useSubmitFeedbackMutation,
 } = apiSlice;

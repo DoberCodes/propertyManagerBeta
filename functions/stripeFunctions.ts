@@ -1,10 +1,24 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import * as dotenv from 'dotenv';
 
-const stripe = new Stripe(functions.config().stripe.secret_key, {
+// Load environment variables from .env file
+dotenv.config();
+
+if (!admin.apps.length) {
+	admin.initializeApp();
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 	apiVersion: '2023-10-16',
 });
+
+console.log('Stripe key loaded:', process.env.STRIPE_SECRET_KEY ? 'YES' : 'NO');
+console.log(
+	'Stripe key starts with sk_live_:',
+	process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_'),
+);
 
 const db = admin.firestore();
 
@@ -33,9 +47,18 @@ export const createCheckoutSession = functions.https.onCall(
 		}
 
 		try {
+			console.log('Creating checkout session with:', {
+				priceId,
+				userId,
+				email,
+				successUrl,
+				cancelUrl,
+			});
+
 			// Get user data to check current subscription
 			const userDoc = await db.collection('users').doc(userId).get();
 			const userData = userDoc.data();
+			console.log('User data retrieved:', userData);
 
 			let customerId = userData?.subscription?.stripeCustomerId;
 

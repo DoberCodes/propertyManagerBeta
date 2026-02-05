@@ -5,3 +5,4 @@ export {
 	cancelSubscription,
 	getSubscriptionDetails,
 } from './stripeFunctions';
+export { sendFeedbackEmail } from './sendFeedbackEmail';

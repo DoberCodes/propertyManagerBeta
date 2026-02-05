@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
+exports.sendFeedbackEmail = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
 var sendPushOnNotificationCreate_1 = require("./sendPushOnNotificationCreate");
 Object.defineProperty(exports, "sendPushOnNotificationCreate", { enumerable: true, get: function () { return sendPushOnNotificationCreate_1.sendPushOnNotificationCreate; } });
 var stripeFunctions_1 = require("./stripeFunctions");
@@ -8,3 +8,5 @@ Object.defineProperty(exports, "createCheckoutSession", { enumerable: true, get:
 Object.defineProperty(exports, "verifyCheckoutSession", { enumerable: true, get: function () { return stripeFunctions_1.verifyCheckoutSession; } });
 Object.defineProperty(exports, "cancelSubscription", { enumerable: true, get: function () { return stripeFunctions_1.cancelSubscription; } });
 Object.defineProperty(exports, "getSubscriptionDetails", { enumerable: true, get: function () { return stripeFunctions_1.getSubscriptionDetails; } });
+var sendFeedbackEmail_1 = require("./sendFeedbackEmail");
+Object.defineProperty(exports, "sendFeedbackEmail", { enumerable: true, get: function () { return sendFeedbackEmail_1.sendFeedbackEmail; } });

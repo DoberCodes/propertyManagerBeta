@@ -35,14 +35,23 @@ var __importStar = (this && this.__importStar) || (function () {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
-const stripe = new stripe_1.default(functions.config().stripe.secret_key, {
+const dotenv = __importStar(require("dotenv"));
+// Load environment variables from .env file
+dotenv.config();
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || '', {
     apiVersion: '2023-10-16',
 });
+console.log('Stripe key loaded:', process.env.STRIPE_SECRET_KEY ? 'YES' : 'NO');
+console.log('Stripe key starts with sk_live_:', (_a = process.env.STRIPE_SECRET_KEY) === null || _a === void 0 ? void 0 : _a.startsWith('sk_live_'));
 const db = admin.firestore();
 /**
  * Create Stripe Checkout Session
@@ -60,9 +69,17 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
     }
     try {
+        console.log('Creating checkout session with:', {
+            priceId,
+            userId,
+            email,
+            successUrl,
+            cancelUrl,
+        });
         // Get user data to check current subscription
         const userDoc = await db.collection('users').doc(userId).get();
         const userData = userDoc.data();
+        console.log('User data retrieved:', userData);
         let customerId = (_a = userData === null || userData === void 0 ? void 0 : userData.subscription) === null || _a === void 0 ? void 0 : _a.stripeCustomerId;
         // Create or retrieve Stripe customer
         if (!customerId) {

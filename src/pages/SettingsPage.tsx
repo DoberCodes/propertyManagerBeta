@@ -14,6 +14,7 @@ import {
 	FormLabel,
 	FormInput,
 } from '../Components/Library';
+import { FeedbackForm } from '../Components/FeedbackForm';
 import {
 	updatePassword,
 	reauthenticateWithCredential,
@@ -223,6 +224,7 @@ const SettingsPage: React.FC = () => {
 	const navigate = useNavigate();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [showPasswordModal, setShowPasswordModal] = useState(false);
+	const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: '',
 		newPassword: '',
@@ -364,6 +366,17 @@ const SettingsPage: React.FC = () => {
 				</AccountActions>
 			</AccountSection>
 
+			<AccountSection>
+				<SectionTitle>Feedback & Support</SectionTitle>
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					Help us improve Property Manager by sharing your feedback, reporting
+					bugs, or requesting new features.
+				</p>
+				<AccountButton onClick={() => setShowFeedbackModal(true)}>
+					Submit Feedback
+				</AccountButton>
+			</AccountSection>
+
 			<LinkButton onClick={() => navigate('/docs')}>
 				View Full Feature Guide
 			</LinkButton>
@@ -440,6 +453,14 @@ const SettingsPage: React.FC = () => {
 				<PasswordHelp>
 					Password must be at least 6 characters long.
 				</PasswordHelp>
+			</GenericModal>
+
+			{/* Feedback Modal */}
+			<GenericModal
+				isOpen={showFeedbackModal}
+				title='Submit Feedback'
+				onClose={() => setShowFeedbackModal(false)}>
+				<FeedbackForm onClose={() => setShowFeedbackModal(false)} />
 			</GenericModal>
 		</Container>
 	);
