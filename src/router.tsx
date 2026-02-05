@@ -9,6 +9,7 @@ import { ErrorPage } from './pages/ErrorPage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoutes } from './ProtectedRoutes';
 import SettingsPage from './pages/SettingsPage';
@@ -50,6 +51,14 @@ export const RouterComponent = () => {
 					element={
 						<ProtectedRoutes>
 							<LoginPage />
+						</ProtectedRoutes>
+					}
+				/>
+				<Route
+					path='forgot-password'
+					element={
+						<ProtectedRoutes>
+							<ForgotPasswordPage />
 						</ProtectedRoutes>
 					}
 				/>

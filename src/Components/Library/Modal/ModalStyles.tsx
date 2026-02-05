@@ -218,29 +218,24 @@ export const DialogForm = styled.form`
 	flex: 1;
 	min-height: 0;
 	position: relative;
-	padding-bottom: 4rem;
 	height: 100%;
 `;
 
 export const DialogButtonGroup = styled.div`
 	display: flex;
 	gap: 0.75rem;
-	margin-top: 0;
+	margin-top: 2rem;
 	justify-content: flex-end;
-	position: absolute;
-	bottom: 0;
-	right: 0;
+	position: relative;
 	background: white;
-	padding: 0.6rem 2rem;
+	padding: 1rem 0;
 	width: 100%;
 	border-top: 1px solid ${COLORS.gray200};
 
 	@media (max-width: 480px) {
 		flex-direction: column-reverse;
-		padding: 1rem 1.5rem;
+		padding: 1rem 0;
 		gap: 0.5rem;
-		position: relative;
-		border-top: none;
 		margin-top: 1rem;
 	}
 `;
@@ -448,7 +443,7 @@ export const FormTextarea = styled.textarea`
 `;
 
 export const ModalFormContent = styled.div`
-	padding: 1rem 2rem 4rem;
+	padding: 1rem 2rem 1rem;
 	flex: 1;
 	overflow-y: auto;
 	min-height: 0;
@@ -456,7 +451,7 @@ export const ModalFormContent = styled.div`
 	flex-direction: column;
 
 	@media (max-width: 480px) {
-		padding: 0.5rem 1rem 5rem;
+		padding: 0.5rem 1rem 1rem;
 	}
 `;
 

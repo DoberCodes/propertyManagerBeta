@@ -190,7 +190,24 @@ export const resetPassword = async (email: string): Promise<void> => {
 		await sendPasswordResetEmail(auth, email);
 	} catch (error: any) {
 		console.error('Password reset error:', error);
-		throw new Error(getAuthErrorMessage(error.code));
+
+		// Provide more specific error messages
+		if (error.code === 'auth/user-not-found') {
+			throw new Error(
+				'No account found with this email address. Please check your email or sign up for a new account.',
+			);
+		} else if (error.code === 'auth/invalid-email') {
+			throw new Error('Please enter a valid email address.');
+		} else if (error.code === 'auth/too-many-requests') {
+			throw new Error(
+				'Too many password reset requests. Please wait a few minutes before trying again.',
+			);
+		}
+
+		throw new Error(
+			getAuthErrorMessage(error.code) ||
+				'Failed to send password reset email. Please check your Firebase Console email template configuration.',
+		);
 	}
 };
 

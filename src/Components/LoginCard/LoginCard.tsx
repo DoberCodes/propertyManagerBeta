@@ -139,6 +139,22 @@ export const LoginCard = () => {
 					Save email address
 				</CheckboxLabel>
 			</CheckboxWrapper>
+			<div style={{ textAlign: 'right', marginBottom: '16px' }}>
+				<a
+					href='#/forgot-password'
+					style={{
+						color: '#10b981',
+						textDecoration: 'none',
+						fontSize: '14px',
+						fontWeight: '500',
+					}}
+					onClick={(e) => {
+						e.preventDefault();
+						navigate('/forgot-password');
+					}}>
+					Forgot Password?
+				</a>
+			</div>
 			<Submit onClick={(event) => login(event)} disabled={loading}>
 				{loading && <LoadingSpinner />}
 				{loading ? 'Signing in...' : 'Login'}

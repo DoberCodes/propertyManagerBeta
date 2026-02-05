@@ -41,7 +41,10 @@ export const ProtectedRoutes = ({
 	}
 
 	const isLoginRoute =
-		location.pathname === '/login' || location.pathname === '/login/';
+		location.pathname === '/login' ||
+		location.pathname === '/login/' ||
+		location.pathname === '/forgot-password' ||
+		location.pathname === '/forgot-password/';
 
 	// If authenticated and on login page, redirect to dashboard
 	if (currentUser && isLoginRoute) {
