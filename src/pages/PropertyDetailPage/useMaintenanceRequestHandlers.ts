@@ -91,6 +91,7 @@ export const useMaintenanceRequestHandlers = (
 			property: property.title,
 			assignee: taskData.assignee,
 			notes: taskData.notes,
+			devices: taskData.devices || [],
 			createdBy: currentUser.id,
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),

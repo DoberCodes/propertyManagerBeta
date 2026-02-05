@@ -57,6 +57,7 @@ export interface TasksTabProps {
 	handleAssignTask: () => void;
 	handleCompleteTask: () => void;
 	handleDeleteTask: () => void;
+	propertyDevices?: any[];
 }
 
 export interface MaintenanceTabProps {

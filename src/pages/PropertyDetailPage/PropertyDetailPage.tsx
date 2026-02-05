@@ -166,12 +166,23 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const taskHandlers = useTaskHandlers({
 		onDeleteClick: handleTaskDeleteClick,
 		deleteTaskMutation,
+		createTaskMutation,
+		updateTaskMutation,
 	});
 	const propertyHandlers = usePropertyEditHandlers();
 	const maintenanceHandlers = useMaintenanceRequestHandlers(
 		property,
 		currentUser,
 	);
+
+	// Wrapper for task form submit to include propertyId
+	const handleTaskFormSubmitWithProperty = (
+		e: React.FormEvent<HTMLFormElement>,
+	) => {
+		if (property?.id) {
+			handleTaskFormSubmit(e, property.id);
+		}
+	};
 
 	// Fetch contractors for this property
 	const { data: propertyContractors = [] } = useGetContractorsByPropertyQuery(
@@ -203,6 +214,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		handleAssignTask,
 		handleCompleteTask,
 		handleTaskFormChange,
+		handleTaskFormSubmit,
 		handleTaskCompletionSuccess,
 		confirmDeleteTask,
 	} = taskHandlers;
@@ -301,18 +313,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		}
 	}, [hasCommercialSuites, activeTab]);
 
-	// Filter tasks for this property
-	const propertyTasks = useMemo(() => {
-		if (!property) return [];
-		// Match by property ID if it exists, otherwise try matching by title
-		const allPropertyTasks = allTasks.filter(
-			(task) =>
-				task.propertyId === property.id || task.property === property.title,
-		);
-		// Filter out completed tasks - they should show in Maintenance History instead
-		return allPropertyTasks.filter((task) => task.status !== 'Completed');
-	}, [property, allTasks]);
-
 	const { data: maintenanceHistoryRecords = [] } =
 		useGetMaintenanceHistoryByPropertyQuery(property?.id || '', {
 			skip: !property?.id,
@@ -323,6 +323,82 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		property?.id || '',
 		{ skip: !property?.id },
 	);
+
+	// Filter tasks for this property
+	const propertyTasks = useMemo(() => {
+		if (!property) return [];
+		// Match by property ID if it exists, otherwise try matching by title
+		const allPropertyTasks = allTasks.filter(
+			(task) =>
+				task.propertyId === property.id || task.property === property.title,
+		);
+
+		// Enrich tasks with user information for assignedTo display
+		const enrichedTasks = allPropertyTasks.map((task) => {
+			if (
+				task.assignedTo &&
+				typeof task.assignedTo === 'object' &&
+				task.assignedTo.id
+			) {
+				// Find user information from available sources
+				let userInfo: { id: string; name: string; email?: string } | null =
+					null;
+
+				// Check current user
+				if (currentUser && task.assignedTo.id === currentUser.id) {
+					userInfo = {
+						id: currentUser.id,
+						name: `${currentUser.firstName} ${currentUser.lastName}`,
+						email: currentUser.email,
+					};
+				}
+
+				// Check property shares
+				if (!userInfo) {
+					const share = currentPropertyShares.find(
+						(share) => share.sharedWithUserId === task.assignedTo!.id,
+					);
+					if (share) {
+						userInfo = {
+							id: share.sharedWithUserId!,
+							name:
+								share.sharedWithFirstName && share.sharedWithLastName
+									? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+									: share.sharedWithEmail?.split('@')[0] || 'Shared User',
+							email: share.sharedWithEmail,
+						};
+					}
+				}
+
+				// Check team members
+				if (!userInfo) {
+					const teamMember = teamMembers.find(
+						(member) => member?.id === task.assignedTo!.id,
+					);
+					if (teamMember) {
+						userInfo = {
+							id: teamMember.id,
+							name: `${teamMember.firstName} ${teamMember.lastName}`,
+							email: teamMember.email,
+						};
+					}
+				}
+
+				// If user info found, update the assignedTo object
+				if (userInfo) {
+					return {
+						...task,
+						assignedTo: userInfo,
+					};
+				}
+			}
+
+			return task;
+		});
+
+		// Filter out completed tasks - they should show in Maintenance History instead
+		return enrichedTasks.filter((task) => task.status !== 'Completed');
+	}, [property, allTasks, currentUser, currentPropertyShares, teamMembers]);
 
 	// Generate assignee options for task editing
 	const assigneeOptions = useMemo(() => {
@@ -464,384 +540,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		}
 	};
 
-	// Task form submit handler
-	const handleTaskFormSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!property || !taskFormData.title.trim()) return;
-
-		try {
-			if (editingTaskId !== null) {
-				// Update existing task
-				const taskToUpdate = allTasks.find((t) => t.id === editingTaskId);
-				if (taskToUpdate) {
-					const reduxStatus =
-						taskFormData.status === 'Hold'
-							? 'Pending'
-							: taskFormData.status === 'Overdue'
-							? 'Pending'
-							: taskFormData.status;
-
-					const safeTeamMembers = teamMembers.filter(
-						(member): member is TeamMember => Boolean(member),
-					);
-					// Find assigned person from team members, contractors, or shared users
-					let assignedTo: any = taskFormData.assignedTo
-						? safeTeamMembers.find(
-								(member) => member.id === taskFormData.assignedTo,
-						  )
-						: undefined;
-
-					// If not found in team members, check contractors
-					if (!assignedTo && taskFormData.assignedTo) {
-						const contractor = propertyContractors.find(
-							(c) => c.id === taskFormData.assignedTo,
-						);
-						if (contractor) {
-							assignedTo = {
-								id: contractor.id,
-								firstName: contractor.name,
-								lastName: '',
-								email: contractor.email || '',
-								title: contractor.category,
-							};
-						}
-					}
-
-					// If still not found, check shared users
-					if (!assignedTo && taskFormData.assignedTo) {
-						const sharedUser = currentPropertyShares.find(
-							(share) =>
-								(share.sharedWithUserId || share.sharedWithEmail) ===
-								taskFormData.assignedTo,
-						);
-						if (sharedUser) {
-							assignedTo = {
-								id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
-								firstName:
-									sharedUser.sharedWithFirstName ||
-									sharedUser.sharedWithEmail?.split('@')[0] ||
-									'Shared User',
-								lastName: sharedUser.sharedWithLastName || '',
-								email: sharedUser.sharedWithEmail || '',
-								title: 'Co-owner',
-							};
-						}
-					}
-
-					// Build updates object and filter out undefined values (Firebase doesn't support undefined)
-					const updates: any = {
-						title: taskFormData.title,
-						dueDate: taskFormData.dueDate,
-						status: reduxStatus,
-						notes: taskFormData.notes,
-						priority: taskFormData.priority,
-						isRecurring: Boolean(taskFormData.isRecurring),
-						devices: taskFormData.devices || [],
-					};
-
-					if (assignedTo) {
-						updates.assignedTo = {
-							id: assignedTo.id,
-							name: `${assignedTo.firstName || ''} ${
-								assignedTo.lastName || ''
-							}`.trim(),
-							email: assignedTo.email,
-						};
-					}
-
-					if (taskFormData.recurrenceFrequency) {
-						updates.recurrenceFrequency = taskFormData.recurrenceFrequency;
-					}
-					if (taskFormData.recurrenceInterval) {
-						updates.recurrenceInterval = taskFormData.recurrenceInterval;
-					}
-					if (taskFormData.recurrenceCustomUnit) {
-						updates.recurrenceCustomUnit = taskFormData.recurrenceCustomUnit;
-					}
-
-					await updateTaskMutation({
-						id: editingTaskId,
-						updates,
-					}).unwrap();
-
-					// Create notification for task update
-					try {
-						await createNotification({
-							userId: currentUser!.id,
-							type: 'task_updated',
-							title: 'Task Updated',
-							message: `Task "${taskFormData.title}" has been updated`,
-							data: {
-								taskId: editingTaskId,
-								taskTitle: taskFormData.title,
-								propertyId: property.id,
-								propertyTitle: property.title,
-							},
-							status: 'unread',
-							actionUrl: `/properties/${property.id}`,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						}).unwrap();
-					} catch (notifError) {
-						console.error('Notification failed:', notifError);
-					}
-
-					// Create notification for task assignment change (to assignee if different from current user)
-					if (assignedTo && assignedTo.id !== currentUser!.id) {
-						// Check if assignment changed
-						const previousAssignedTo = taskToUpdate.assignedTo;
-						const assignmentChanged =
-							!previousAssignedTo || previousAssignedTo.id !== assignedTo.id;
-
-						if (assignmentChanged) {
-							try {
-								await createNotification({
-									userId: assignedTo.id,
-									type: 'task_assigned',
-									title: 'Task Assigned',
-									message: `You have been assigned to task "${taskFormData.title}"`,
-									data: {
-										taskId: editingTaskId,
-										taskTitle: taskFormData.title,
-										assignedTo: {
-											id: assignedTo.id,
-											name: `${assignedTo.firstName || ''} ${
-												assignedTo.lastName || ''
-											}`.trim(),
-											email: assignedTo.email,
-										},
-										propertyId: property.id,
-										propertyTitle: property.title,
-									},
-									status: 'unread',
-									actionUrl: `/properties/${property.id}`,
-									createdAt: new Date().toISOString(),
-									updatedAt: new Date().toISOString(),
-								}).unwrap();
-							} catch (assignNotifError) {
-								console.error(
-									'Assignment notification failed:',
-									assignNotifError,
-								);
-							}
-						}
-					}
-				}
-			} else {
-				// Add new task
-				const reduxStatus =
-					taskFormData.status === 'Hold'
-						? 'Pending'
-						: taskFormData.status === 'Overdue'
-						? 'Pending'
-						: taskFormData.status;
-
-				const safeTeamMembers = teamMembers.filter(
-					(member): member is TeamMember => Boolean(member),
-				);
-				// Find assigned person from team members, contractors, or shared users
-				let assignedTo: any = taskFormData.assignedTo
-					? safeTeamMembers.find(
-							(member) => member.id === taskFormData.assignedTo,
-					  )
-					: undefined;
-
-				// If not found in team members, check contractors
-				if (!assignedTo && taskFormData.assignedTo) {
-					const contractor = propertyContractors.find(
-						(c) => c.id === taskFormData.assignedTo,
-					);
-					if (contractor) {
-						assignedTo = {
-							id: contractor.id,
-							firstName: contractor.name,
-							lastName: '',
-							email: contractor.email || '',
-							title: contractor.category,
-						};
-					}
-				}
-
-				// If still not found, check shared users
-				if (!assignedTo && taskFormData.assignedTo) {
-					const sharedUser = currentPropertyShares.find(
-						(share) =>
-							(share.sharedWithUserId || share.sharedWithEmail) ===
-							taskFormData.assignedTo,
-					);
-					if (sharedUser) {
-						assignedTo = {
-							id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
-							firstName:
-								sharedUser.sharedWithFirstName ||
-								sharedUser.sharedWithEmail?.split('@')[0] ||
-								'Shared User',
-							lastName: sharedUser.sharedWithLastName || '',
-							email: sharedUser.sharedWithEmail || '',
-							title: 'Co-owner',
-						};
-					}
-				}
-
-				// Build new task object and filter out undefined values (Firebase doesn't support undefined)
-				const newTask: any = {
-					userId: currentUser!.id,
-					title: taskFormData.title,
-					dueDate: taskFormData.dueDate,
-					status: reduxStatus,
-					property: property.title,
-					propertyId: property.id,
-					notes: taskFormData.notes,
-					priority: taskFormData.priority,
-					isRecurring: Boolean(taskFormData.isRecurring),
-					devices: taskFormData.devices || [],
-				};
-
-				if (assignedTo) {
-					newTask.assignedTo = {
-						id: assignedTo.id,
-						name: `${assignedTo.firstName || ''} ${
-							assignedTo.lastName || ''
-						}`.trim(),
-						email: assignedTo.email,
-					};
-				}
-
-				if (taskFormData.recurrenceFrequency) {
-					newTask.recurrenceFrequency = taskFormData.recurrenceFrequency;
-					// Set default interval of 1 for non-custom frequencies
-					if (taskFormData.recurrenceFrequency !== 'custom') {
-						newTask.recurrenceInterval = 1;
-					}
-				}
-				if (taskFormData.recurrenceInterval) {
-					newTask.recurrenceInterval = taskFormData.recurrenceInterval;
-				}
-				if (taskFormData.recurrenceCustomUnit) {
-					newTask.recurrenceCustomUnit = taskFormData.recurrenceCustomUnit;
-				}
-
-				await createTaskMutation(newTask).unwrap();
-
-				// Create notification for task creation (to creator)
-				try {
-					await createNotification({
-						userId: currentUser!.id,
-						type: 'task_created',
-						title: 'Task Created',
-						message: `New task "${taskFormData.title}" has been created`,
-						data: {
-							taskTitle: taskFormData.title,
-							propertyId: property.id,
-							propertyTitle: property.title,
-						},
-						status: 'unread',
-						actionUrl: `/properties/${property.id}`,
-						createdAt: new Date().toISOString(),
-						updatedAt: new Date().toISOString(),
-					}).unwrap();
-				} catch (notifError) {
-					console.error('Notification failed:', notifError);
-				}
-
-				// Create notification for task assignment (to assignee if different from creator)
-				if (assignedTo && assignedTo.id !== currentUser!.id) {
-					try {
-						await createNotification({
-							userId: assignedTo.id,
-							type: 'task_assigned',
-							title: 'Task Assigned',
-							message: `You have been assigned to task "${taskFormData.title}"`,
-							data: {
-								taskId: newTask.id, // This will be set after creation
-								taskTitle: taskFormData.title,
-								assignedTo: {
-									id: assignedTo.id,
-									name: `${assignedTo.firstName || ''} ${
-										assignedTo.lastName || ''
-									}`.trim(),
-									email: assignedTo.email,
-								},
-								propertyId: property.id,
-								propertyTitle: property.title,
-							},
-							status: 'unread',
-							actionUrl: `/properties/${property.id}`,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						}).unwrap();
-					} catch (assignNotifError) {
-						console.error('Assignment notification failed:', assignNotifError);
-					}
-				}
-
-				// Create additional notification for recurring tasks
-				if (taskFormData.isRecurring) {
-					console.log(
-						'Creating recurring task notification for:',
-						taskFormData.title,
-						'isRecurring:',
-						taskFormData.isRecurring,
-					);
-					try {
-						const recurrenceText =
-							taskFormData.recurrenceFrequency === 'custom'
-								? `every ${taskFormData.recurrenceInterval || 1} ${
-										taskFormData.recurrenceCustomUnit
-								  }`
-								: `every ${taskFormData.recurrenceFrequency}`;
-
-						console.log('Recurrence text:', recurrenceText);
-						await createNotification({
-							userId: currentUser!.id,
-							type: 'task_created',
-							title: 'Recurring Task Created',
-							message: `Recurring task "${taskFormData.title}" has been created (${recurrenceText})`,
-							data: {
-								taskTitle: taskFormData.title,
-								propertyId: property.id,
-								propertyTitle: property.title,
-								isRecurring: true,
-								recurrenceFrequency: taskFormData.recurrenceFrequency,
-								recurrenceInterval:
-									taskFormData.recurrenceFrequency === 'custom'
-										? taskFormData.recurrenceInterval
-										: 1,
-							},
-							status: 'unread',
-							actionUrl: `/properties/${property.id}`,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						}).unwrap();
-						console.log('Recurring task notification created successfully');
-					} catch (recurringNotifError) {
-						console.error(
-							'Recurring task notification failed:',
-							recurringNotifError,
-						);
-					}
-				} else {
-					console.log(
-						'Task is not recurring, skipping recurring notification. isRecurring:',
-						taskFormData.isRecurring,
-					);
-				}
-			}
-			setShowTaskDialog(false);
-			setSelectedTasks([]);
-			setTaskFormData({
-				title: '',
-				dueDate: '',
-				status: 'Pending',
-				notes: '',
-				devices: [],
-			});
-		} catch (error) {
-			console.error('Error saving task:', error);
-			alert('Failed to save task. Please try again.');
-		}
-	};
-
+	// Confirm assignment handler
 	// Confirm assignment handler
 	const handleConfirmAssignment = async () => {
 		if (assigningTaskId && selectedAssignee) {
@@ -1218,6 +917,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						handleAssignTask={handleAssignTask}
 						handleCompleteTask={handleCompleteTask}
 						handleDeleteTask={handleDeleteTask}
+						propertyDevices={propertyDevices}
 					/>
 				)}
 
@@ -1323,8 +1023,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				isEditing={Boolean(editingTaskId)}
 				formData={taskFormData}
 				onClose={() => setShowTaskDialog(false)}
-				onSubmit={handleTaskFormSubmit}
+				onSubmit={handleTaskFormSubmitWithProperty}
 				onChange={handleTaskFormChange}
+				onDevicesChange={(devices) => {
+					setTaskFormData({ ...taskFormData, devices });
+				}}
 				statusOptions={[
 					'Pending',
 					'In Progress',
@@ -1334,6 +1037,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				]}
 				priorityOptions={['Low', 'Medium', 'High', 'Urgent']}
 				assigneeOptions={assigneeOptions}
+				deviceOptions={deviceOptions}
 			/>
 
 			{/* Task Assignment Dialog */}
@@ -1489,6 +1193,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					teamMembers={teamMembers.filter(
 						(m): m is TeamMember => m !== undefined,
 					)}
+					deviceOptions={deviceOptions}
 				/>
 			)}
 

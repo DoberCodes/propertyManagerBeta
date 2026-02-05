@@ -10,6 +10,7 @@ import {
 	FormInput as Input,
 	FormSelect as Select,
 	FormTextarea as Textarea,
+	MultiSelect,
 } from '../Library';
 
 interface ConvertRequestToTaskModalProps {
@@ -18,21 +19,29 @@ interface ConvertRequestToTaskModalProps {
 	onConvert: (taskData: TaskData) => void;
 	request: MaintenanceRequestItem;
 	teamMembers: TeamMember[];
+	deviceOptions?: { label: string; value: string }[];
 }
 
 export const ConvertRequestToTaskModal: React.FC<
 	ConvertRequestToTaskModalProps
-> = ({ isOpen, onClose, onConvert, request, teamMembers }) => {
+> = ({
+	isOpen,
+	onClose,
+	onConvert,
+	request,
+	teamMembers,
+	deviceOptions = [],
+}) => {
 	// Calculate default due date (7 days from now for urgent, 14 for high, etc.)
 	const getDefaultDueDate = (priority: string) => {
 		const days =
 			priority === 'Urgent'
 				? 3
 				: priority === 'High'
-					? 7
-					: priority === 'Medium'
-						? 14
-						: 30;
+				? 7
+				: priority === 'Medium'
+				? 14
+				: 30;
 		const date = new Date();
 		date.setDate(date.getDate() + days);
 		return date.toISOString().split('T')[0];
@@ -48,8 +57,13 @@ ${request.description}
 ${request.unit ? `\nUnit: ${request.unit}` : ''}
 Category: ${request.category}
 Priority: ${request.priority}
-Submitted by: ${request.submittedByName} on ${request.submittedAt ? new Date(request.submittedAt).toLocaleDateString() : 'N/A'}`,
+Submitted by: ${request.submittedByName} on ${
+			request.submittedAt
+				? new Date(request.submittedAt).toLocaleDateString()
+				: 'N/A'
+		}`,
 		priority: request.priority,
+		devices: [],
 	});
 
 	// Reset form when modal opens with new request
@@ -65,8 +79,13 @@ ${request.description}
 ${request.unit ? `\nUnit: ${request.unit}` : ''}
 Category: ${request.category}
 Priority: ${request.priority}
-Submitted by: ${request.submittedByName} on ${request.submittedAt ? new Date(request.submittedAt).toLocaleDateString() : 'N/A'}`,
+Submitted by: ${request.submittedByName} on ${
+					request.submittedAt
+						? new Date(request.submittedAt).toLocaleDateString()
+						: 'N/A'
+				}`,
 				priority: request.priority,
+				devices: [],
 			});
 		}
 	}, [isOpen, request]);
@@ -186,6 +205,18 @@ Submitted by: ${request.submittedByName} on ${request.submittedAt ? new Date(req
 					</Helper>
 				</FormGroup>
 
+				{deviceOptions.length > 0 && (
+					<FormGroup>
+						<Label>Connected Devices</Label>
+						<MultiSelect
+							options={deviceOptions}
+							value={taskData.devices || []}
+							onChange={(devices) => setTaskData({ ...taskData, devices })}
+							placeholder='Select devices for this task...'
+						/>
+					</FormGroup>
+				)}
+
 				<FormGroup>
 					<Label>
 						Task Notes <Required>*</Required>
@@ -260,18 +291,18 @@ const PriorityBadge = styled.span<{ priority: string }>`
 		props.priority === 'Urgent'
 			? '#fee'
 			: props.priority === 'High'
-				? '#fff3e0'
-				: props.priority === 'Medium'
-					? '#e3f2fd'
-					: '#f5f5f5'};
+			? '#fff3e0'
+			: props.priority === 'Medium'
+			? '#e3f2fd'
+			: '#f5f5f5'};
 	color: ${(props) =>
 		props.priority === 'Urgent'
 			? '#c62828'
 			: props.priority === 'High'
-				? '#e65100'
-				: props.priority === 'Medium'
-					? '#1565c0'
-					: '#666'};
+			? '#e65100'
+			: props.priority === 'Medium'
+			? '#1565c0'
+			: '#666'};
 `;
 
 const CategoryBadge = styled.span`

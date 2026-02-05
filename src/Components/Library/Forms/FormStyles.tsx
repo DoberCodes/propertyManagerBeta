@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import React, { useState, useRef, useEffect } from 'react';
 
 /**
  * Shared form styled components used across the app
@@ -96,9 +97,175 @@ export const FormSelect = styled.select`
 	}
 `;
 
+export const MultiSelectContainer = styled.div`
+	position: relative;
+	width: 100%;
+`;
+
+export const MultiSelectInput = styled.div`
+	min-height: 42px;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background-color: white;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	align-items: center;
+
+	&:focus-within {
+		outline: none;
+		border-color: #667eea;
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+
+	&:hover {
+		border-color: #ccc;
+	}
+`;
+
+export const MultiSelectTag = styled.span`
+	background-color: #f3f4f6;
+	color: #374151;
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.25rem;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+`;
+
+export const MultiSelectTagRemove = styled.button`
+	background: none;
+	border: none;
+	color: #6b7280;
+	cursor: pointer;
+	padding: 0;
+	font-size: 14px;
+	line-height: 1;
+
+	&:hover {
+		color: #374151;
+	}
+`;
+
+export const MultiSelectPlaceholder = styled.span`
+	color: #9ca3af;
+	font-size: 14px;
+`;
+
+export const MultiSelectDropdown = styled.div<{ isOpen: boolean }>`
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background-color: white;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 1000;
+	display: ${(props) => (props.isOpen ? 'block' : 'none')};
+`;
+
+export const MultiSelectOption = styled.div<{ isSelected: boolean }>`
+	padding: 0.5rem 0.75rem;
+	cursor: pointer;
+	background-color: ${(props) => (props.isSelected ? '#f3f4f6' : 'white')};
+	color: #374151;
+	font-size: 14px;
+
+	&:hover {
+		background-color: #f9fafb;
+	}
+`;
+
+interface MultiSelectProps {
+	options: { label: string; value: string }[];
+	value: string[];
+	onChange: (value: string[]) => void;
+	placeholder?: string;
+}
+
+export const MultiSelect: React.FC<MultiSelectProps> = ({
+	options,
+	value,
+	onChange,
+	placeholder = 'Select options...',
+}) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, []);
+
+	const handleToggleOption = (optionValue: string) => {
+		const newValue = value.includes(optionValue)
+			? value.filter((v) => v !== optionValue)
+			: [...value, optionValue];
+		onChange(newValue);
+	};
+
+	const handleRemoveTag = (optionValue: string) => {
+		onChange(value.filter((v) => v !== optionValue));
+	};
+
+	const selectedOptions = options.filter((option) =>
+		value.includes(option.value),
+	);
+
+	return (
+		<MultiSelectContainer ref={containerRef}>
+			<MultiSelectInput onClick={() => setIsOpen(!isOpen)}>
+				{selectedOptions.length > 0 ? (
+					selectedOptions.map((option) => (
+						<MultiSelectTag key={option.value}>
+							{option.label}
+							<MultiSelectTagRemove
+								onClick={(e) => {
+									e.stopPropagation();
+									handleRemoveTag(option.value);
+								}}>
+								×
+							</MultiSelectTagRemove>
+						</MultiSelectTag>
+					))
+				) : (
+					<MultiSelectPlaceholder>{placeholder}</MultiSelectPlaceholder>
+				)}
+			</MultiSelectInput>
+
+			<MultiSelectDropdown isOpen={isOpen}>
+				{options.map((option) => (
+					<MultiSelectOption
+						key={option.value}
+						isSelected={value.includes(option.value)}
+						onClick={() => handleToggleOption(option.value)}>
+						{option.label}
+					</MultiSelectOption>
+				))}
+			</MultiSelectDropdown>
+		</MultiSelectContainer>
+	);
+};
+
 export const FormError = styled.div`
 	color: #e74c3c;
-	font-size: 13px;
+	font-size: 14px;
 	margin-top: 0.25rem;
 `;
 

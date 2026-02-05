@@ -16,8 +16,25 @@ export const getDeviceName = (
 	entity: any,
 ): string => {
 	if (!entity || !deviceId) return '-';
-	const device = entity.devices?.find((d: any) => d.id === deviceId);
+	const device = entity.devices?.find(
+		(d: any) => String(d.id) === String(deviceId),
+	);
 	return device ? `${device.type} - ${device.brand}` : '-';
+};
+
+/**
+ * Get device names from array of device IDs
+ * Returns a comma-separated string of device names
+ */
+export const getDeviceNames = (
+	deviceIds: string[] | undefined,
+	entity: any,
+): string => {
+	if (!deviceIds || deviceIds.length === 0) return '-';
+	const names = deviceIds
+		.map((id) => getDeviceName(id, entity))
+		.filter((name) => name !== '-');
+	return names.length > 0 ? names.join(', ') : '-';
 };
 
 /**

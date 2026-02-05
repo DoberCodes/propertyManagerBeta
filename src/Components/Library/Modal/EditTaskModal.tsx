@@ -12,6 +12,7 @@ import {
 	ModalTab,
 	ModalTabContent,
 } from './ModalStyles';
+import { MultiSelect } from '../index';
 
 interface TaskFormData {
 	title: string;
@@ -42,6 +43,7 @@ interface EditTaskModalProps {
 	priorityOptions?: string[];
 	assigneeOptions?: { label: string; value: string }[];
 	deviceOptions?: { label: string; value: string }[];
+	onDevicesChange?: (devices: string[]) => void;
 	taskTitlePlaceholder?: string;
 }
 
@@ -78,6 +80,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	priorityOptions = ['Low', 'Medium', 'High', 'Urgent'],
 	assigneeOptions = [],
 	deviceOptions = [],
+	onDevicesChange,
 	taskTitlePlaceholder = 'Enter task name',
 }) => {
 	const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
@@ -215,23 +218,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 					{deviceOptions.length > 0 && (
 						<FormGroup>
 							<FormLabel>Connected Devices</FormLabel>
-							<FormSelect
-								name='devices'
-								onChange={onChange}
-								multiple
-								style={{ minHeight: '80px' }}>
-								{deviceOptions.map((option) => (
-									<option
-										key={option.value}
-										value={option.value}
-										selected={formData.devices?.includes(option.value)}>
-										{option.label}
-									</option>
-								))}
-							</FormSelect>
-							<small style={{ color: '#666', fontSize: '12px' }}>
-								Hold Ctrl/Cmd to select multiple devices
-							</small>
+							<MultiSelect
+								options={deviceOptions}
+								value={formData.devices || []}
+								onChange={onDevicesChange || (() => {})}
+								placeholder='Select devices for this task...'
+							/>
 						</FormGroup>
 					)}
 

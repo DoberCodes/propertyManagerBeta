@@ -130,6 +130,10 @@ export interface TaskHandlers {
 			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 		>,
 	) => void;
+	handleTaskFormSubmit: (
+		e: React.FormEvent<HTMLFormElement>,
+		propertyId: string,
+	) => void;
 	handleTaskCompletionSuccess: () => void;
 	confirmDeleteTask: () => void;
 }
@@ -141,4 +145,5 @@ export interface TaskData {
 	assignee?: string;
 	notes: string;
 	priority: string;
+	devices?: string[];
 }

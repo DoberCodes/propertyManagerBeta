@@ -35,6 +35,7 @@ export {
 	FormRow,
 	FormSection,
 	FormSectionTitle,
+	MultiSelect,
 } from './Forms/FormStyles';
 
 // Modals & Dialogs

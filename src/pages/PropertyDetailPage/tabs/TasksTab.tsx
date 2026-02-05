@@ -13,6 +13,7 @@ import {
 	TaskStatus,
 	EmptyState,
 } from '../PropertyDetailPage.styles';
+import { getDeviceNames } from '../../../utils/detailPageUtils';
 
 export const TasksTab: React.FC<TasksTabProps> = ({
 	propertyTasks,
@@ -24,6 +25,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 	handleAssignTask,
 	handleCompleteTask,
 	handleDeleteTask,
+	propertyDevices = [],
 }) => {
 	return (
 		<SectionContainer>
@@ -76,6 +78,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 								<th>Due Date</th>
 								<th>Priority</th>
 								<th>Status</th>
+								<th>Devices</th>
 								<th>Notes</th>
 							</tr>
 						</thead>
@@ -100,13 +103,16 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 									<td>
 										{task.assignedTo
 											? task.assignedTo.name ||
-												task.assignedTo.email ||
-												task.assignedTo.id
+											  task.assignedTo.email ||
+											  task.assignedTo.id
 											: 'Unassigned'}
 									</td>
 									<td>{task.dueDate}</td> <td>{task.priority || '-'}</td>{' '}
 									<td>
 										<TaskStatus status={task.status}>{task.status}</TaskStatus>
+									</td>
+									<td>
+										{getDeviceNames(task.devices, { devices: propertyDevices })}
 									</td>
 									<td>{task.notes || '-'}</td>
 								</tr>

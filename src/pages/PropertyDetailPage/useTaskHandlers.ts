@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { AppDispatch } from '../../Redux/store';
 import { useDispatch } from 'react-redux';
-import { deleteTask as deleteTaskAction } from '../../Redux/Slices/propertyDataSlice';
+import {
+	deleteTask as deleteTaskAction,
+	addTask,
+	updateTask,
+} from '../../Redux/Slices/propertyDataSlice';
 import { TaskHandlers, TaskFormData } from '../../types/Task.types';
 
 interface UseTaskHandlersProps {
 	onDeleteClick?: (taskIds: string[]) => void;
 	deleteTaskMutation?: any;
+	createTaskMutation?: any;
+	updateTaskMutation?: any;
 }
 
 export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
@@ -123,6 +129,98 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		setSelectedTasks([]);
 	};
 
+	const handleTaskFormSubmit = async (
+		e: React.FormEvent<HTMLFormElement>,
+		propertyId: string,
+	) => {
+		e.preventDefault();
+
+		if (!taskFormData.title || !taskFormData.dueDate) {
+			alert('Please fill in all required fields');
+			return;
+		}
+
+		const taskData = {
+			id: editingTaskId || `task-${Date.now()}`,
+			propertyId,
+			title: taskFormData.title,
+			dueDate: taskFormData.dueDate,
+			status: taskFormData.status,
+			notes: taskFormData.notes,
+			priority: taskFormData.priority,
+			assignedTo: taskFormData.assignedTo
+				? { id: taskFormData.assignedTo }
+				: undefined,
+			devices: taskFormData.devices || [],
+			isRecurring: taskFormData.isRecurring,
+			recurrenceFrequency: taskFormData.recurrenceFrequency,
+			recurrenceInterval: taskFormData.recurrenceInterval,
+			recurrenceCustomUnit: taskFormData.recurrenceCustomUnit,
+		};
+
+		try {
+			if (editingTaskId) {
+				// Update existing task - only send updatable fields
+				const updates = {
+					propertyId,
+					title: taskFormData.title,
+					dueDate: taskFormData.dueDate,
+					status: taskFormData.status,
+					notes: taskFormData.notes,
+					priority: taskFormData.priority,
+					assignedTo: taskFormData.assignedTo
+						? { id: taskFormData.assignedTo }
+						: undefined,
+					devices: taskFormData.devices || [],
+					isRecurring: taskFormData.isRecurring,
+					recurrenceFrequency: taskFormData.recurrenceFrequency,
+					recurrenceInterval: taskFormData.recurrenceInterval,
+					recurrenceCustomUnit: taskFormData.recurrenceCustomUnit,
+				};
+
+				// Filter out undefined values (Firestore doesn't allow them)
+				const cleanUpdates = Object.fromEntries(
+					Object.entries(updates).filter(([_, value]) => value !== undefined),
+				);
+
+				if (props?.updateTaskMutation) {
+					await props
+						.updateTaskMutation({
+							id: editingTaskId,
+							updates: cleanUpdates,
+						})
+						.unwrap();
+				} else {
+					dispatch(updateTask(taskData));
+				}
+			} else {
+				// Create new task
+				// Filter out undefined values (Firestore doesn't allow them)
+				const cleanTaskData = Object.fromEntries(
+					Object.entries(taskData).filter(([_, value]) => value !== undefined),
+				);
+
+				if (props?.createTaskMutation) {
+					await props.createTaskMutation(cleanTaskData).unwrap();
+				} else {
+					dispatch(addTask(taskData));
+				}
+			}
+
+			setShowTaskDialog(false);
+			setEditingTaskId(null);
+			setTaskFormData({
+				title: '',
+				dueDate: '',
+				status: 'Pending',
+				notes: '',
+			});
+		} catch (error) {
+			console.error('Error saving task:', error);
+			alert('Error saving task. Please try again.');
+		}
+	};
+
 	return {
 		selectedTasks,
 		setSelectedTasks,
@@ -149,6 +247,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		handleAssignTask,
 		handleCompleteTask,
 		handleTaskFormChange,
+		handleTaskFormSubmit,
 		handleTaskCompletionSuccess,
 		confirmDeleteTask,
 	};
