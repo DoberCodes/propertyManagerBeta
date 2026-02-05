@@ -23,6 +23,7 @@ interface GenericModalProps {
 	primaryButtonDisabled?: boolean;
 	isLoading?: boolean;
 	onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
+	showActions?: boolean;
 }
 
 export const GenericModal: React.FC<GenericModalProps> = ({
@@ -37,6 +38,7 @@ export const GenericModal: React.FC<GenericModalProps> = ({
 	primaryButtonDisabled = false,
 	isLoading = false,
 	onSubmit,
+	showActions = true,
 }) => {
 	if (!isOpen) return null;
 
@@ -74,19 +76,21 @@ export const GenericModal: React.FC<GenericModalProps> = ({
 				<ModalFormContent>
 					<DialogForm onSubmit={handleFormSubmit}>
 						{children}
-						<DialogButtonGroup>
-							<DialogCancelButton
-								type='button'
-								onClick={handleSecondaryAction}
-								disabled={isLoading}>
-								{secondaryButtonLabel}
-							</DialogCancelButton>
-							<DialogSubmitButton
-								type='submit'
-								disabled={primaryButtonDisabled || isLoading}>
-								{primaryButtonLabel}
-							</DialogSubmitButton>
-						</DialogButtonGroup>
+						{showActions && (
+							<DialogButtonGroup>
+								<DialogCancelButton
+									type='button'
+									onClick={handleSecondaryAction}
+									disabled={isLoading}>
+									{secondaryButtonLabel}
+								</DialogCancelButton>
+								<DialogSubmitButton
+									type='submit'
+									disabled={primaryButtonDisabled || isLoading}>
+									{primaryButtonLabel}
+								</DialogSubmitButton>
+							</DialogButtonGroup>
+						)}
 					</DialogForm>
 				</ModalFormContent>
 			</DialogContent>

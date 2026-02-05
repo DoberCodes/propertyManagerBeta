@@ -1,0 +1,261 @@
+import React, { useState, useRef } from 'react';
+import {
+	CarouselContainer,
+	CarouselViewport,
+	CarouselTrack,
+	TaskCard,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	CardProperty,
+	CardMeta,
+	MetaItem,
+	MetaLabel,
+	MetaValue,
+	CardActions,
+	ActionButton,
+	IndicatorDots,
+	Dot,
+	NoTasks,
+} from './MobileTaskCarousel.styles';
+import { Task } from '../../../Redux/API/apiSlice';
+import { TaskDetailModal } from '../Modal/TaskDetailModal';
+
+interface MobileTaskCarouselProps {
+	tasks: Task[];
+	onTaskUpdate?: (taskId: string, updates: Partial<Task>) => Promise<void>;
+	onTaskDelete?: (taskId: string) => Promise<void>;
+	onTaskComplete?: (taskId: string) => void;
+}
+
+export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
+	tasks,
+	onTaskUpdate,
+	onTaskDelete,
+	onTaskComplete,
+}) => {
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [isDragging, setIsDragging] = useState(false);
+	const [dragStart, setDragStart] = useState(0);
+	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+	const [showDetailModal, setShowDetailModal] = useState(false);
+	const trackRef = useRef<HTMLDivElement>(null);
+
+	if (tasks.length === 0) {
+		return (
+			<NoTasks>
+				<div>📋 No tasks yet</div>
+				<div style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px' }}>
+					Start by creating a task
+				</div>
+			</NoTasks>
+		);
+	}
+
+	const handleMouseDown = (e: React.MouseEvent) => {
+		setIsDragging(true);
+		setDragStart(e.clientX);
+	};
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		setIsDragging(true);
+		setDragStart(e.touches[0].clientX);
+	};
+
+	const handleMouseUp = (e: React.MouseEvent) => {
+		handleDragEnd(e.clientX);
+	};
+
+	const handleTouchEnd = (e: React.TouchEvent) => {
+		handleDragEnd(e.changedTouches[0].clientX);
+	};
+
+	const handleDragEnd = (endPos: number) => {
+		if (!isDragging) return;
+		setIsDragging(false);
+
+		const diff = dragStart - endPos;
+		const threshold = 50; // Minimum distance to trigger slide
+
+		if (Math.abs(diff) > threshold) {
+			if (diff > 0 && currentIndex < tasks.length - 1) {
+				// Swiped left, go to next card
+				setCurrentIndex(currentIndex + 1);
+			} else if (diff < 0 && currentIndex > 0) {
+				// Swiped right, go to previous card
+				setCurrentIndex(currentIndex - 1);
+			}
+		}
+	};
+
+	const currentTask = tasks[currentIndex];
+
+	const getPriorityColor = (priority?: string) => {
+		switch (priority?.toLowerCase()) {
+			case 'high':
+				return '#dc2626';
+			case 'medium':
+				return '#f59e0b';
+			case 'low':
+				return '#10b981';
+			default:
+				return '#6b7280';
+		}
+	};
+
+	const getStatusColor = (status?: string) => {
+		switch (status?.toLowerCase()) {
+			case 'completed':
+				return '#10b981';
+			case 'in progress':
+				return '#3b82f6';
+			case 'pending':
+				return '#f59e0b';
+			case 'awaiting approval':
+				return '#8b5cf6';
+			case 'rejected':
+				return '#ef4444';
+			default:
+				return '#6b7280';
+		}
+	};
+
+	const handleCardClick = () => {
+		setSelectedTask(currentTask);
+		setShowDetailModal(true);
+	};
+
+	const handleDetailModalClose = () => {
+		setShowDetailModal(false);
+		setSelectedTask(null);
+	};
+
+	return (
+		<>
+			<CarouselContainer>
+				<CarouselViewport>
+					<CarouselTrack
+						ref={trackRef}
+						onMouseDown={handleMouseDown}
+						onMouseUp={handleMouseUp}
+						onTouchStart={handleTouchStart}
+						onTouchEnd={handleTouchEnd}
+						style={{
+							transform: `translateX(calc(-${currentIndex} * (100% + 16px)))`,
+							cursor: isDragging ? 'grabbing' : 'grab',
+						}}>
+						{tasks.map((task) => (
+							<TaskCard key={task.id} onClick={handleCardClick}>
+								<CardHeader>
+									<CardTitle>{task.title}</CardTitle>
+									<div
+										style={{
+											fontSize: '12px',
+											color: getPriorityColor(task.priority),
+											fontWeight: 600,
+											textTransform: 'uppercase',
+											letterSpacing: '0.5px',
+										}}>
+										{task.priority || 'Normal'}
+									</div>
+								</CardHeader>
+
+								<CardContent>
+									<CardProperty>
+										{task.property || 'Unknown Property'}
+									</CardProperty>
+
+									<CardMeta>
+										<MetaItem>
+											<MetaLabel>Status</MetaLabel>
+											<MetaValue style={{ color: getStatusColor(task.status) }}>
+												{task.status || 'Pending'}
+											</MetaValue>
+										</MetaItem>
+
+										{task.dueDate && (
+											<MetaItem>
+												<MetaLabel>Due</MetaLabel>
+												<MetaValue>
+													{new Date(task.dueDate).toLocaleDateString('en-US', {
+														month: 'short',
+														day: 'numeric',
+													})}
+												</MetaValue>
+											</MetaItem>
+										)}
+
+										{task.assignedTo && (
+											<MetaItem>
+												<MetaLabel>Assigned</MetaLabel>
+												<MetaValue>{task.assignedTo.name}</MetaValue>
+											</MetaItem>
+										)}
+									</CardMeta>
+
+									{task.notes && (
+										<div
+											style={{
+												marginTop: '12px',
+												fontSize: '14px',
+												color: '#4b5563',
+												lineHeight: '1.4',
+											}}>
+											{task.notes}
+										</div>
+									)}
+								</CardContent>
+
+								<CardActions>
+									{task.status !== 'Completed' && (
+										<ActionButton
+											onClick={(e) => {
+												e.stopPropagation();
+												onTaskComplete?.(task.id);
+											}}
+											style={{ backgroundColor: '#10b981', color: 'white' }}>
+											✓ Complete
+										</ActionButton>
+									)}
+									<ActionButton
+										onClick={(e) => {
+											e.stopPropagation();
+											handleCardClick();
+										}}
+										style={{ backgroundColor: '#3b82f6', color: 'white' }}>
+										Edit
+									</ActionButton>
+								</CardActions>
+							</TaskCard>
+						))}
+					</CarouselTrack>
+				</CarouselViewport>
+
+				{tasks.length > 1 && (
+					<IndicatorDots>
+						{tasks.map((_, index) => (
+							<Dot
+								key={index}
+								active={index === currentIndex}
+								onClick={() => setCurrentIndex(index)}
+							/>
+						))}
+					</IndicatorDots>
+				)}
+			</CarouselContainer>
+
+			{selectedTask && (
+				<TaskDetailModal
+					isOpen={showDetailModal}
+					task={selectedTask}
+					onClose={handleDetailModalClose}
+					onUpdate={onTaskUpdate}
+					onDelete={onTaskDelete}
+					onComplete={onTaskComplete}
+				/>
+			)}
+		</>
+	);
+};
+
+export default MobileTaskCarousel;

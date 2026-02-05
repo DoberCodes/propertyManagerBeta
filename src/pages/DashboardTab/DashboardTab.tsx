@@ -26,7 +26,6 @@ import { filterTasksByRole } from '../../utils/dataFilters';
 import { getDefaultTempUnit } from '../../utils/geolocationUtils';
 import { getCurrentLocation } from '../../utils/geolocation';
 import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
-import { NotificationPanel } from '../../Components/Library';
 import { TrialWarningBanner } from '../../Components/TrialWarningBanner/TrialWarningBanner';
 import { getTrialDaysRemaining } from '../../utils/subscriptionUtils';
 import { handleCheckoutSuccess } from '../../services/stripeService';
@@ -35,13 +34,17 @@ import {
 	Wrapper,
 	TaskGridSection,
 	BottomSectionsWrapper,
+	TopChartsContainer,
+	CarouselSection,
 	Section,
 	SectionTitle,
 	SectionContent,
 	TempToggle,
+	FilterSection,
 } from './DashboardTab.styles';
 import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
 import { ReusableTable } from '../../Components/Library/ReusableTable';
+import { MobileTaskCarousel } from '../../Components/Library/MobileTaskCarousel/MobileTaskCarousel';
 
 export const DashboardTab = () => {
 	const navigate = useNavigate();
@@ -175,6 +178,7 @@ export const DashboardTab = () => {
 		latitude: number;
 		longitude: number;
 	} | null>(null);
+	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
 
 	console.info(tempUnit);
 
@@ -185,7 +189,8 @@ export const DashboardTab = () => {
 		setTempUnit(unit);
 	};
 
-	const filteredTasks = useMemo(() => {
+	// Get active tasks for carousel (without enrichment)
+	const carouselTasks = useMemo(() => {
 		const filtered = filterTasksByRole(
 			allTasks,
 			currentUser,
@@ -193,8 +198,44 @@ export const DashboardTab = () => {
 			allProperties,
 		);
 		const activeTasks = filtered.filter((task) => task.status !== 'Completed');
-		// Enrich tasks with propertyTitle for display in table
-		return activeTasks.map((task) => {
+
+		// Filter tasks within the specified days
+		const now = new Date();
+		const daysInMs = taskDaysFilter * 24 * 60 * 60 * 1000;
+		const futureDate = new Date(now.getTime() + daysInMs);
+
+		const tasksWithinRange = activeTasks.filter((task) => {
+			if (!task.dueDate) return false;
+			const dueDate = new Date(task.dueDate);
+			return dueDate >= now && dueDate <= futureDate;
+		});
+
+		// Sort by due date (ascending), then by priority (descending)
+		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+
+		const sorted = tasksWithinRange.sort((a, b) => {
+			// Primary: Sort by due date (soonest first)
+			const dateA = new Date(a.dueDate!).getTime();
+			const dateB = new Date(b.dueDate!).getTime();
+			if (dateA !== dateB) {
+				return dateA - dateB;
+			}
+
+			// Secondary: Sort by priority (highest first)
+			const priorityA =
+				priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+			const priorityB =
+				priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+			return priorityB - priorityA;
+		});
+
+		console.log('Carousel tasks:', sorted.length, sorted);
+		return sorted;
+	}, [allTasks, currentUser, teamMembers, allProperties, taskDaysFilter]);
+
+	const filteredTasks = useMemo(() => {
+		// Enrich carousel tasks with propertyTitle for display in table
+		return carouselTasks.map((task) => {
 			const property = allProperties.find((p) => p.id === task.propertyId);
 			return {
 				...task,
@@ -202,7 +243,7 @@ export const DashboardTab = () => {
 				assignedToNames: task.assignedTo?.name || '',
 			};
 		});
-	}, [allTasks, currentUser, teamMembers, allProperties]);
+	}, [carouselTasks, allProperties]);
 
 	// Task statuses based on Task.types.ts
 	const TASK_STATUSES = useMemo(
@@ -352,6 +393,21 @@ export const DashboardTab = () => {
 				/>
 			)}
 
+			{/* Task Filter Section */}
+			<FilterSection>
+				<label htmlFor='task-days-filter'>Show tasks due within:</label>
+				<select
+					id='task-days-filter'
+					value={taskDaysFilter}
+					onChange={(e) => setTaskDaysFilter(Number(e.target.value))}>
+					<option value={7}>7 days</option>
+					<option value={14}>14 days</option>
+					<option value={30}>30 days</option>
+					<option value={60}>60 days</option>
+					<option value={90}>90 days</option>
+				</select>
+			</FilterSection>
+
 			{/* Task Grid Section */}
 			<TaskGridSection>
 				{filteredTasks.length === 0 ? (
@@ -419,43 +475,79 @@ export const DashboardTab = () => {
 				)}
 			</TaskGridSection>
 
-			{/* Bottom Two Sections */}
+			{/* Bottom Sections - Charts and Carousel */}
 			<BottomSectionsWrapper>
-				<NotificationPanel />
-				<Section>
-					<SectionTitle>Efficiency Chart</SectionTitle>
-					<SectionContent>
-						{efficiencyData.every((item) => item.value === 0) ? (
-							<ZeroState
-								title='No tasks yet'
-								description='No data available'
-								icon='📊'></ZeroState>
-						) : (
-							<ResponsiveContainer width='100%' height={220}>
-								<PieChart>
-									<Pie
-										data={efficiencyData}
-										dataKey='value'
-										nameKey='name'
-										cx='50%'
-										cy='50%'
-										outerRadius={70}
-										label>
-										{efficiencyData.map((_, index) => (
-											<Cell
-												key={`cell-${index}`}
-												fill={COLORS[index % COLORS.length]}
-											/>
-										))}
-									</Pie>
-									<Tooltip />
-									<Legend />
-								</PieChart>
-							</ResponsiveContainer>
-						)}
-					</SectionContent>
-				</Section>
-				<Section>
+				{/* Top Row: Efficiency Chart */}
+				<TopChartsContainer>
+					<Section>
+						<SectionTitle>Efficiency Chart</SectionTitle>
+						<SectionContent>
+							{efficiencyData.every((item) => item.value === 0) ? (
+								<ZeroState
+									title='No tasks yet'
+									description='No data available'
+									icon='📊'></ZeroState>
+							) : (
+								<ResponsiveContainer width='100%' height={200}>
+									<PieChart>
+										<Pie
+											data={efficiencyData}
+											dataKey='value'
+											nameKey='name'
+											cx='50%'
+											cy='50%'
+											outerRadius={60}
+											label>
+											{efficiencyData.map((_, index) => (
+												<Cell
+													key={`cell-${index}`}
+													fill={COLORS[index % COLORS.length]}
+												/>
+											))}
+										</Pie>
+										<Tooltip />
+										<Legend />
+									</PieChart>
+								</ResponsiveContainer>
+							)}
+						</SectionContent>
+					</Section>
+					<Section>
+						<SectionTitle>
+							<h3>Seasonal Maintenance Tips</h3>
+							<TempToggle>
+								<button
+									className={tempUnit === 'C' ? 'active' : ''}
+									onClick={() => handleTempUnit('C')}>
+									°C
+								</button>
+								<button
+									className={tempUnit === 'F' ? 'active' : ''}
+									onClick={() => handleTempUnit('F')}>
+									°F
+								</button>
+							</TempToggle>
+						</SectionTitle>
+
+						<SectionContent>
+							<SeasonalMaintenance
+								tempUnit={tempUnit}
+								location={userLocation}
+							/>
+						</SectionContent>
+					</Section>
+				</TopChartsContainer>
+
+				{/* Task Carousel Section - Mobile Only */}
+				<CarouselSection>
+					<MobileTaskCarousel
+						tasks={carouselTasks}
+						onTaskComplete={handleTaskCompletion}
+					/>
+				</CarouselSection>
+
+				{/* Seasonal Maintenance - Mobile Only (Below Carousel) */}
+				<Section className='mobile-seasonal'>
 					<SectionTitle>
 						<h3>Seasonal Maintenance Tips</h3>
 						<TempToggle>

@@ -39,9 +39,13 @@ export const Wrapper = styled.div`
 			left: 50%;
 			top: 50%;
 			transform: translate(-50%, -50%);
-			height: 100%;
+			height: 80%;
 			align-items: center;
-			max-width: 60vw;
+			max-width: 50vw;
+
+			img {
+				max-height: 100%;
+			}
 		}
 	}
 
@@ -49,6 +53,11 @@ export const Wrapper = styled.div`
 		padding: 20px 10px;
 		padding-left: max(10px, env(safe-area-inset-left));
 		padding-right: max(10px, env(safe-area-inset-right));
+
+		.mobile-title {
+			max-width: 45vw;
+			height: 70%;
+		}
 	}
 `;
 
@@ -103,6 +112,7 @@ export const RightSection = styled.div`
 	@media (max-width: 768px) {
 		flex-wrap: nowrap;
 		justify-content: flex-end;
+		gap: 16px;
 
 		.mobile-profile {
 			display: flex; /* Show profile picture on mobile */
@@ -115,6 +125,10 @@ export const RightSection = styled.div`
 		.desktop-title {
 			display: none;
 		}
+	}
+
+	@media (max-width: 480px) {
+		gap: 12px;
 	}
 `;
 
@@ -244,5 +258,55 @@ export const MobileSidebar = styled.div<{ isOpen: boolean }>`
 
 	@media (max-width: 768px) {
 		display: block;
+	}
+`;
+
+export const NotificationIcon = styled.div<{ hasUnread?: boolean }>`
+	position: relative;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.2);
+		transform: scale(1.05);
+	}
+
+	svg {
+		width: 20px;
+		height: 20px;
+		color: white;
+	}
+
+	${(props) =>
+		props.hasUnread &&
+		`
+		&::after {
+			content: '';
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			width: 8px;
+			height: 8px;
+			background: #ef4444;
+			border-radius: 50%;
+			border: 2px solid ${COLORS.primary};
+		}
+	`}
+
+	@media (max-width: 768px) {
+		width: 36px;
+		height: 36px;
+
+		svg {
+			width: 18px;
+			height: 18px;
+		}
 	}
 `;

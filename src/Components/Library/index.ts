@@ -10,6 +10,7 @@ export { Breadcrumb } from './Breadcrumb';
 // Data Display
 export { TasksTable } from './TasksTable';
 export { ReusableTable } from './ReusableTable';
+export { MobileTaskCarousel } from './MobileTaskCarousel/MobileTaskCarousel';
 export { GridContainer, GridTable, EmptyState } from './DataGrid';
 export {
 	InfoGrid,
@@ -62,6 +63,7 @@ export {
 export { EditTaskModal } from './Modal/EditTaskModal';
 export { GenericModal } from './Modal/GenericModal';
 export { DeleteConfirmationModal } from './Modal/DeleteConfirmationModal';
+export { TaskDetailModal } from './Modal/TaskDetailModal';
 
 // Buttons
 export {

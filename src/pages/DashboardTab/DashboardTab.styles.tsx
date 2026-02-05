@@ -26,13 +26,7 @@ export const TaskGridSection = styled.div`
 	min-height: clamp(240px, 35vh, 400px);
 
 	@media (max-width: 768px) {
-		min-height: 300px;
-		gap: 12px;
-	}
-
-	@media (max-width: 480px) {
-		min-height: 250px;
-		gap: 10px;
+		display: none;
 	}
 `;
 
@@ -45,6 +39,50 @@ export const TaskGridHeader = styled.div`
 
 	@media (max-width: 480px) {
 		gap: 5px;
+	}
+`;
+
+export const FilterSection = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 16px;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+
+	label {
+		font-size: 14px;
+		font-weight: 500;
+		color: #374151;
+	}
+
+	select {
+		padding: 6px 12px;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-size: 14px;
+		color: #1f2937;
+		background: white;
+		cursor: pointer;
+		transition: all 0.2s;
+
+		&:hover {
+			border-color: #3b82f6;
+		}
+
+		&:focus {
+			outline: none;
+			border-color: #3b82f6;
+			box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+		}
+	}
+
+	@media (max-width: 480px) {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+		padding: 10px;
 	}
 `;
 
@@ -203,27 +241,42 @@ export const Table = styled.table`
 `;
 
 export const BottomSectionsWrapper = styled.div`
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	display: flex;
+	flex-direction: column;
 	gap: 20px;
 	flex-shrink: 0;
-	min-height: clamp(240px, 30vh, 380px);
-
-	@media (max-width: 1024px) {
-		grid-template-columns: repeat(2, 1fr);
-		gap: 16px;
-		min-height: clamp(240px, 30vh, 380px);
-	}
 
 	@media (max-width: 768px) {
-		grid-template-columns: 1fr;
 		gap: 14px;
-		min-height: auto;
-		max-height: none;
 	}
 
 	@media (max-width: 480px) {
 		gap: 10px;
+	}
+`;
+
+export const TopChartsContainer = styled.div`
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 20px;
+	flex-shrink: 0;
+	min-height: clamp(200px, 25vh, 320px);
+
+	@media (max-width: 1024px) {
+		gap: 16px;
+	}
+
+	@media (max-width: 768px) {
+		display: none;
+	}
+`;
+
+export const CarouselSection = styled.div`
+	width: 100%;
+	display: none;
+
+	@media (max-width: 768px) {
+		display: block;
 	}
 `;
 
@@ -236,17 +289,24 @@ export const Section = styled.div`
 	overflow: hidden;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 	height: 100%;
-	min-height: clamp(240px, 30vh, 380px);
+	min-height: clamp(200px, 25vh, 320px);
+
+	&.mobile-seasonal {
+		display: none;
+
+		@media (max-width: 768px) {
+			display: flex;
+		}
+	}
 
 	@media (max-width: 768px) {
 		border-radius: 6px;
-		min-height: 300px;
+		min-height: auto;
 		height: auto;
 	}
 
 	@media (max-width: 480px) {
 		border-radius: 4px;
-		min-height: 250px;
 	}
 `;
 

@@ -11,6 +11,7 @@ import {
 	HamburgerButton,
 	SidebarOverlay,
 	MobileSidebar,
+	NotificationIcon,
 } from './TopNav.styles';
 import { UserProfile } from './UserProfile';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,8 @@ import { canViewAllPages, isTenant } from '../../../../utils/permissions';
 import { canManageTeam } from '../../../../utils/subscriptionUtils';
 import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
 import TitleName from '../../../../Assets/images/TitleName.png';
+import { GenericModal } from '../../Modal/GenericModal';
+import { NotificationPanel } from '../../NotificationPanel/NotificationPanel';
 
 export const TopNav = () => {
 	const navigate = useNavigate();
@@ -29,6 +32,7 @@ export const TopNav = () => {
 	const { favorites } = useFavorites(currentUser!.id);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+	const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
 	// Check permissions for menu visibility based on subscription plan
 	const canAccessTeam = currentUser?.subscription
@@ -89,6 +93,22 @@ export const TopNav = () => {
 					<img src={TitleName} alt='Maintley' />
 				</Title>
 				<RightSection>
+					{/* Notification Icon */}
+					<NotificationIcon onClick={() => setIsNotificationModalOpen(true)}>
+						<svg
+							xmlns='http://www.w3.org/2000/svg'
+							fill='none'
+							viewBox='0 0 24 24'
+							stroke='currentColor'>
+							<path
+								strokeLinecap='round'
+								strokeLinejoin='round'
+								strokeWidth={2}
+								d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'
+							/>
+						</svg>
+					</NotificationIcon>
+
 					{currentUser && (
 						<div className='desktop-profile'>
 							<UserProfile
@@ -306,6 +326,15 @@ export const TopNav = () => {
 					)}
 				</div>
 			</MobileSidebar>
+
+			{/* Notification Modal */}
+			<GenericModal
+				isOpen={isNotificationModalOpen}
+				onClose={() => setIsNotificationModalOpen(false)}
+				title='Notifications'
+				showActions={false}>
+				<NotificationPanel />
+			</GenericModal>
 		</>
 	);
 };
