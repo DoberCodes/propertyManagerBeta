@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 export const NavWrapper = styled.div`
 	display: flex;
-	height: 80px;
+	height: 110px;
 	width: 100%;
 	background: linear-gradient(135deg, #065f46 0%, #047857 100%);
 	align-items: center;
@@ -19,7 +19,7 @@ export const NavWrapper = styled.div`
 	z-index: 100;
 
 	@media (max-width: 768px) {
-		height: 70px;
+		height: 90px;
 		padding: 10px 12px;
 		gap: 8px;
 		flex-direction: row;
@@ -38,28 +38,36 @@ export const NavWrapper = styled.div`
 
 export const IconWrapper = styled.div``;
 
-export const NavTitle = styled.h2`
-	font-size: 28px;
-	font-weight: 800;
+export const NavTitle = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 35%;
-	text-align: center;
-	color: white;
-	letter-spacing: 0.5px;
+	height: 100%;
 	margin: 0;
-	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+
+	img {
+		max-height: 100%;
+		width: auto;
+		max-width: none;
+	}
 
 	@media (max-width: 768px) {
-		font-size: 18px;
 		width: auto;
 		flex: 1;
-		text-align: left;
+
+		img {
+			height: 100%;
+		}
 	}
 
 	@media (max-width: 480px) {
-		font-size: 20px;
 		width: 100%;
 		padding: 4px 0;
-		text-align: center;
+
+		img {
+			height: 100%;
+		}
 	}
 `;
 
@@ -96,9 +104,7 @@ export const NavAnchor = styled(HashLink)`
 	color: white;
 	white-space: nowrap;
 	border-radius: 4px;
-	transition:
-		background-color 0.2s,
-		transform 0.2s;
+	transition: background-color 0.2s, transform 0.2s;
 
 	&:hover {
 		background-color: rgba(255, 255, 255, 0.2);

@@ -20,6 +20,7 @@ import { UserRole } from '../../../../constants/roles';
 import { canViewAllPages, isTenant } from '../../../../utils/permissions';
 import { canManageTeam } from '../../../../utils/subscriptionUtils';
 import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
+import TitleName from '../../../../Assets/images/TitleName.png';
 
 export const TopNav = () => {
 	const navigate = useNavigate();
@@ -80,7 +81,14 @@ export const TopNav = () => {
 						title='Open menu'>
 						☰
 					</HamburgerButton>
-					<Title className='mobile-title'>Maintley</Title>
+					<Title className='desktop-title'>
+						<img src={TitleName} alt='Maintley' />
+					</Title>
+				</LeftSection>
+				<Title className='mobile-title'>
+					<img src={TitleName} alt='Maintley' />
+				</Title>
+				<RightSection>
 					{currentUser && (
 						<div className='desktop-profile'>
 							<UserProfile
@@ -91,9 +99,6 @@ export const TopNav = () => {
 							/>
 						</div>
 					)}
-				</LeftSection>
-				<RightSection>
-					<Title className='desktop-title'>Maintley</Title>
 					{currentUser && (
 						<div
 							className='mobile-profile'

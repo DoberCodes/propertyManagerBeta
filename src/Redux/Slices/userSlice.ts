@@ -13,6 +13,7 @@ export interface User {
 	phone?: string;
 	image?: string;
 	assignedPropertyId?: number;
+	hiddenPropertyIds?: string[]; // Properties hidden from dashboard
 	pushToken?: string; // Push notification token for FCM
 	pushTokenUpdatedAt?: string; // When push token was last updated
 	subscription?: {

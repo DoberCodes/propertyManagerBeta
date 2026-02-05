@@ -80,12 +80,24 @@ export const signUpWithEmail = async (
 			subscription,
 		});
 
-		// Always create default groups for new users (see scripts/migrateDefaultGroups.cjs for batch logic)
+		// Always create default groups for new users
 		await setDoc(
-			doc(db, 'propertyGroups', `${userCredential.user.uid}_default`),
+			doc(db, 'propertyGroups', `${userCredential.user.uid}_my_properties`),
 			{
 				userId: userCredential.user.uid,
 				name: 'My Properties',
+				properties: [],
+				createdAt: serverTimestamp(),
+				updatedAt: serverTimestamp(),
+			},
+		);
+
+		await setDoc(
+			doc(db, 'propertyGroups', `${userCredential.user.uid}_shared_properties`),
+			{
+				userId: userCredential.user.uid,
+				name: 'Shared Properties',
+				properties: [],
 				createdAt: serverTimestamp(),
 				updatedAt: serverTimestamp(),
 			},

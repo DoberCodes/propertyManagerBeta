@@ -24,10 +24,25 @@ export const Wrapper = styled.div`
 	z-index: 100;
 	box-shadow: ${COLORS.shadow};
 
+	.mobile-title {
+		display: none;
+	}
+
 	@media (max-width: 768px) {
 		padding: 20px 15px;
 		padding-left: max(15px, env(safe-area-inset-left));
 		padding-right: max(15px, env(safe-area-inset-right));
+
+		.mobile-title {
+			display: flex;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			height: 100%;
+			align-items: center;
+			max-width: 60vw;
+		}
 	}
 
 	@media (max-width: 480px) {
@@ -40,33 +55,25 @@ export const Wrapper = styled.div`
 export const LeftSection = styled.div`
 	display: flex;
 	align-items: center;
-	gap: 30px;
+	gap: 15px;
 	flex-shrink: 0;
-	width: 250px;
+	width: auto;
 
-	.desktop-profile {
-		display: flex;
-	}
-
-	.mobile-title {
-		display: none;
+	.desktop-title {
+		display: block;
 	}
 
 	@media (max-width: 1024px) {
-		gap: 20px;
-		width: 200px;
+		gap: 12px;
+		max-width: 130px;
 	}
 
 	@media (max-width: 768px) {
 		gap: 15px;
 		width: auto;
 
-		.desktop-profile {
+		.desktop-title {
 			display: none;
-		}
-
-		.mobile-title {
-			display: block;
 		}
 	}
 `;
@@ -74,18 +81,23 @@ export const LeftSection = styled.div`
 export const RightSection = styled.div`
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	flex: 1;
+	justify-content: flex-end;
+	flex: 0 0 auto;
 	overflow: visible;
 	z-index: 10;
 	gap: 20px;
+	padding-right: 6px;
 
 	.mobile-profile {
 		display: none; /* Hide profile picture on desktop */
 	}
 
+	.desktop-profile {
+		display: flex;
+	}
+
 	.desktop-title {
-		display: block;
+		display: none;
 	}
 
 	@media (max-width: 768px) {
@@ -96,25 +108,41 @@ export const RightSection = styled.div`
 			display: flex; /* Show profile picture on mobile */
 		}
 
+		.desktop-profile {
+			display: none;
+		}
+
 		.desktop-title {
 			display: none;
 		}
 	}
 `;
 
-export const Title = styled.h1`
-	font-size: 20px;
+export const Title = styled.div`
+	display: flex;
+	align-items: center;
 	margin: 0;
-	flex-shrink: 0;
-	color: ${COLORS.bgWhite};
-	font-weight: 700;
+	height: 100%;
+
+	img {
+		max-height: 100%;
+		width: auto;
+		max-width: 120px;
+		object-fit: contain;
+	}
 
 	@media (max-width: 768px) {
-		font-size: 16px;
+		img {
+			height: 100%;
+			max-width: 100%;
+			object-fit: contain;
+		}
 	}
 
 	@media (max-width: 480px) {
-		font-size: 14px;
+		img {
+			height: 100%;
+		}
 	}
 `;
 

@@ -9,6 +9,7 @@ import {
 	ModalFooter as DialogFooter,
 	PrimaryButton as SaveButton,
 	SecondaryButton as CancelButton,
+	SecondaryButton as SecondaryButton,
 	SmallButton as AddButton,
 } from '../Library';
 import {
@@ -68,6 +69,10 @@ interface PropertyDialogProps {
 	selectedGroupId?: string | null;
 	onCreateGroup?: (name: string) => Promise<string>; // returns new group id
 	propertyId?: string; // For editing existing properties
+	isHiddenFromDashboard?: boolean;
+	onToggleHideFromDashboard?: () => void;
+	isSharedProperty?: boolean;
+	onDetachFromProperty?: () => void;
 }
 
 export const PropertyDialog: React.FC<PropertyDialogProps> = ({
@@ -79,6 +84,10 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 	selectedGroupId,
 	onCreateGroup,
 	propertyId,
+	isHiddenFromDashboard,
+	onToggleHideFromDashboard,
+	isSharedProperty,
+	onDetachFromProperty,
 }) => {
 	const [formData, setFormData] = useState<PropertyFormData>(
 		initialData || {
@@ -121,7 +130,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 					initialData.units && Array.isArray(initialData.units)
 						? (initialData.units as any[]).map((u) =>
 								typeof u === 'string' ? u : u.name,
-							)
+						  )
 						: [];
 
 				// Convert suites from Suite[] objects back to string[] for editing
@@ -130,7 +139,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 					Array.isArray((initialData as any).suites)
 						? ((initialData as any).suites as any[]).map((s) =>
 								typeof s === 'string' ? s : s.name,
-							)
+						  )
 						: [];
 
 				setFormData({
@@ -712,9 +721,37 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 					</FileUploadSection>
 				</DialogContent>
 
-				<DialogFooter>
-					<CancelButton onClick={onClose}>Cancel</CancelButton>
-					<SaveButton onClick={handleSave}>Save Property</SaveButton>
+				<DialogFooter
+					style={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						gap: '10px',
+					}}>
+					<div style={{ display: 'flex', gap: '10px' }}>
+						{propertyId && onToggleHideFromDashboard && (
+							<SecondaryButton onClick={onToggleHideFromDashboard}>
+								{isHiddenFromDashboard
+									? 'Show on Dashboard'
+									: 'Hide from Dashboard'}
+							</SecondaryButton>
+						)}
+						{propertyId && isSharedProperty && onDetachFromProperty && (
+							<SecondaryButton
+								onClick={onDetachFromProperty}
+								style={{
+									backgroundColor: '#f59e0b',
+									borderColor: '#f59e0b',
+									color: 'white',
+								}}>
+								Detach from Property
+							</SecondaryButton>
+						)}
+					</div>
+					<div style={{ display: 'flex', gap: '10px' }}>
+						<CancelButton onClick={onClose}>Cancel</CancelButton>
+						<SaveButton onClick={handleSave}>Save Property</SaveButton>
+					</div>
 				</DialogFooter>
 			</DialogContainer>
 		</DialogOverlay>

@@ -31,6 +31,8 @@ export const PageHeader = styled.div`
 	@media (max-width: 480px) {
 		gap: 10px;
 		padding-bottom: 15px;
+		justify-content: center;
+		text-align: center;
 	}
 `;
 
@@ -58,14 +60,21 @@ export const TopActions = styled.div`
 	@media (max-width: 480px) {
 		gap: 6px;
 		width: 100%;
+		justify-content: center;
 	}
 `;
 
 export const GroupsContainer = styled.div`
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	gap: 40px;
 	flex: 1;
+	align-items: flex-start;
+
+	@media (max-width: 1024px) {
+		flex-direction: column;
+		gap: 30px;
+	}
 
 	@media (max-width: 768px) {
 		gap: 30px;
@@ -73,6 +82,7 @@ export const GroupsContainer = styled.div`
 
 	@media (max-width: 480px) {
 		gap: 20px;
+		align-items: center;
 	}
 `;
 
@@ -80,9 +90,14 @@ export const GroupSection = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	flex: 1;
+	min-width: 0;
 
 	@media (max-width: 480px) {
 		gap: 15px;
+		align-items: center;
+		width: 100%;
+		max-width: 300px;
 	}
 `;
 
@@ -106,6 +121,8 @@ export const GroupHeader = styled.div`
 	@media (max-width: 480px) {
 		padding: 10px;
 		gap: 10px;
+		justify-content: center;
+		width: 100%;
 	}
 `;
 
@@ -168,6 +185,7 @@ export const HeaderRight = styled.div`
 	@media (max-width: 480px) {
 		gap: 5px;
 		width: 100%;
+		justify-content: center;
 	}
 `;
 
@@ -286,8 +304,11 @@ export const PropertiesGrid = styled.div<{
 	}
 
 	@media (max-width: 480px) {
-		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		grid-template-columns: 1fr;
 		gap: 12px;
+		justify-items: center;
+		max-width: 250px;
+		margin: 8px auto 0;
 
 		${({ $isHomeowner, $singleProperty }) =>
 			$isHomeowner && $singleProperty
@@ -306,9 +327,7 @@ export const PropertyTile = styled.div`
 	overflow: hidden;
 	cursor: pointer;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	transition:
-		transform 0.2s ease,
-		box-shadow 0.2s ease;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
 
 	&:hover {
 		transform: translateY(-4px);
@@ -357,9 +376,7 @@ export const FavoriteStar = styled.button`
 	border: none;
 	font-size: 28px;
 	cursor: pointer;
-	transition:
-		transform 0.2s ease,
-		text-shadow 0.2s ease;
+	transition: transform 0.2s ease, text-shadow 0.2s ease;
 	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	padding: 4px;
 	display: flex;
@@ -471,9 +488,7 @@ export const AddGroupButton = styled.button`
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
-	transition:
-		background-color 0.2s ease,
-		color 0.2s ease;
+	transition: background-color 0.2s ease, color 0.2s ease;
 
 	&:hover {
 		background-color: #b6b9c1;

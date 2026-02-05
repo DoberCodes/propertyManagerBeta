@@ -66,8 +66,11 @@ export const DashboardTab = () => {
 
 	// Combine owned and shared properties for task assignment
 	const allProperties = useMemo(() => {
-		return [...ownedProperties, ...sharedProperties];
-	}, [ownedProperties, sharedProperties]);
+		const combined = [...ownedProperties, ...sharedProperties];
+		// Filter out properties hidden from dashboard
+		const hiddenIds = currentUser?.hiddenPropertyIds || [];
+		return combined.filter((property) => !hiddenIds.includes(property.id));
+	}, [ownedProperties, sharedProperties, currentUser?.hiddenPropertyIds]);
 
 	// Firebase mutations
 	const [updateTaskMutation] = useUpdateTaskMutation();

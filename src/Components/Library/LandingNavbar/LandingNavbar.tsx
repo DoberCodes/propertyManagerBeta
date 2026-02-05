@@ -7,12 +7,15 @@ import {
 	NavTitle,
 	NavWrapper,
 } from './LandingNavbar.styles';
+import TitleName from '../../../Assets/images/TitleName.png';
 
 export const LandingNavbar = () => {
 	return (
 		<NavWrapper>
 			<IconWrapper></IconWrapper>
-			<NavTitle>Maintley</NavTitle>
+			<NavTitle>
+				<img src={TitleName} alt='Maintley' />
+			</NavTitle>
 			<ButtonWrapper>
 				<NavAnchor
 					to='#About'

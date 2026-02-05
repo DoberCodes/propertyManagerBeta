@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { PropertyDialog } from './PropertyDialog';
 import {
 	PageHeaderSection,
@@ -10,6 +10,7 @@ import { DeleteConfirmationModal } from '../Library/Modal/DeleteConfirmationModa
 import { useRecentlyViewed } from '../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../Hooks/useFavorites';
 import { RootState } from '../../Redux/store/store';
+import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { UserRole } from '../../constants/roles';
 import {
 	useCreatePropertyMutation,
@@ -19,7 +20,11 @@ import {
 	useUpdatePropertyGroupMutation,
 	useDeletePropertyGroupMutation,
 	useCreateNotificationMutation,
+	useUpdateUserMutation,
+	useDeletePropertyShareMutation,
 } from '../../Redux/API/apiSlice';
+import { db } from '../../config/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import {
 	canAddProperty,
 	getRemainingPropertySlots,
@@ -27,6 +32,7 @@ import {
 	canManageTeam,
 } from '../../utils/subscriptionUtils';
 import { filterPropertyGroupsByRole } from '../../utils/dataFilters';
+import { canDeleteProperty } from '../../utils/permissions';
 import { TeamMember } from '../../Redux/Slices/teamSlice';
 import {
 	Wrapper,
@@ -54,6 +60,7 @@ import {
 
 export const Properties = () => {
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const teamMembers = useSelector((state: RootState) =>
 		state.team.groups.flatMap((group) => group.members),
@@ -75,6 +82,8 @@ export const Properties = () => {
 	const [updatePropertyGroup] = useUpdatePropertyGroupMutation();
 	const [deletePropertyGroup] = useDeletePropertyGroupMutation();
 	const [createNotification] = useCreateNotificationMutation();
+	const [updateUser] = useUpdateUserMutation();
+	const [deletePropertyShare] = useDeletePropertyShareMutation();
 
 	// Check if user can manage properties based on subscription plan
 	// All paid plans allow property management, free plan has limited access
@@ -82,11 +91,11 @@ export const Properties = () => {
 		? currentUser.subscription.plan !== 'free'
 		: false;
 
-	// Check if user can create groups (basic and above plans only)
-	const canCreateGroups = currentUser?.subscription
+	// Check if user can create/edit/delete groups (basic and above plans only, not homeowner)
+	const canManageGroups = currentUser?.subscription
 		? ['basic', 'professional', 'enterprise'].includes(
 				currentUser.subscription.plan,
-			)
+		  )
 		: false;
 
 	// Combine groups with their properties
@@ -247,7 +256,9 @@ export const Properties = () => {
 				const maxProperties = planDetails?.maxProperties || 1;
 
 				alert(
-					`Your ${planDetails?.name || 'current'} plan allows up to ${maxProperties} properties. ` +
+					`Your ${
+						planDetails?.name || 'current'
+					} plan allows up to ${maxProperties} properties. ` +
 						`You currently have ${totalProperties} properties. ` +
 						`Please upgrade your plan to add more properties.`,
 				);
@@ -381,6 +392,73 @@ export const Properties = () => {
 		}
 	};
 
+	const handleToggleHideFromDashboard = async (propertyId: string) => {
+		if (!currentUser) return;
+
+		try {
+			const hiddenIds = currentUser.hiddenPropertyIds || [];
+			const isCurrentlyHidden = hiddenIds.includes(propertyId);
+
+			const updatedHiddenIds = isCurrentlyHidden
+				? hiddenIds.filter((id) => id !== propertyId)
+				: [...hiddenIds, propertyId];
+
+			const result = await updateUser({
+				id: currentUser.id,
+				updates: { hiddenPropertyIds: updatedHiddenIds },
+			}).unwrap();
+
+			// Update the Redux store with the new user data
+			dispatch(
+				setCurrentUser({
+					...currentUser,
+					hiddenPropertyIds: updatedHiddenIds,
+				}),
+			);
+
+			setOpenDropdown(null);
+		} catch (error) {
+			console.error('Failed to update dashboard visibility:', error);
+			alert('Failed to update dashboard visibility. Please try again.');
+		}
+	};
+
+	const handleDetachFromProperty = async (propertyId: string) => {
+		if (!currentUser) return;
+
+		if (
+			!window.confirm(
+				'Are you sure you want to detach from this shared property? You will lose access to it.',
+			)
+		) {
+			return;
+		}
+
+		try {
+			// Find the property share for this user and property
+			const shareQuery = query(
+				collection(db, 'propertyShares'),
+				where('propertyId', '==', propertyId),
+				where('sharedWithUserId', '==', currentUser.id),
+			);
+
+			const shareSnapshot = await getDocs(shareQuery);
+
+			if (!shareSnapshot.empty) {
+				const shareId = shareSnapshot.docs[0].id;
+				await deletePropertyShare(shareId).unwrap();
+
+				setOpenDropdown(null);
+				alert('Successfully detached from property.');
+			} else {
+				alert('Could not find property share to remove.');
+			}
+		} catch (error) {
+			console.error('Failed to detach from property:', error);
+			alert('Failed to detach from property. Please try again.');
+		}
+	};
+
 	const handleSaveProperty = async (formData: any) => {
 		// Prepare units data for Multi-Family properties
 		const unitsData =
@@ -388,7 +466,7 @@ export const Properties = () => {
 				? (formData.units || []).map((unitName: string) => ({
 						name: unitName,
 						occupants: [],
-					}))
+				  }))
 				: undefined;
 
 		// Prepare suites data for Commercial properties
@@ -397,7 +475,7 @@ export const Properties = () => {
 				? (formData.suites || []).map((suiteName: string) => ({
 						name: suiteName,
 						occupants: [],
-					}))
+				  }))
 				: undefined;
 
 		if (selectedPropertyForEdit) {
@@ -550,7 +628,7 @@ export const Properties = () => {
 				<StandardPageTitle>Properties</StandardPageTitle>
 				{canManage && (
 					<TopActions>
-						{canCreateGroups && (
+						{canManageGroups && (
 							<AddGroupButton onClick={handleAddGroup}>
 								+ Add Group
 							</AddGroupButton>
@@ -605,7 +683,31 @@ export const Properties = () => {
 								notes: selectedPropertyForEdit.notes || '',
 								maintenanceHistory:
 									selectedPropertyForEdit.maintenanceHistory || [],
-							}
+						  }
+						: undefined
+				}
+				isHiddenFromDashboard={
+					selectedPropertyForEdit
+						? currentUser?.hiddenPropertyIds?.includes(
+								selectedPropertyForEdit.id,
+						  )
+						: false
+				}
+				onToggleHideFromDashboard={
+					selectedPropertyForEdit
+						? () => handleToggleHideFromDashboard(selectedPropertyForEdit.id)
+						: undefined
+				}
+				isSharedProperty={
+					filteredGroups
+						.find((g) =>
+							g.properties?.some((p) => p.id === selectedPropertyForEdit?.id),
+						)
+						?.name?.toLowerCase() === 'shared properties'
+				}
+				onDetachFromProperty={
+					selectedPropertyForEdit
+						? () => handleDetachFromProperty(selectedPropertyForEdit.id)
 						: undefined
 				}
 			/>
@@ -632,7 +734,7 @@ export const Properties = () => {
 								)}
 							</div>
 							<HeaderRight>
-								{canManage && (
+								{canManageGroups && (
 									<GroupActions>
 										<GroupActionButton
 											title='Edit group'
@@ -712,13 +814,15 @@ export const Properties = () => {
 														}>
 														Edit
 													</DropdownItem>
-													<DropdownItem
-														onClick={() =>
-															handleDeleteProperty(property.id as any)
-														}
-														style={{ color: '#ef4444' }}>
-														Delete
-													</DropdownItem>
+													{canDeleteProperty(currentUser!.id, property) && (
+														<DropdownItem
+															onClick={() =>
+																handleDeleteProperty(property.id as any)
+															}
+															style={{ color: '#ef4444' }}>
+															Delete
+														</DropdownItem>
+													)}
 												</DropdownMenu>
 											)}
 									</PropertyOverlay>

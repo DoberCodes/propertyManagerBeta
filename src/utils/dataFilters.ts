@@ -95,9 +95,11 @@ export const filterTasksByRole = (
 ): Task[] => {
 	if (!currentUser) return [];
 
-	// Full access roles see everything
+	// Full access roles see everything (but filter out hidden properties)
 	if (hasFullAccess(currentUser.role as UserRole)) {
-		return tasks;
+		// Filter out tasks for properties that are hidden from dashboard
+		const hiddenIds = currentUser.hiddenPropertyIds || [];
+		return tasks.filter((task) => !hiddenIds.includes(task.propertyId));
 	}
 
 	// Limited access roles only see tasks for assigned properties
