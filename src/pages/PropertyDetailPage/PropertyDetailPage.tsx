@@ -26,6 +26,7 @@ import {
 	useGetPropertySharesQuery,
 	useGetMaintenanceHistoryByPropertyQuery,
 	useGetDevicesQuery,
+	useGetContractorsByPropertyQuery,
 } from '../../Redux/API/apiSlice';
 import {
 	canApproveMaintenanceRequest,
@@ -170,6 +171,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const maintenanceHandlers = useMaintenanceRequestHandlers(
 		property,
 		currentUser,
+	);
+
+	// Fetch contractors for this property
+	const { data: propertyContractors = [] } = useGetContractorsByPropertyQuery(
+		property?.id || '',
+		{ skip: !property?.id },
 	);
 
 	// Destructure task handlers
@@ -331,17 +338,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			});
 		}
 
-		// Add shared users
-		currentPropertyShares.forEach((share) => {
-			const fullName =
-				share.sharedWithFirstName && share.sharedWithLastName
-					? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
-					: share.sharedWithEmail?.split('@')[0] || 'Shared User';
-			assignees.push({
-				label: fullName,
-				value: share.sharedWithUserId || share.sharedWithEmail,
+		// Add shared users (only those with user accounts for notifications)
+		currentPropertyShares
+			.filter((share) => share.sharedWithUserId) // Only include users with accounts
+			.forEach((share) => {
+				const fullName =
+					share.sharedWithFirstName && share.sharedWithLastName
+						? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+						: share.sharedWithEmail?.split('@')[0] || 'Shared User';
+				assignees.push({
+					label: fullName,
+					value: share.sharedWithUserId,
+				});
 			});
-		});
 
 		// Add team members
 		teamMembers
@@ -355,6 +364,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				});
 			});
 
+		// Add contractors
+		propertyContractors.forEach((contractor) => {
+			assignees.push({
+				label: `${contractor.name} (${contractor.category})`,
+				value: contractor.id,
+			});
+		});
+
 		// Remove duplicates based on value
 		const uniqueAssignees = assignees.filter(
 			(assignee, index, self) =>
@@ -362,7 +379,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		);
 
 		return uniqueAssignees;
-	}, [property, currentUser, currentPropertyShares, teamMembers]);
+	}, [
+		property,
+		currentUser,
+		currentPropertyShares,
+		teamMembers,
+		propertyContractors,
+	]);
 
 	// Generate device options for task connection
 	const { data: propertyDevices = [] } = useGetDevicesQuery(
@@ -461,11 +484,49 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					const safeTeamMembers = teamMembers.filter(
 						(member): member is TeamMember => Boolean(member),
 					);
-					const assignedTo = taskFormData.assignedTo
+					// Find assigned person from team members, contractors, or shared users
+					let assignedTo: any = taskFormData.assignedTo
 						? safeTeamMembers.find(
 								(member) => member.id === taskFormData.assignedTo,
 						  )
 						: undefined;
+
+					// If not found in team members, check contractors
+					if (!assignedTo && taskFormData.assignedTo) {
+						const contractor = propertyContractors.find(
+							(c) => c.id === taskFormData.assignedTo,
+						);
+						if (contractor) {
+							assignedTo = {
+								id: contractor.id,
+								firstName: contractor.name,
+								lastName: '',
+								email: contractor.email || '',
+								title: contractor.category,
+							};
+						}
+					}
+
+					// If still not found, check shared users
+					if (!assignedTo && taskFormData.assignedTo) {
+						const sharedUser = currentPropertyShares.find(
+							(share) =>
+								(share.sharedWithUserId || share.sharedWithEmail) ===
+								taskFormData.assignedTo,
+						);
+						if (sharedUser) {
+							assignedTo = {
+								id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
+								firstName:
+									sharedUser.sharedWithFirstName ||
+									sharedUser.sharedWithEmail?.split('@')[0] ||
+									'Shared User',
+								lastName: sharedUser.sharedWithLastName || '',
+								email: sharedUser.sharedWithEmail || '',
+								title: 'Co-owner',
+							};
+						}
+					}
 
 					// Build updates object and filter out undefined values (Firebase doesn't support undefined)
 					const updates: any = {
@@ -524,6 +585,47 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					} catch (notifError) {
 						console.error('Notification failed:', notifError);
 					}
+
+					// Create notification for task assignment change (to assignee if different from current user)
+					if (assignedTo && assignedTo.id !== currentUser!.id) {
+						// Check if assignment changed
+						const previousAssignedTo = taskToUpdate.assignedTo;
+						const assignmentChanged =
+							!previousAssignedTo || previousAssignedTo.id !== assignedTo.id;
+
+						if (assignmentChanged) {
+							try {
+								await createNotification({
+									userId: assignedTo.id,
+									type: 'task_assigned',
+									title: 'Task Assigned',
+									message: `You have been assigned to task "${taskFormData.title}"`,
+									data: {
+										taskId: editingTaskId,
+										taskTitle: taskFormData.title,
+										assignedTo: {
+											id: assignedTo.id,
+											name: `${assignedTo.firstName || ''} ${
+												assignedTo.lastName || ''
+											}`.trim(),
+											email: assignedTo.email,
+										},
+										propertyId: property.id,
+										propertyTitle: property.title,
+									},
+									status: 'unread',
+									actionUrl: `/properties/${property.id}`,
+									createdAt: new Date().toISOString(),
+									updatedAt: new Date().toISOString(),
+								}).unwrap();
+							} catch (assignNotifError) {
+								console.error(
+									'Assignment notification failed:',
+									assignNotifError,
+								);
+							}
+						}
+					}
 				}
 			} else {
 				// Add new task
@@ -537,11 +639,49 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				const safeTeamMembers = teamMembers.filter(
 					(member): member is TeamMember => Boolean(member),
 				);
-				const assignedTo = taskFormData.assignedTo
+				// Find assigned person from team members, contractors, or shared users
+				let assignedTo: any = taskFormData.assignedTo
 					? safeTeamMembers.find(
 							(member) => member.id === taskFormData.assignedTo,
 					  )
 					: undefined;
+
+				// If not found in team members, check contractors
+				if (!assignedTo && taskFormData.assignedTo) {
+					const contractor = propertyContractors.find(
+						(c) => c.id === taskFormData.assignedTo,
+					);
+					if (contractor) {
+						assignedTo = {
+							id: contractor.id,
+							firstName: contractor.name,
+							lastName: '',
+							email: contractor.email || '',
+							title: contractor.category,
+						};
+					}
+				}
+
+				// If still not found, check shared users
+				if (!assignedTo && taskFormData.assignedTo) {
+					const sharedUser = currentPropertyShares.find(
+						(share) =>
+							(share.sharedWithUserId || share.sharedWithEmail) ===
+							taskFormData.assignedTo,
+					);
+					if (sharedUser) {
+						assignedTo = {
+							id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
+							firstName:
+								sharedUser.sharedWithFirstName ||
+								sharedUser.sharedWithEmail?.split('@')[0] ||
+								'Shared User',
+							lastName: sharedUser.sharedWithLastName || '',
+							email: sharedUser.sharedWithEmail || '',
+							title: 'Co-owner',
+						};
+					}
+				}
 
 				// Build new task object and filter out undefined values (Firebase doesn't support undefined)
 				const newTask: any = {
