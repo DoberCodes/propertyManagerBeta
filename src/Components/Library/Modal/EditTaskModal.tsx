@@ -20,6 +20,7 @@ interface TaskFormData {
 	priority?: string;
 	notes: string;
 	assignedTo?: string;
+	devices?: string[];
 	isRecurring?: boolean;
 	recurrenceFrequency?: string;
 	recurrenceInterval?: number;
@@ -40,6 +41,7 @@ interface EditTaskModalProps {
 	statusOptions?: string[];
 	priorityOptions?: string[];
 	assigneeOptions?: { label: string; value: string }[];
+	deviceOptions?: { label: string; value: string }[];
 	taskTitlePlaceholder?: string;
 }
 
@@ -75,19 +77,20 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	],
 	priorityOptions = ['Low', 'Medium', 'High', 'Urgent'],
 	assigneeOptions = [],
+	deviceOptions = [],
 	taskTitlePlaceholder = 'Enter task name',
 }) => {
 	const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
 	const wantsRecurrence = Boolean(
 		formData.recurrenceFrequency ||
-		formData.recurrenceInterval ||
-		formData.recurrenceCustomUnit,
+			formData.recurrenceInterval ||
+			formData.recurrenceCustomUnit,
 	);
 	const hasSchedule = Boolean(
 		formData.recurrenceFrequency &&
-		(formData.recurrenceFrequency === 'custom'
-			? formData.recurrenceInterval && formData.recurrenceCustomUnit
-			: true), // For non-custom frequencies, just need the frequency
+			(formData.recurrenceFrequency === 'custom'
+				? formData.recurrenceInterval && formData.recurrenceCustomUnit
+				: true), // For non-custom frequencies, just need the frequency
 	);
 
 	useEffect(() => {
@@ -206,6 +209,29 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 									</option>
 								))}
 							</FormSelect>
+						</FormGroup>
+					)}
+
+					{deviceOptions.length > 0 && (
+						<FormGroup>
+							<FormLabel>Connected Devices</FormLabel>
+							<FormSelect
+								name='devices'
+								onChange={onChange}
+								multiple
+								style={{ minHeight: '80px' }}>
+								{deviceOptions.map((option) => (
+									<option
+										key={option.value}
+										value={option.value}
+										selected={formData.devices?.includes(option.value)}>
+										{option.label}
+									</option>
+								))}
+							</FormSelect>
+							<small style={{ color: '#666', fontSize: '12px' }}>
+								Hold Ctrl/Cmd to select multiple devices
+							</small>
 						</FormGroup>
 					)}
 

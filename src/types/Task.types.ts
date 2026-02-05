@@ -93,6 +93,7 @@ export interface TaskFormData {
 	priority?: TaskPriority;
 	assignee?: string;
 	assignedTo?: string;
+	devices?: string[];
 	isRecurring?: boolean;
 	recurrenceFrequency?: RecurrenceFrequency;
 	recurrenceInterval?: number;

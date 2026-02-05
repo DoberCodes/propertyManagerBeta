@@ -78,10 +78,23 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		>,
 	) => {
 		const { name, value, type, checked } = e.target as HTMLInputElement;
-		setTaskFormData((prev: any) => ({
-			...prev,
-			[name]: type === 'checkbox' ? checked : value,
-		}));
+		const target = e.target as HTMLSelectElement;
+
+		// Handle multi-select elements
+		if (target.multiple) {
+			const selectedOptions = Array.from(target.selectedOptions).map(
+				(option) => option.value,
+			);
+			setTaskFormData((prev: any) => ({
+				...prev,
+				[name]: selectedOptions,
+			}));
+		} else {
+			setTaskFormData((prev: any) => ({
+				...prev,
+				[name]: type === 'checkbox' ? checked : value,
+			}));
+		}
 	};
 
 	const handleTaskCompletionSuccess = () => {

@@ -25,6 +25,7 @@ import {
 	useCreateNotificationMutation,
 	useGetPropertySharesQuery,
 	useGetMaintenanceHistoryByPropertyQuery,
+	useGetDevicesQuery,
 } from '../../Redux/API/apiSlice';
 import {
 	canApproveMaintenanceRequest,
@@ -211,6 +212,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			notes: taskToEdit.notes || '',
 			priority: taskToEdit.priority,
 			assignedTo: taskToEdit.assignedTo?.id || taskToEdit.assignee || '',
+			devices: taskToEdit.devices || [],
 			isRecurring: taskToEdit.isRecurring || false,
 			recurrenceFrequency: taskToEdit.recurrenceFrequency,
 			recurrenceInterval: taskToEdit.recurrenceInterval,
@@ -346,8 +348,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			.filter((member): member is TeamMember => member !== undefined)
 			.forEach((member) => {
 				assignees.push({
-					label:
-						`${member.firstName || ''} ${member.lastName || ''} (${member.title || ''})`.trim(),
+					label: `${member.firstName || ''} ${member.lastName || ''} (${
+						member.title || ''
+					})`.trim(),
 					value: member.id,
 				});
 			});
@@ -360,6 +363,20 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 		return uniqueAssignees;
 	}, [property, currentUser, currentPropertyShares, teamMembers]);
+
+	// Generate device options for task connection
+	const { data: propertyDevices = [] } = useGetDevicesQuery(
+		property?.id || '',
+		{
+			skip: !property?.id,
+		},
+	);
+	const deviceOptions = useMemo(() => {
+		return propertyDevices.map((device: any) => ({
+			label: `${device.type} - ${device.brand} ${device.model}`,
+			value: device.id,
+		}));
+	}, [propertyDevices]);
 
 	// Helper function for property field value - use util if not in edit mode
 	const getPropertyFieldValue = (field: string) => {
@@ -438,8 +455,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						taskFormData.status === 'Hold'
 							? 'Pending'
 							: taskFormData.status === 'Overdue'
-								? 'Pending'
-								: taskFormData.status;
+							? 'Pending'
+							: taskFormData.status;
 
 					const safeTeamMembers = teamMembers.filter(
 						(member): member is TeamMember => Boolean(member),
@@ -447,7 +464,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					const assignedTo = taskFormData.assignedTo
 						? safeTeamMembers.find(
 								(member) => member.id === taskFormData.assignedTo,
-							)
+						  )
 						: undefined;
 
 					// Build updates object and filter out undefined values (Firebase doesn't support undefined)
@@ -458,12 +475,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						notes: taskFormData.notes,
 						priority: taskFormData.priority,
 						isRecurring: Boolean(taskFormData.isRecurring),
+						devices: taskFormData.devices || [],
 					};
 
 					if (assignedTo) {
 						updates.assignedTo = {
 							id: assignedTo.id,
-							name: `${assignedTo.firstName || ''} ${assignedTo.lastName || ''}`.trim(),
+							name: `${assignedTo.firstName || ''} ${
+								assignedTo.lastName || ''
+							}`.trim(),
 							email: assignedTo.email,
 						};
 					}
@@ -511,8 +531,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					taskFormData.status === 'Hold'
 						? 'Pending'
 						: taskFormData.status === 'Overdue'
-							? 'Pending'
-							: taskFormData.status;
+						? 'Pending'
+						: taskFormData.status;
 
 				const safeTeamMembers = teamMembers.filter(
 					(member): member is TeamMember => Boolean(member),
@@ -520,7 +540,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				const assignedTo = taskFormData.assignedTo
 					? safeTeamMembers.find(
 							(member) => member.id === taskFormData.assignedTo,
-						)
+					  )
 					: undefined;
 
 				// Build new task object and filter out undefined values (Firebase doesn't support undefined)
@@ -534,12 +554,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					notes: taskFormData.notes,
 					priority: taskFormData.priority,
 					isRecurring: Boolean(taskFormData.isRecurring),
+					devices: taskFormData.devices || [],
 				};
 
 				if (assignedTo) {
 					newTask.assignedTo = {
 						id: assignedTo.id,
-						name: `${assignedTo.firstName || ''} ${assignedTo.lastName || ''}`.trim(),
+						name: `${assignedTo.firstName || ''} ${
+							assignedTo.lastName || ''
+						}`.trim(),
 						email: assignedTo.email,
 					};
 				}
@@ -594,7 +617,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 								taskTitle: taskFormData.title,
 								assignedTo: {
 									id: assignedTo.id,
-									name: `${assignedTo.firstName || ''} ${assignedTo.lastName || ''}`.trim(),
+									name: `${assignedTo.firstName || ''} ${
+										assignedTo.lastName || ''
+									}`.trim(),
 									email: assignedTo.email,
 								},
 								propertyId: property.id,
@@ -621,7 +646,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					try {
 						const recurrenceText =
 							taskFormData.recurrenceFrequency === 'custom'
-								? `every ${taskFormData.recurrenceInterval || 1} ${taskFormData.recurrenceCustomUnit}`
+								? `every ${taskFormData.recurrenceInterval || 1} ${
+										taskFormData.recurrenceCustomUnit
+								  }`
 								: `every ${taskFormData.recurrenceFrequency}`;
 
 						console.log('Recurrence text:', recurrenceText);
@@ -667,6 +694,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				dueDate: '',
 				status: 'Pending',
 				notes: '',
+				devices: [],
 			});
 		} catch (error) {
 			console.error('Error saving task:', error);
@@ -1222,7 +1250,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 											sharedUser.sharedWithLastName
 												? `${sharedUser.sharedWithFirstName} ${sharedUser.sharedWithLastName}`
 												: sharedUser.sharedWithEmail?.split('@')[0] ||
-													'Shared User';
+												  'Shared User';
 										const nameParts = fullName.split(' ');
 										found = {
 											id:
