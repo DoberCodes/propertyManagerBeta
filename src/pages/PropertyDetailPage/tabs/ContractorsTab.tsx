@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	useGetContractorsByPropertyQuery,
 	useDeleteContractorMutation,
@@ -36,11 +36,11 @@ const AddButton = styled.button`
 	background-color: #27ae60;
 	color: white;
 	border: none;
-	padding: 0.75rem 1.5rem;
+	padding: 0.5rem 1rem;
 	border-radius: 4px;
 	cursor: pointer;
 	font-weight: 500;
-	font-size: 1rem;
+	font-size: 0.9rem;
 
 	&:hover {
 		background-color: #229954;
@@ -51,6 +51,10 @@ const TableContainer = styled.div`
 	overflow-x: auto;
 	border: 1px solid #ddd;
 	border-radius: 4px;
+
+	@media (max-width: 768px) {
+		display: none;
+	}
 `;
 
 const Table = styled.table`
@@ -76,6 +80,105 @@ const Table = styled.table`
 	tbody tr:hover {
 		background-color: #f9f9f9;
 	}
+`;
+
+const MobileCarouselContainer = styled.div`
+	display: none;
+
+	@media (max-width: 768px) {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		background: #f9fafb;
+		border-radius: 10px;
+		padding: 16px;
+	}
+`;
+
+const MobileCarouselViewport = styled.div`
+	width: 100%;
+	overflow: hidden;
+	border-radius: 8px;
+`;
+
+const MobileCarouselTrack = styled.div`
+	display: flex;
+	transition: transform 0.3s ease-out;
+	user-select: none;
+	-webkit-user-select: none;
+`;
+
+const ContractorCard = styled.div`
+	min-width: 100%;
+	flex: 0 0 100%;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
+	padding: 16px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-right: 12px;
+`;
+
+const ContractorHeader = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+`;
+
+const ContractorCompany = styled.div`
+	font-size: 16px;
+	font-weight: 700;
+	color: #111827;
+`;
+
+const ContractorName = styled.div`
+	font-size: 14px;
+	color: #4b5563;
+`;
+
+const ContractorRow = styled.div`
+	font-size: 14px;
+	color: #374151;
+
+	a {
+		color: #2563eb;
+		text-decoration: none;
+	}
+`;
+
+const MobileActions = styled.div`
+	display: flex;
+	gap: 8px;
+`;
+
+const MobileActionButton = styled.button<{ variant: 'edit' | 'delete' }>`
+	flex: 1;
+	padding: 8px 10px;
+	border: none;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	color: white;
+	background: ${(props) => (props.variant === 'edit' ? '#3498db' : '#e74c3c')};
+	cursor: pointer;
+`;
+
+const MobileDots = styled.div`
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+`;
+
+const MobileDot = styled.button<{ active?: boolean }>`
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	border: none;
+	background: ${(props) => (props.active ? '#22c55e' : '#d1d5db')};
+	cursor: pointer;
 `;
 
 const CategoryBadge = styled.span<{ category: ContractorCategory }>`
@@ -178,6 +281,9 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [contractorToDelete, setContractorToDelete] =
 		useState<Contractor | null>(null);
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [isDragging, setIsDragging] = useState(false);
+	const [dragStart, setDragStart] = useState(0);
 
 	const {
 		data: contractors = [],
@@ -188,6 +294,24 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	});
 	const [deleteContractor, { isLoading: isDeleting }] =
 		useDeleteContractorMutation();
+
+	useEffect(() => {
+		setCurrentIndex(0);
+	}, [contractors.length]);
+
+	const handleDragEnd = (endPos: number) => {
+		if (!isDragging) return;
+		setIsDragging(false);
+		const diff = dragStart - endPos;
+		const threshold = 50;
+		if (Math.abs(diff) > threshold) {
+			if (diff > 0 && currentIndex < contractors.length - 1) {
+				setCurrentIndex(currentIndex + 1);
+			} else if (diff < 0 && currentIndex > 0) {
+				setCurrentIndex(currentIndex - 1);
+			}
+		}
+	};
 
 	const handleDeleteClick = (contractor: Contractor) => {
 		setContractorToDelete(contractor);
@@ -275,60 +399,139 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 					onClose={handleFormClose}
 				/>
 			)}
-
 			{contractors.length === 0 ? (
 				<EmptyState>
 					<p>No contractors added yet.</p>
 					<p>Click "Add Contractor" to get started.</p>
 				</EmptyState>
 			) : (
-				<TableContainer>
-					<Table>
-						<thead>
-							<tr>
-								<th>Company</th>
-								<th>Contact Name</th>
-								<th>Phone</th>
-								<th>Category</th>
-								<th>Address</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							{contractors.map((contractor: Contractor) => (
-								<tr key={contractor.id}>
-									<td>
-										<strong>{contractor.company}</strong>
-									</td>
-									<td>{contractor.name}</td>
-									<td>
-										<a href={`tel:${contractor.phone}`}>{contractor.phone}</a>
-									</td>
-									<td>
-										<CategoryBadge category={contractor.category}>
-											{contractor.category}
-										</CategoryBadge>
-									</td>
-									<td>{contractor.address || '—'}</td>
-									<td>
-										<ActionButtons>
-											<button
-												className='edit'
+				<>
+					<TableContainer>
+						<Table>
+							<thead>
+								<tr>
+									<th>Company</th>
+									<th>Contact Name</th>
+									<th>Phone</th>
+									<th>Category</th>
+									<th>Address</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{contractors.map((contractor: Contractor) => (
+									<tr key={contractor.id}>
+										<td>
+											<strong>{contractor.company}</strong>
+										</td>
+										<td>{contractor.name}</td>
+										<td>
+											<a href={`tel:${contractor.phone}`}>{contractor.phone}</a>
+										</td>
+										<td>
+											<CategoryBadge category={contractor.category}>
+												{contractor.category}
+											</CategoryBadge>
+										</td>
+										<td>{contractor.address || '—'}</td>
+										<td>
+											<ActionButtons>
+												<button
+													className='edit'
+													onClick={() => handleEdit(contractor)}>
+													Edit
+												</button>
+												<button
+													className='delete'
+													onClick={() => handleDeleteClick(contractor)}>
+													Delete
+												</button>
+											</ActionButtons>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</Table>
+					</TableContainer>
+
+					<MobileCarouselContainer>
+						<MobileCarouselViewport>
+							<MobileCarouselTrack
+								onMouseDown={(e) => {
+									setIsDragging(true);
+									setDragStart(e.clientX);
+								}}
+								onMouseUp={(e) => handleDragEnd(e.clientX)}
+								onTouchStart={(e) => {
+									setIsDragging(true);
+									setDragStart(e.touches[0].clientX);
+								}}
+								onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+								style={{
+									transform: `translateX(calc(-${currentIndex} * (100% + 12px)))`,
+									cursor: isDragging ? 'grabbing' : 'grab',
+								}}>
+								{contractors.map((contractor) => (
+									<ContractorCard key={contractor.id}>
+										<ContractorHeader>
+											<ContractorCompany>
+												{contractor.company}
+											</ContractorCompany>
+											<ContractorName>{contractor.name}</ContractorName>
+										</ContractorHeader>
+										<ContractorRow>
+											Phone:{' '}
+											<a href={`tel:${contractor.phone}`}>{contractor.phone}</a>
+										</ContractorRow>
+										<ContractorRow>
+											Category:{' '}
+											<CategoryBadge category={contractor.category}>
+												{contractor.category}
+											</CategoryBadge>
+										</ContractorRow>
+										{contractor.address && (
+											<ContractorRow>
+												Address: {contractor.address}
+											</ContractorRow>
+										)}
+										{contractor.email && (
+											<ContractorRow>
+												Email:{' '}
+												<a href={`mailto:${contractor.email}`}>
+													{contractor.email}
+												</a>
+											</ContractorRow>
+										)}
+										<MobileActions>
+											<MobileActionButton
+												variant='edit'
 												onClick={() => handleEdit(contractor)}>
 												Edit
-											</button>
-											<button
-												className='delete'
+											</MobileActionButton>
+											<MobileActionButton
+												variant='delete'
 												onClick={() => handleDeleteClick(contractor)}>
 												Delete
-											</button>
-										</ActionButtons>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</Table>
-				</TableContainer>
+											</MobileActionButton>
+										</MobileActions>
+									</ContractorCard>
+								))}
+							</MobileCarouselTrack>
+						</MobileCarouselViewport>
+
+						{contractors.length > 1 && (
+							<MobileDots>
+								{contractors.map((_, index) => (
+									<MobileDot
+										key={index}
+										active={index === currentIndex}
+										onClick={() => setCurrentIndex(index)}
+									/>
+								))}
+							</MobileDots>
+						)}
+					</MobileCarouselContainer>
+				</>
 			)}
 		</ContainerStyled>
 	);
