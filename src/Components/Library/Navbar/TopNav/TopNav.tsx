@@ -24,6 +24,7 @@ import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
 import TitleName from '../../../../Assets/images/TitleName.png';
 import { GenericModal } from '../../Modal/GenericModal';
 import { NotificationPanel } from '../../NotificationPanel/NotificationPanel';
+import { useGetUserNotificationsQuery } from '../../../../Redux/API/apiSlice';
 
 export const TopNav = () => {
 	const navigate = useNavigate();
@@ -76,6 +77,24 @@ export const TopNav = () => {
 		navigate('/');
 	};
 
+	// Get notifications to check for unread ones
+	const { data: notifications = [] } = useGetUserNotificationsQuery(
+		currentUser?.id,
+		{
+			skip: !currentUser?.id,
+		},
+	);
+
+	// Check if there are any unread notifications
+	const hasUnreadNotifications = notifications.some(
+		(notification) => notification.status === 'unread',
+	);
+
+	// Count unread notifications
+	const unreadCount = notifications.filter(
+		(notification) => notification.status === 'unread',
+	).length;
+
 	return (
 		<>
 			<Wrapper>
@@ -94,7 +113,10 @@ export const TopNav = () => {
 				</Title>
 				<RightSection>
 					{/* Notification Icon */}
-					<NotificationIcon onClick={() => setIsNotificationModalOpen(true)}>
+					<NotificationIcon
+						onClick={() => setIsNotificationModalOpen(true)}
+						hasUnread={hasUnreadNotifications}
+						unreadCount={unreadCount}>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
 							fill='none'

@@ -184,12 +184,13 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 				);
 
 				if (props?.updateTaskMutation) {
-					await props
+					const updatedTask = await props
 						.updateTaskMutation({
 							id: editingTaskId,
 							updates: cleanUpdates,
 						})
 						.unwrap();
+					dispatch(updateTask(updatedTask));
 				} else {
 					dispatch(updateTask(taskData));
 				}
@@ -201,7 +202,10 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 				);
 
 				if (props?.createTaskMutation) {
-					await props.createTaskMutation(cleanTaskData).unwrap();
+					const createdTask = await props
+						.createTaskMutation(cleanTaskData)
+						.unwrap();
+					dispatch(addTask(createdTask));
 				} else {
 					dispatch(addTask(taskData));
 				}

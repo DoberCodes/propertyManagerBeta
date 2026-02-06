@@ -261,7 +261,10 @@ export const MobileSidebar = styled.div<{ isOpen: boolean }>`
 	}
 `;
 
-export const NotificationIcon = styled.div<{ hasUnread?: boolean }>`
+export const NotificationIcon = styled.div<{
+	hasUnread?: boolean;
+	unreadCount?: number;
+}>`
 	position: relative;
 	width: 40px;
 	height: 40px;
@@ -286,17 +289,27 @@ export const NotificationIcon = styled.div<{ hasUnread?: boolean }>`
 
 	${(props) =>
 		props.hasUnread &&
+		props.unreadCount &&
+		props.unreadCount > 0 &&
 		`
 		&::after {
-			content: '';
+			content: '${props.unreadCount > 99 ? '99+' : props.unreadCount}';
 			position: absolute;
-			top: 8px;
-			right: 8px;
-			width: 8px;
-			height: 8px;
+			top: 4px;
+			right: 4px;
+			min-width: 16px;
+			height: 16px;
 			background: #ef4444;
-			border-radius: 50%;
+			color: white;
+			border-radius: 8px;
 			border: 2px solid ${COLORS.primary};
+			font-size: 10px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0 4px;
+			box-sizing: border-box;
 		}
 	`}
 

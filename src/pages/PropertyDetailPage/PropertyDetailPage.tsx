@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faArrowLeft,
@@ -10,6 +10,7 @@ import {
 import { PropertyDetailPageProps } from '../../types/PropertyDetailPage.types';
 import { RootState } from '../../Redux/store/store';
 import { User } from '../../Redux/Slices/userSlice';
+import { addTask } from '../../Redux/Slices/propertyDataSlice';
 import { useTaskHandlers } from './useTaskHandlers';
 import { usePropertyEditHandlers } from './usePropertyEditHandlers';
 import { useMaintenanceRequestHandlers } from './useMaintenanceRequestHandlers';
@@ -123,6 +124,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [deleteTaskMutation] = useDeleteTaskMutation();
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
 	const [createNotification] = useCreateNotificationMutation();
+
+	const dispatch = useDispatch();
 
 	const [activeTab, setActiveTab] = useState<
 		| 'details'
@@ -379,7 +382,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		);
 
 		return uniqueAssignees;
-	}, [property, currentUser, currentPropertyShares, teamMembers, propertyContractors]);
+	}, [
+		property,
+		currentUser,
+		currentPropertyShares,
+		teamMembers,
+		propertyContractors,
+	]);
 
 	// Generate device options for task connection
 	const { data: propertyDevices = [] } = useGetDevicesQuery(
@@ -504,12 +513,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					// If still not found, check shared users
 					if (!assignedTo && taskFormData.assignedTo) {
 						const sharedUser = currentPropertyShares.find(
-							(share) => (share.sharedWithUserId || share.sharedWithEmail) === taskFormData.assignedTo,
+							(share) =>
+								(share.sharedWithUserId || share.sharedWithEmail) ===
+								taskFormData.assignedTo,
 						);
 						if (sharedUser) {
 							assignedTo = {
 								id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
-								firstName: sharedUser.sharedWithFirstName || sharedUser.sharedWithEmail?.split('@')[0] || 'Shared User',
+								firstName:
+									sharedUser.sharedWithFirstName ||
+									sharedUser.sharedWithEmail?.split('@')[0] ||
+									'Shared User',
 								lastName: sharedUser.sharedWithLastName || '',
 								email: sharedUser.sharedWithEmail || '',
 								title: 'Co-owner',
@@ -579,7 +593,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					if (assignedTo && assignedTo.id !== currentUser!.id) {
 						// Check if assignment changed
 						const previousAssignedTo = taskToUpdate.assignedTo;
-						const assignmentChanged = !previousAssignedTo || previousAssignedTo.id !== assignedTo.id;
+						const assignmentChanged =
+							!previousAssignedTo || previousAssignedTo.id !== assignedTo.id;
 
 						if (assignmentChanged) {
 							try {
@@ -607,7 +622,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 									updatedAt: new Date().toISOString(),
 								}).unwrap();
 							} catch (assignNotifError) {
-								console.error('Assignment notification failed:', assignNotifError);
+								console.error(
+									'Assignment notification failed:',
+									assignNotifError,
+								);
 							}
 						}
 					}
@@ -650,12 +668,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				// If still not found, check shared users
 				if (!assignedTo && taskFormData.assignedTo) {
 					const sharedUser = currentPropertyShares.find(
-						(share) => (share.sharedWithUserId || share.sharedWithEmail) === taskFormData.assignedTo,
+						(share) =>
+							(share.sharedWithUserId || share.sharedWithEmail) ===
+							taskFormData.assignedTo,
 					);
 					if (sharedUser) {
 						assignedTo = {
 							id: sharedUser.sharedWithUserId || sharedUser.sharedWithEmail,
-							firstName: sharedUser.sharedWithFirstName || sharedUser.sharedWithEmail?.split('@')[0] || 'Shared User',
+							firstName:
+								sharedUser.sharedWithFirstName ||
+								sharedUser.sharedWithEmail?.split('@')[0] ||
+								'Shared User',
 							lastName: sharedUser.sharedWithLastName || '',
 							email: sharedUser.sharedWithEmail || '',
 							title: 'Co-owner',
@@ -701,7 +724,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					newTask.recurrenceCustomUnit = taskFormData.recurrenceCustomUnit;
 				}
 
-				await createTaskMutation(newTask).unwrap();
+				const createdTask = await createTaskMutation(newTask).unwrap();
+
+				// Add to Redux state immediately for UI update
+				dispatch(addTask(createdTask));
 
 				// Create notification for task creation (to creator)
 				try {
@@ -711,6 +737,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						title: 'Task Created',
 						message: `New task "${taskFormData.title}" has been created`,
 						data: {
+							taskId: createdTask.id,
 							taskTitle: taskFormData.title,
 							propertyId: property.id,
 							propertyTitle: property.title,
@@ -733,7 +760,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 							title: 'Task Assigned',
 							message: `You have been assigned to task "${taskFormData.title}"`,
 							data: {
-								taskId: newTask.id, // This will be set after creation
+								taskId: createdTask.id, // Use the actual task ID from Firestore
 								taskTitle: taskFormData.title,
 								assignedTo: {
 									id: assignedTo.id,
@@ -1104,9 +1131,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						) : (
 							<PropertyTitle>{property.title}</PropertyTitle>
 						)}
-						<PencilIcon onClick={handleTitleEdit} title='Edit property name'>
-							✎
-						</PencilIcon>
 					</TitleContainer>
 
 					<div style={{ display: 'contents' }} className='desktop-actions'>
@@ -1175,6 +1199,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						property={property}
 						getPropertyFieldValue={getPropertyFieldValue}
 						handlePropertyFieldChange={handlePropertyFieldChange}
+						teamMembers={[]}
 					/>
 				)}
 
@@ -1198,6 +1223,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						handleAssignTask={handleAssignTask}
 						handleCompleteTask={handleCompleteTask}
 						handleDeleteTask={handleDeleteTask}
+						teamMembers={teamMembers}
+						contractors={propertyContractors}
+						sharedUsers={currentPropertyShares}
+						currentUser={currentUser}
 					/>
 				)}
 
@@ -1383,6 +1412,21 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 									}
 								}
 
+								// Check contractors
+								if (!found) {
+									const contractor = propertyContractors.find(
+										(c) => c.id === selectedId,
+									);
+									if (contractor) {
+										found = {
+											id: contractor.id,
+											firstName: contractor.name,
+											lastName: `(${contractor.category})`,
+											email: contractor.email || '',
+										};
+									}
+								}
+
 								if (found) {
 									// Safely construct the name property
 									let name = '';
@@ -1451,6 +1495,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 										{member.firstName} {member.lastName} ({member.title})
 									</option>
 								))}
+							{/* Contractors */}
+							{propertyContractors.map((contractor) => (
+								<option key={contractor.id} value={contractor.id}>
+									{contractor.name} ({contractor.category})
+								</option>
+							))}
 						</FormSelect>
 					</FormGroup>
 				</GenericModal>
