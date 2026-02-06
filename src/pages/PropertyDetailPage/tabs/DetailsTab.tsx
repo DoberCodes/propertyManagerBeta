@@ -8,27 +8,21 @@ import {
 import {
 	EditableFieldInput,
 	DetailsEditHeader,
-	MinimalEditButton,
 } from '../PropertyDetailPage.styles';
 import { PropertyDetailSection } from '../PropertyDetailSection';
 
 export const DetailsTab: React.FC<DetailsTabProps> = ({
 	isEditMode,
-	setIsEditMode,
 	property,
 	getPropertyFieldValue,
 	handlePropertyFieldChange,
+	teamMembers,
 }) => {
 	return (
 		<>
 			{/* Edit Mode Header */}
 			<DetailsEditHeader>
 				<SectionHeader>Property Information</SectionHeader>
-				<MinimalEditButton
-					onClick={() => setIsEditMode(!isEditMode)}
-					title={isEditMode ? 'Exit edit mode' : 'Enter edit mode'}>
-					✎
-				</MinimalEditButton>
 			</DetailsEditHeader>
 
 			<PropertyDetailSection
@@ -36,6 +30,7 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
 				property={property}
 				getPropertyFieldValue={getPropertyFieldValue}
 				handlePropertyFieldChange={handlePropertyFieldChange}
+				teamMembers={teamMembers}
 			/>
 
 			{/* Notes */}

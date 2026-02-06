@@ -11,7 +11,27 @@ import {
 } from './PropertyDetailPage.styles';
 
 export const PropertyDetailSection = (props: PropertyDetailSectionProps) => {
-	// Implementation of PropertyDetailSection component
+	// Helper function to get user name from ID
+	const getUserName = (userId: string) => {
+		const user = props.teamMembers.find((member) => member.id === userId);
+		return user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+	};
+
+	// Get all owners (main owner + co-owners)
+	const getAllOwners = () => {
+		const owners: string[] = [];
+		const mainOwner = props.property?.owner;
+		if (mainOwner) owners.push(mainOwner);
+
+		const coOwners = props.property?.coOwners || [];
+		coOwners.forEach((coOwnerId) => {
+			const coOwnerName = getUserName(coOwnerId);
+			if (coOwnerName !== 'Unknown User') owners.push(coOwnerName);
+		});
+
+		return owners;
+	};
+
 	return (
 		<SectionContainer>
 			<InfoGrid>
@@ -36,7 +56,7 @@ export const PropertyDetailSection = (props: PropertyDetailSectionProps) => {
 					)}
 				</InfoCard>
 				<InfoCard>
-					<InfoLabel>Owner</InfoLabel>
+					<InfoLabel>Owner{getAllOwners().length > 1 ? 's' : ''}</InfoLabel>
 					{props.isEditMode ? (
 						<EditableFieldInput
 							type='text'
@@ -46,7 +66,11 @@ export const PropertyDetailSection = (props: PropertyDetailSectionProps) => {
 							}
 						/>
 					) : (
-						<InfoValue>{props.getPropertyFieldValue('owner')}</InfoValue>
+						<InfoValue>
+							{getAllOwners().length > 0
+								? getAllOwners().join(', ')
+								: 'No owner specified'}
+						</InfoValue>
 					)}
 				</InfoCard>
 				<InfoCard>

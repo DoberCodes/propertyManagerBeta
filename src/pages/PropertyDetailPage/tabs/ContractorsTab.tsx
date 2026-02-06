@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	useGetContractorsByPropertyQuery,
 	useDeleteContractorMutation,
@@ -9,6 +9,13 @@ import {
 } from '../../../types/Contractor.types';
 import { ContractorForm } from './ContractorForm';
 import { DeleteConfirmationModal } from '../../../Components/Library/Modal/DeleteConfirmationModal';
+import {
+	FilterBar,
+	FilterConfig,
+	FilterValues,
+} from '../../../Components/Library/FilterBar';
+import { applyFilters } from '../../../utils/tableFilters';
+import { ToolbarButton } from '../PropertyDetailPage.styles';
 import styled from 'styled-components';
 
 interface ContractorsTabProps {
@@ -154,18 +161,6 @@ const MobileActions = styled.div`
 	gap: 8px;
 `;
 
-const MobileActionButton = styled.button<{ variant: 'edit' | 'delete' }>`
-	flex: 1;
-	padding: 8px 10px;
-	border: none;
-	border-radius: 6px;
-	font-size: 14px;
-	font-weight: 600;
-	color: white;
-	background: ${(props) => (props.variant === 'edit' ? '#3498db' : '#e74c3c')};
-	cursor: pointer;
-`;
-
 const MobileDots = styled.div`
 	display: flex;
 	justify-content: center;
@@ -221,39 +216,6 @@ const CategoryBadge = styled.span<{ category: ContractorCategory }>`
 	}};
 `;
 
-const ActionButtons = styled.div`
-	display: flex;
-	gap: 0.5rem;
-	justify-content: center;
-
-	button {
-		padding: 0.5rem 1rem;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 0.9rem;
-		font-weight: 500;
-
-		&.edit {
-			background-color: #3498db;
-			color: white;
-
-			&:hover {
-				background-color: #2980b9;
-			}
-		}
-
-		&.delete {
-			background-color: #e74c3c;
-			color: white;
-
-			&:hover {
-				background-color: #c0392b;
-			}
-		}
-	}
-`;
-
 const EmptyState = styled.div`
 	text-align: center;
 	padding: 2rem;
@@ -284,6 +246,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState(0);
+	const [filters, setFilters] = useState<FilterValues>({});
 
 	const {
 		data: contractors = [],
@@ -298,6 +261,40 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	useEffect(() => {
 		setCurrentIndex(0);
 	}, [contractors.length]);
+
+	// Filter configuration for contractors
+	const contractorFilters: FilterConfig[] = [
+		{
+			key: 'search',
+			label: 'Search',
+			type: 'text',
+			placeholder: 'Search company, name, email...',
+		},
+		{
+			key: 'category',
+			label: 'Category',
+			type: 'select',
+			options: [
+				{ value: 'Landscaper', label: 'Landscaper' },
+				{ value: 'Contractor', label: 'Contractor' },
+				{ value: 'Pest Control', label: 'Pest Control' },
+				{ value: 'Plumber', label: 'Plumber' },
+				{ value: 'Electrician', label: 'Electrician' },
+				{ value: 'HVAC', label: 'HVAC' },
+				{ value: 'Roofer', label: 'Roofer' },
+				{ value: 'Painter', label: 'Painter' },
+				{ value: 'Cleaning Service', label: 'Cleaning Service' },
+			],
+		},
+	];
+
+	// Apply filters to contractors
+	const filteredContractors = useMemo(() => {
+		return applyFilters(contractors, filters, {
+			textFields: ['company', 'name', 'email', 'phone', 'address'],
+			selectFields: [{ field: 'category', filterKey: 'category' }],
+		});
+	}, [contractors, filters]);
 
 	const handleDragEnd = (endPos: number) => {
 		if (!isDragging) return;
@@ -392,6 +389,12 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 				<AddButton onClick={handleAddNew}>+ Add Contractor</AddButton>
 			</HeaderContainer>
 
+			<FilterBar
+				filters={contractorFilters}
+				onFiltersChange={setFilters}
+				hideOnMobile={true}
+			/>
+
 			{isFormOpen && (
 				<ContractorForm
 					propertyId={propertyId}
@@ -399,10 +402,10 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 					onClose={handleFormClose}
 				/>
 			)}
-			{contractors.length === 0 ? (
+			{filteredContractors.length === 0 ? (
 				<EmptyState>
-					<p>No contractors added yet.</p>
-					<p>Click "Add Contractor" to get started.</p>
+					<p>No contractors found matching your filters.</p>
+					<p>Try adjusting your search criteria.</p>
 				</EmptyState>
 			) : (
 				<>
@@ -419,7 +422,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 								</tr>
 							</thead>
 							<tbody>
-								{contractors.map((contractor: Contractor) => (
+								{filteredContractors.map((contractor: Contractor) => (
 									<tr key={contractor.id}>
 										<td>
 											<strong>{contractor.company}</strong>
@@ -435,18 +438,30 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 										</td>
 										<td>{contractor.address || '—'}</td>
 										<td>
-											<ActionButtons>
-												<button
-													className='edit'
-													onClick={() => handleEdit(contractor)}>
+											<div
+												style={{
+													display: 'flex',
+													gap: '0.5rem',
+													justifyContent: 'center',
+												}}>
+												<ToolbarButton
+													onClick={() => handleEdit(contractor)}
+													style={{
+														padding: '0.25rem 0.5rem',
+														fontSize: '0.8rem',
+													}}>
 													Edit
-												</button>
-												<button
+												</ToolbarButton>
+												<ToolbarButton
 													className='delete'
-													onClick={() => handleDeleteClick(contractor)}>
+													onClick={() => handleDeleteClick(contractor)}
+													style={{
+														padding: '0.25rem 0.5rem',
+														fontSize: '0.8rem',
+													}}>
 													Delete
-												</button>
-											</ActionButtons>
+												</ToolbarButton>
+											</div>
 										</td>
 									</tr>
 								))}
@@ -471,7 +486,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 									transform: `translateX(calc(-${currentIndex} * (100% + 12px)))`,
 									cursor: isDragging ? 'grabbing' : 'grab',
 								}}>
-								{contractors.map((contractor) => (
+								{filteredContractors.map((contractor) => (
 									<ContractorCard key={contractor.id}>
 										<ContractorHeader>
 											<ContractorCompany>
@@ -503,25 +518,26 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 											</ContractorRow>
 										)}
 										<MobileActions>
-											<MobileActionButton
-												variant='edit'
-												onClick={() => handleEdit(contractor)}>
+											<ToolbarButton
+												onClick={() => handleEdit(contractor)}
+												style={{ flex: 1, padding: '0.5rem' }}>
 												Edit
-											</MobileActionButton>
-											<MobileActionButton
-												variant='delete'
-												onClick={() => handleDeleteClick(contractor)}>
+											</ToolbarButton>
+											<ToolbarButton
+												className='delete'
+												onClick={() => handleDeleteClick(contractor)}
+												style={{ flex: 1, padding: '0.5rem' }}>
 												Delete
-											</MobileActionButton>
+											</ToolbarButton>
 										</MobileActions>
 									</ContractorCard>
 								))}
 							</MobileCarouselTrack>
 						</MobileCarouselViewport>
 
-						{contractors.length > 1 && (
+						{filteredContractors.length > 1 && (
 							<MobileDots>
-								{contractors.map((_, index) => (
+								{filteredContractors.map((_, index) => (
 									<MobileDot
 										key={index}
 										active={index === currentIndex}

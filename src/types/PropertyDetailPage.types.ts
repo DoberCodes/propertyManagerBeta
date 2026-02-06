@@ -34,7 +34,9 @@ export interface PropertyEditHandlers {
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
 	) => void;
 	handleDeviceFormSubmit: (e: React.FormEvent) => void;
-	handleTitleEdit: () => void;
+	handleTitleEdit: (
+		setShowPropertyDialog: React.Dispatch<React.SetStateAction<boolean>>,
+	) => void;
 	handleTitleSave: () => void;
 }
 
@@ -45,6 +47,7 @@ export interface DetailsTabProps {
 	property: Property;
 	getPropertyFieldValue: (field: string) => any;
 	handlePropertyFieldChange: (field: string, value: any) => void;
+	teamMembers: any[];
 }
 
 export interface TasksTabProps {
@@ -92,6 +95,7 @@ export interface PropertyDetailSectionProps {
 	property: Property;
 	getPropertyFieldValue: (field: string) => any;
 	handlePropertyFieldChange: (field: string, value: any) => void;
+	teamMembers: any[];
 }
 
 // Modal-related types (re-exported for convenience)

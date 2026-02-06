@@ -1,0 +1,244 @@
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+
+export interface FilterConfig {
+	key: string;
+	label: string;
+	type: 'text' | 'select' | 'date' | 'daterange' | 'multiselect';
+	options?: { value: string; label: string }[];
+	placeholder?: string;
+}
+
+export interface FilterValues {
+	[key: string]: any;
+}
+
+interface FilterBarProps {
+	filters: FilterConfig[];
+	onFiltersChange: (filters: FilterValues) => void;
+	className?: string;
+	hideOnMobile?: boolean;
+}
+
+const FilterContainer = styled.div<{ hideOnMobile?: boolean }>`
+	background-color: #f9fafb;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	align-items: center;
+
+	@media (max-width: 768px) {
+		padding: 0.75rem;
+		gap: 0.75rem;
+		display: ${(props) => (props.hideOnMobile ? 'none' : 'flex')};
+	}
+`;
+
+const FilterGroup = styled.div`
+	display: flex;
+	flex-direction: column;
+	min-width: 200px;
+	flex: 1;
+
+	@media (max-width: 768px) {
+		min-width: 100%;
+	}
+
+	label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #374151;
+		margin-bottom: 0.25rem;
+	}
+`;
+
+const FilterInput = styled.input`
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	background-color: white;
+
+	&:focus {
+		outline: none;
+		border-color: #3b82f6;
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	}
+
+	&::placeholder {
+		color: #9ca3af;
+	}
+`;
+
+const FilterSelect = styled.select`
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	background-color: white;
+
+	&:focus {
+		outline: none;
+		border-color: #3b82f6;
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	}
+`;
+
+const DateRangeContainer = styled.div`
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+
+	@media (max-width: 480px) {
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	span {
+		font-size: 0.875rem;
+		color: #6b7280;
+		white-space: nowrap;
+	}
+`;
+
+const ClearButton = styled.button`
+	background-color: #6b7280;
+	color: white;
+	border: none;
+	padding: 0.5rem 1rem;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	cursor: pointer;
+	white-space: nowrap;
+
+	&:hover {
+		background-color: #4b5563;
+	}
+
+	@media (max-width: 768px) {
+		flex: 1;
+		padding: 0.75rem;
+	}
+`;
+
+export const FilterBar: React.FC<FilterBarProps> = ({
+	filters,
+	onFiltersChange,
+	className,
+	hideOnMobile = false,
+}) => {
+	const [filterValues, setFilterValues] = useState<FilterValues>({});
+
+	useEffect(() => {
+		onFiltersChange(filterValues);
+	}, [filterValues, onFiltersChange]);
+
+	const handleFilterChange = (key: string, value: any) => {
+		setFilterValues((prev) => ({
+			...prev,
+			[key]: value,
+		}));
+	};
+
+	const clearFilters = () => {
+		setFilterValues({});
+	};
+
+	const hasActiveFilters = Object.values(filterValues).some((value) =>
+		Array.isArray(value)
+			? value.length > 0
+			: value !== '' && value !== undefined && value !== null,
+	);
+
+	return (
+		<FilterContainer className={className} hideOnMobile={hideOnMobile}>
+			{filters.map((filter) => (
+				<FilterGroup key={filter.key}>
+					<label htmlFor={`filter-${filter.key}`}>{filter.label}</label>
+					{filter.type === 'text' && (
+						<FilterInput
+							id={`filter-${filter.key}`}
+							type='text'
+							placeholder={
+								filter.placeholder || `Search ${filter.label.toLowerCase()}...`
+							}
+							value={filterValues[filter.key] || ''}
+							onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+						/>
+					)}
+					{filter.type === 'select' && (
+						<FilterSelect
+							id={`filter-${filter.key}`}
+							value={filterValues[filter.key] || ''}
+							onChange={(e) => handleFilterChange(filter.key, e.target.value)}>
+							<option value=''>All {filter.label.toLowerCase()}</option>
+							{filter.options?.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</FilterSelect>
+					)}
+					{filter.type === 'date' && (
+						<FilterInput
+							id={`filter-${filter.key}`}
+							type='date'
+							value={filterValues[filter.key] || ''}
+							onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+						/>
+					)}
+					{filter.type === 'daterange' && (
+						<DateRangeContainer>
+							<FilterInput
+								type='date'
+								placeholder='Start date'
+								value={filterValues[`${filter.key}_start`] || ''}
+								onChange={(e) =>
+									handleFilterChange(`${filter.key}_start`, e.target.value)
+								}
+							/>
+							<span>to</span>
+							<FilterInput
+								type='date'
+								placeholder='End date'
+								value={filterValues[`${filter.key}_end`] || ''}
+								onChange={(e) =>
+									handleFilterChange(`${filter.key}_end`, e.target.value)
+								}
+							/>
+						</DateRangeContainer>
+					)}
+					{filter.type === 'multiselect' && (
+						<FilterSelect
+							id={`filter-${filter.key}`}
+							multiple
+							value={filterValues[filter.key] || []}
+							onChange={(e) => {
+								const selectedOptions = Array.from(
+									e.target.selectedOptions,
+									(option) => option.value,
+								);
+								handleFilterChange(filter.key, selectedOptions);
+							}}>
+							{filter.options?.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</FilterSelect>
+					)}
+				</FilterGroup>
+			))}
+
+			<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+				{hasActiveFilters && (
+					<ClearButton onClick={clearFilters}>Clear Filters</ClearButton>
+				)}
+			</div>
+		</FilterContainer>
+	);
+};

@@ -45,6 +45,7 @@ import { ConvertRequestToTaskModal } from '../../Components/ConvertRequestToTask
 import { SharePropertyModal } from '../../Components/SharePropertyModal';
 import { AddTenantModal } from '../../Components/AddTenantModal';
 import { DeleteConfirmationModal } from '../../Components/Library/Modal/DeleteConfirmationModal';
+import { PropertyDialog } from '../../Components/PropertiesTab/PropertyDialog';
 import { Tabs, GenericModal } from '../../Components/Library';
 import {
 	EditTaskModal,
@@ -64,7 +65,6 @@ import {
 	EmptyState,
 	TitleContainer,
 	EditableTitleInput,
-	PencilIcon,
 	TabControlsContainer,
 	TabContentContainer,
 } from './PropertyDetailPage.styles';
@@ -138,6 +138,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 	const [showShareModal, setShowShareModal] = useState(false);
 	const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+	const [showPropertyDialog, setShowPropertyDialog] = useState(false);
 	const [deleteTaskModalOpen, setDeleteTaskModalOpen] = useState(false);
 	const [taskToDelete, setTaskToDelete] = useState<{
 		id: string;
@@ -262,6 +263,62 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		handleTitleSave,
 	} = propertyHandlers;
 
+	// Handle saving property from dialog
+	const handleSaveProperty = async (formData: any) => {
+		if (!property) return;
+
+		// Prepare units data for Multi-Family properties
+		const unitsData =
+			formData.propertyType === 'Multi-Family'
+				? (formData.units || []).map((unitName: string) => ({
+						name: unitName,
+						occupants: [],
+				  }))
+				: undefined;
+
+		// Prepare suites data for Commercial properties
+		const suitesData =
+			formData.propertyType === 'Commercial' && formData.hasSuites
+				? (formData.suites || []).map((suiteName: string) => ({
+						name: suiteName,
+						occupants: [],
+				  }))
+				: undefined;
+
+		try {
+			await updatePropertyMutation({
+				id: property.id,
+				updates: {
+					title: formData.name,
+					image: formData.photo || property.image,
+					owner: formData.owner,
+					address: formData.address,
+					propertyType: formData.propertyType,
+					units:
+						formData.propertyType === 'Multi-Family' ? unitsData : undefined,
+					hasSuites:
+						formData.propertyType === 'Commercial'
+							? !!formData.hasSuites
+							: undefined,
+					suites:
+						formData.propertyType === 'Commercial' && formData.hasSuites
+							? suitesData
+							: undefined,
+					bedrooms: formData.bedrooms,
+					bathrooms: formData.bathrooms,
+					notes: formData.notes,
+					groupId: formData.groupId,
+				},
+			}).unwrap();
+
+			setShowPropertyDialog(false);
+			// Optionally show success message or refresh data
+		} catch (error) {
+			console.error('Failed to update property:', error);
+			// Optionally show error message
+		}
+	};
+
 	// Destructure maintenance request handlers
 	const {
 		showMaintenanceRequestModal,
@@ -324,6 +381,65 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		{ skip: !property?.id },
 	);
 
+	// Enrich maintenance history records with user information
+	const enrichedMaintenanceHistoryRecords = useMemo(() => {
+		return maintenanceHistoryRecords.map((record) => {
+			let completedByName =
+				record.completedBy ||
+				record.approvedBy ||
+				record.assignee ||
+				'Unknown User';
+
+			// If completedBy is a user ID, try to find the user name
+			const userId = record.completedBy || record.approvedBy || record.assignee;
+			if (userId && typeof userId === 'string') {
+				// Check current user
+				if (currentUser && userId === currentUser.id) {
+					completedByName = `${currentUser.firstName} ${currentUser.lastName}`;
+				}
+				// Check property shares
+				else if (currentPropertyShares) {
+					const share = currentPropertyShares.find(
+						(share) => share.sharedWithUserId === userId,
+					);
+					if (share) {
+						completedByName =
+							share.sharedWithFirstName && share.sharedWithLastName
+								? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+								: share.sharedWithEmail?.split('@')[0] || 'Shared User';
+					}
+				}
+				// Check team members
+				else if (teamMembers) {
+					const teamMember = teamMembers.find(
+						(member) => member?.id === userId,
+					);
+					if (teamMember) {
+						completedByName = `${teamMember.firstName} ${teamMember.lastName}`;
+					}
+				}
+				// Check contractors
+				else if (propertyContractors) {
+					const contractor = propertyContractors.find((c) => c.id === userId);
+					if (contractor) {
+						completedByName = `${contractor.name} (${contractor.category})`;
+					}
+				}
+			}
+
+			return {
+				...record,
+				completedByName,
+			};
+		});
+	}, [
+		maintenanceHistoryRecords,
+		currentUser,
+		currentPropertyShares,
+		teamMembers,
+		propertyContractors,
+	]);
+
 	// Filter tasks for this property
 	const propertyTasks = useMemo(() => {
 		if (!property) return [];
@@ -384,6 +500,20 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					}
 				}
 
+				// Check contractors
+				if (!userInfo) {
+					const contractor = propertyContractors.find(
+						(c) => c.id === task.assignedTo!.id,
+					);
+					if (contractor) {
+						userInfo = {
+							id: contractor.id,
+							name: `${contractor.name} (${contractor.category})`,
+							email: contractor.email,
+						};
+					}
+				}
+
 				// If user info found, update the assignedTo object
 				if (userInfo) {
 					return {
@@ -398,7 +528,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 		// Filter out completed tasks - they should show in Maintenance History instead
 		return enrichedTasks.filter((task) => task.status !== 'Completed');
-	}, [property, allTasks, currentUser, currentPropertyShares, teamMembers]);
+	}, [
+		property,
+		allTasks,
+		currentUser,
+		currentPropertyShares,
+		teamMembers,
+		propertyContractors,
+	]);
 
 	// Generate assignee options for task editing
 	const assigneeOptions = useMemo(() => {
@@ -730,6 +867,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 												fontSize: '14px',
 												color: '#1a1a1a',
 												transition: 'background-color 0.2s ease',
+												borderBottom: '1px solid #f0f0f0',
 											}}
 											onMouseEnter={(e) =>
 												(e.currentTarget.style.backgroundColor = '#f3f4f6')
@@ -740,6 +878,31 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 											👥 Share Property
 										</button>
 									)}
+								<button
+									onClick={() => {
+										handleTitleEdit(setShowPropertyDialog);
+										setIsActionMenuOpen(false);
+									}}
+									style={{
+										width: '100%',
+										padding: '12px 16px',
+										border: 'none',
+										background: 'none',
+										textAlign: 'left',
+										cursor: 'pointer',
+										fontSize: '14px',
+										color: '#1a1a1a',
+										transition: 'background-color 0.2s ease',
+										borderBottom: '1px solid #f0f0f0',
+									}}
+									onMouseEnter={(e) =>
+										(e.currentTarget.style.backgroundColor = '#f3f4f6')
+									}
+									onMouseLeave={(e) =>
+										(e.currentTarget.style.backgroundColor = 'transparent')
+									}>
+									✎ Edit Property
+								</button>
 								{!isUploadingImage && (
 									<label
 										htmlFor='header-photo-upload'
@@ -823,12 +986,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						) : (
 							<PropertyTitle>{property.title}</PropertyTitle>
 						)}
-						<PencilIcon onClick={handleTitleEdit} title='Edit property name'>
-							✎
-						</PencilIcon>
 					</TitleContainer>
 
 					<div style={{ display: 'contents' }} className='desktop-actions'>
+						<FavoriteButton
+							onClick={() => handleTitleEdit(setShowPropertyDialog)}
+							title='Edit property'>
+							✎ Edit Property
+						</FavoriteButton>
 						<FavoriteButton
 							onClick={() =>
 								toggleFavorite({
@@ -894,6 +1059,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						property={property}
 						getPropertyFieldValue={getPropertyFieldValue}
 						handlePropertyFieldChange={handlePropertyFieldChange}
+						teamMembers={firebaseTeamMembers}
 					/>
 				)}
 
@@ -925,7 +1091,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				{activeTab === 'maintenance' && (
 					<MaintenanceTab
 						property={property}
-						maintenanceHistoryRecords={maintenanceHistoryRecords}
+						maintenanceHistoryRecords={enrichedMaintenanceHistoryRecords}
 					/>
 				)}
 
@@ -1107,6 +1273,21 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 									}
 								}
 
+								// Check contractors
+								if (!found) {
+									const contractor = propertyContractors.find(
+										(c) => c.id === selectedId,
+									);
+									if (contractor) {
+										found = {
+											id: contractor.id,
+											firstName: contractor.name,
+											lastName: `(${contractor.category})`,
+											email: contractor.email || '',
+										};
+									}
+								}
+
 								if (found) {
 									// Safely construct the name property
 									let name = '';
@@ -1175,6 +1356,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 										{member.firstName} {member.lastName} ({member.title})
 									</option>
 								))}
+							{/* Contractors */}
+							{propertyContractors.map((contractor) => (
+								<option key={contractor.id} value={contractor.id}>
+									{contractor.name} ({contractor.category})
+								</option>
+							))}
 						</FormSelect>
 					</FormGroup>
 				</GenericModal>
@@ -1244,6 +1431,31 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					task={allTasks.find((t) => t.id === completingTaskId)}
 					onClose={() => setShowTaskCompletionModal(false)}
 					onSuccess={handleTaskCompletionSuccess}
+				/>
+			)}
+
+			{/* Property Edit Dialog */}
+			{property && (
+				<PropertyDialog
+					isOpen={showPropertyDialog}
+					onClose={() => setShowPropertyDialog(false)}
+					onSave={handleSaveProperty}
+					initialData={{
+						name: property.title,
+						owner: property.owner,
+						address: property.address,
+						propertyType: property.propertyType,
+						units: property.units?.map((u) => u.name) || [],
+						hasSuites: property.hasSuites,
+						suites: property.suites?.map((s) => s.name) || [],
+						bedrooms: property.bedrooms,
+						bathrooms: property.bathrooms,
+						notes: property.notes,
+						photo: property.image,
+						groupId: property.groupId,
+					}}
+					groups={propertyGroups.map((g) => ({ id: g.id, name: g.name }))}
+					propertyId={property.id}
 				/>
 			)}
 

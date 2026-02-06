@@ -39,10 +39,10 @@ export const usePropertyEditHandlers = (): PropertyEditHandlers => {
 		setShowDeviceDialog(false);
 	};
 
-	const handleTitleEdit = () => {
-		setIsEditingTitle(true);
-		// Set initial value here
-		setEditedTitle('');
+	const handleTitleEdit = (
+		setShowPropertyDialog: React.Dispatch<React.SetStateAction<boolean>>,
+	) => {
+		setShowPropertyDialog(true);
 	};
 
 	const handleTitleSave = () => {

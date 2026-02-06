@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TenantsTabProps } from '../../../types/PropertyDetailPage.types';
 import {
 	SectionContainer,
@@ -12,12 +12,57 @@ import {
 } from '../PropertyDetailPage.styles';
 import { UserRole } from '../../../constants/roles';
 import { isTenant } from '../../../utils/permissions';
+import {
+	FilterBar,
+	FilterConfig,
+	FilterValues,
+} from '../../../Components/Library/FilterBar';
+import { applyFilters } from '../../../utils/tableFilters';
+import { useState } from 'react';
 
 export const TenantsTab: React.FC<TenantsTabProps> = ({
 	property,
 	currentUser,
 	setShowAddTenantModal,
 }) => {
+	const [filters, setFilters] = useState<FilterValues>({});
+
+	// Filter configuration for tenants
+	const tenantFilters: FilterConfig[] = [
+		{
+			key: 'search',
+			label: 'Search',
+			type: 'text',
+			placeholder: 'Search name, email, phone...',
+		},
+		{
+			key: 'leaseStatus',
+			label: 'Lease Status',
+			type: 'select',
+			options: [
+				{ value: 'active', label: 'Active' },
+				{ value: 'expired', label: 'Expired' },
+				{ value: 'upcoming', label: 'Upcoming' },
+			],
+		},
+		{
+			key: 'leaseDate',
+			label: 'Lease Period',
+			type: 'daterange',
+		},
+	];
+
+	// Apply filters to tenants
+	const filteredTenants = useMemo(() => {
+		if (!property.tenants) return [];
+		return applyFilters(property.tenants, filters, {
+			textFields: ['firstName', 'lastName', 'email', 'phone', 'unit'],
+			dateRangeFields: [
+				{ field: 'leaseStart', filterKey: 'leaseDate' },
+				{ field: 'leaseEnd', filterKey: 'leaseDate' },
+			],
+		});
+	}, [property.tenants, filters]);
 	return (
 		<SectionContainer>
 			<SectionHeader>
@@ -29,7 +74,9 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 				)}
 			</SectionHeader>
 
-			{property.tenants && property.tenants.length > 0 ? (
+			<FilterBar filters={tenantFilters} onFiltersChange={setFilters} />
+
+			{filteredTenants && filteredTenants.length > 0 ? (
 				<GridContainer>
 					<GridTable>
 						<thead>
@@ -43,7 +90,7 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 							</tr>
 						</thead>
 						<tbody>
-							{property.tenants.map((tenant: any) => (
+							{filteredTenants.map((tenant: any) => (
 								<tr key={tenant.id}>
 									<td>
 										{tenant.firstName} {tenant.lastName}

@@ -5,21 +5,23 @@ export const Wrapper = styled.div`
 	flex-direction: column;
 	gap: 0;
 	min-height: 100%;
-	background-color: #fafafa;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 `;
 
 export const Header = styled.div`
 	position: relative;
-	height: 150px;
+	height: 200px;
 	background-size: cover;
 	background-position: center;
-	background-color: #e0e0e0;
+	background-color: #e2e8f0;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
-	padding: 50px 20px 20px;
-	gap: 16px;
+	padding: 60px 20px 30px;
+	gap: 20px;
 	flex-shrink: 0;
+	border-radius: 0 0 24px 24px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
 	&::after {
 		content: '';
@@ -29,22 +31,26 @@ export const Header = styled.div`
 		right: 0;
 		bottom: 0;
 		background: linear-gradient(
-			to bottom,
-			rgba(0, 0, 0, 0.2),
-			rgba(0, 0, 0, 0.6)
+			135deg,
+			rgba(0, 0, 0, 0.3) 0%,
+			rgba(0, 0, 0, 0.5) 50%,
+			rgba(0, 0, 0, 0.7) 100%
 		);
+		border-radius: 0 0 24px 24px;
 		pointer-events: none;
 	}
 
 	@media (max-width: 768px) {
-		height: 198px;
-		padding: 36px 15px 15px;
+		height: 180px;
+		padding: 40px 15px 20px;
+		border-radius: 0 0 20px 20px;
 	}
 
 	@media (max-width: 480px) {
-		height: 120px;
-		padding: 12px 12px 12px;
-		gap: 8px;
+		height: 140px;
+		padding: 20px 12px 16px;
+		gap: 12px;
+		border-radius: 0 0 16px 16px;
 	}
 `;
 
@@ -52,27 +58,30 @@ export const HeaderContent = styled.div`
 	position: relative;
 	z-index: 2;
 	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 16px;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: 24px;
 	flex-wrap: wrap;
 
 	@media (max-width: 768px) {
-		gap: 10px;
+		gap: 16px;
+		align-items: center;
 	}
 
 	@media (max-width: 480px) {
 		flex-direction: column;
 		align-items: center;
-		gap: 6px;
+		gap: 12px;
+		text-align: center;
 	}
 `;
 
 export const TabContainer = styled.div`
 	display: flex;
 	border-bottom: 2px solid #e0e0e0;
-	background-color: #ffffff;
+	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 	flex-shrink: 0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 `;
 
 export const TabButton = styled.button<{ isActive: boolean }>`
@@ -88,10 +97,28 @@ export const TabButton = styled.button<{ isActive: boolean }>`
 	transition: all 0.2s ease;
 	margin-bottom: -2px;
 	white-space: nowrap;
+	position: relative;
 
 	&:hover {
 		color: #22c55e;
+		background-color: rgba(34, 197, 94, 0.05);
 	}
+
+	${(props) =>
+		props.isActive &&
+		`
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: -2px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 20px;
+			height: 3px;
+			background: linear-gradient(90deg, #22c55e, #16a34a);
+			border-radius: 2px 2px 0 0;
+		}
+	`}
 
 	@media (max-width: 768px) {
 		padding: 12px 16px;
@@ -234,18 +261,19 @@ export const GridTable = styled.table`
 
 export const PropertyTitle = styled.h1`
 	color: white;
-	font-size: 36px;
+	font-size: 2.5rem;
 	font-weight: 800;
 	margin: 0;
-	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-	letter-spacing: 0.5px;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+	letter-spacing: -0.025em;
+	line-height: 1.1;
 
 	@media (max-width: 768px) {
-		font-size: 28px;
+		font-size: 2rem;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 22px;
+		font-size: 1.75rem;
 	}
 `;
 
@@ -258,9 +286,7 @@ export const FavoriteButton = styled.button`
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
-	transition:
-		background-color 0.2s ease,
-		border-color 0.2s ease,
+	transition: background-color 0.2s ease, border-color 0.2s ease,
 		transform 0.1s ease;
 	position: relative;
 	z-index: 2;
@@ -309,13 +335,35 @@ export const DevicesGrid = styled.div`
 `;
 
 export const DeviceCard = styled.div`
-	background-color: white;
-	border: 1px solid #e0e0e0;
-	border-radius: 6px;
-	padding: 16px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.95),
+		rgba(248, 250, 252, 0.95)
+	);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 12px;
+	padding: 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 14px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+	backdrop-filter: blur(8px);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+	}
+
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 12px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px;
+		gap: 10px;
+	}
 `;
 
 export const DeviceField = styled.div`
@@ -331,13 +379,36 @@ export const MaintenanceList = styled.div`
 `;
 
 export const MaintenanceItem = styled.div`
-	background-color: white;
-	border: 1px solid #e0e0e0;
-	border-radius: 6px;
-	padding: 16px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.95),
+		rgba(248, 250, 252, 0.95)
+	);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 12px;
+	padding: 20px;
 	display: flex;
-	gap: 16px;
+	gap: 18px;
 	align-items: flex-start;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+	backdrop-filter: blur(8px);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+	}
+
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 14px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px;
+		gap: 12px;
+		flex-direction: column;
+	}
 `;
 
 export const MaintenanceDate = styled.div`
@@ -364,17 +435,34 @@ export const TasksGrid = styled.div`
 `;
 
 export const TaskCard = styled.div`
-	background-color: white;
-	border: 1px solid #e0e0e0;
-	border-radius: 6px;
-	padding: 16px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.98),
+		rgba(248, 250, 252, 0.98)
+	);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 12px;
+	padding: 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
-	transition: box-shadow 0.2s ease;
+	gap: 14px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+	backdrop-filter: blur(6px);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
 
 	&:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		transform: translateY(-3px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	}
+
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 12px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px;
+		gap: 10px;
 	}
 `;
 
@@ -412,28 +500,60 @@ export const TaskStatus = styled.span<{ status: string }>`
 `;
 
 export const EmptyState = styled.div`
-	background-color: white;
-	border: 1px dashed #e0e0e0;
-	border-radius: 6px;
-	padding: 40px 20px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.95),
+		rgba(248, 250, 252, 0.95)
+	);
+	border: 2px dashed rgba(148, 163, 184, 0.3);
+	border-radius: 16px;
+	padding: 48px 24px;
 	text-align: center;
-	color: #999999;
+	color: #64748b;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+	backdrop-filter: blur(8px);
 
 	p {
 		margin: 0;
-		font-size: 14px;
+		font-size: 16px;
+		font-weight: 400;
+		line-height: 1.5;
 	}
 
 	h2 {
-		margin: 0 0 12px 0;
-		font-size: 20px;
+		margin: 0 0 16px 0;
+		font-size: 24px;
 		font-weight: 700;
-		color: #1f2937;
+		color: #1e293b;
 		letter-spacing: 0.3px;
 	}
 
 	button {
-		margin-top: 16px;
+		margin-top: 20px;
+	}
+
+	@media (max-width: 768px) {
+		padding: 32px 20px;
+
+		h2 {
+			font-size: 20px;
+		}
+
+		p {
+			font-size: 14px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		padding: 24px 16px;
+
+		h2 {
+			font-size: 18px;
+		}
+
+		p {
+			font-size: 13px;
+		}
 	}
 `;
 
@@ -441,47 +561,64 @@ export const EmptyState = styled.div`
 export const TitleContainer = styled.div`
 	display: flex;
 	align-items: center;
-	justify-content: center;
 	gap: 12px;
 	flex: 1;
-	text-align: center;
+
+	@media (max-width: 480px) {
+		flex-direction: column;
+		gap: 8px;
+	}
 `;
 
 export const EditableTitleInput = styled.input`
-	background: transparent;
-	border: none;
-	color: white;
-	padding: 8px 12px;
-	border-radius: 4px;
-	font-size: 32px;
+	background: rgba(255, 255, 255, 0.95);
+	border: 2px solid #22c55e;
+	border-radius: 8px;
+	color: #1a1a1a;
+	font-size: 2rem;
 	font-weight: 700;
-	max-width: fit-content;
+	padding: 8px 12px;
+	width: 100%;
+	max-width: 400px;
+	text-shadow: none;
+	letter-spacing: -0.025em;
 
 	&:focus {
 		outline: none;
+		box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
 	}
 
-	&::placeholder {
-		color: rgba(255, 255, 255, 0.7);
+	@media (max-width: 768px) {
+		font-size: 1.75rem;
+		max-width: 300px;
+	}
+
+	@media (max-width: 480px) {
+		font-size: 1.5rem;
+		padding: 6px 10px;
+		max-width: 250px;
 	}
 `;
 
 export const PencilIcon = styled.button`
-	background: rgba(0, 0, 0, 0.3);
-	border: none;
+	background: rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.3);
 	color: white;
-	width: 36px;
-	height: 36px;
-	border-radius: 4px;
+	border-radius: 6px;
+	padding: 6px 8px;
 	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 18px;
-	transition: background-color 0.2s ease;
+	font-size: 14px;
+	transition: all 0.2s ease;
+	backdrop-filter: blur(4px);
 
 	&:hover {
-		background-color: rgba(0, 0, 0, 0.5);
+		background: rgba(255, 255, 255, 0.3);
+		transform: scale(1.05);
+	}
+
+	@media (max-width: 480px) {
+		padding: 4px 6px;
+		font-size: 12px;
 	}
 `;
 
@@ -492,6 +629,7 @@ export const TabControlsContainer = styled.div`
 	justify-content: space-between;
 	background-color: #ffffff;
 	border-bottom: 2px solid #e0e0e0;
+	margin-top: 10px;
 	padding: 0 24px;
 	flex-shrink: 0;
 `;
@@ -634,27 +772,53 @@ export const InfoGrid = styled.div`
 `;
 
 export const InfoCard = styled.div`
-	background: #f9fafb;
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 16px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.95),
+		rgba(248, 250, 252, 0.95)
+	);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 12px;
+	padding: 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 10px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+	backdrop-filter: blur(8px);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+	}
+
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 8px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px;
+		gap: 6px;
+	}
 `;
 
 export const InfoLabel = styled.label`
-	font-size: 12px;
-	font-weight: 600;
+	font-size: 11px;
+	font-weight: 700;
 	text-transform: uppercase;
-	color: #6b7280;
-	letter-spacing: 0.5px;
+	color: #64748b;
+	letter-spacing: 0.8px;
+	margin-bottom: 4px;
+	display: block;
 `;
 
 export const InfoValue = styled.span`
-	font-size: 14px;
-	color: #1f2937;
+	font-size: 15px;
+	font-weight: 500;
+	color: #1e293b;
 	word-break: break-word;
+	line-height: 1.4;
 `;
 
 export const TabContentContainer = styled.div`
