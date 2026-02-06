@@ -53,7 +53,7 @@ export const getAPKFileSize = async () => {
 			const release = await releaseResponse.json();
 			const assets = release?.assets || [];
 			const apkAsset = assets.find(
-				(asset) => asset?.name === 'PropertyManager.apk',
+				(asset) => asset?.label === 'PropertyManager.apk',
 			);
 			if (apkAsset?.size) {
 				return formatBytes(Number(apkAsset.size));
@@ -68,7 +68,7 @@ export const getAPKFileSize = async () => {
 
 	try {
 		const fallbackUrl =
-			'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
+			'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
 		const fallbackResponse = await fetch(`${fallbackUrl}?t=${Date.now()}`, {
 			method: 'HEAD',
 			cache: 'no-store',
@@ -181,11 +181,11 @@ export const getAPKDownloadURL = (): string => {
 	if (configuredUrl) {
 		// Ignore legacy GitHub Pages URL to ensure we always check the release asset
 		if (configuredUrl.includes('github.io')) {
-			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
+			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
 		}
 		return configuredUrl;
 	}
-	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
+	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
 };
 
 /**

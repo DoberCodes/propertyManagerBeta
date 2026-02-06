@@ -67,7 +67,7 @@ const LandingPageComponent = () => {
 	const apkDownloadUrl = getAPKDownloadURL();
 	// Use previous version (1.7.3) for the versioned APK download
 	const previousVersion = '1.7.3';
-	const versionedApkDownloadUrl = `https://github.com/DoberCodes/propertyManagerWebApp/releases/download/v${previousVersion}/PropertyManager-${previousVersion}.apk`;
+	const versionedApkDownloadUrl = `https://github.com/DoberCodes/propertyManagerWebApp/releases/download/v${previousVersion}/app-release.apk`;
 	const [formData, setFormData] = useState({
 		name: '',
 		email: '',
@@ -97,7 +97,7 @@ const LandingPageComponent = () => {
 					// Get file sizes for both APKs
 					const assets = release.assets || [];
 					const latestApk = assets.find(
-						(asset) => asset.name === 'PropertyManager.apk',
+						(asset) => asset.label === 'PropertyManager.apk',
 					);
 
 					// For versioned APK, fetch the previous version release
@@ -110,7 +110,9 @@ const LandingPageComponent = () => {
 						const previousAssets = previousRelease.assets || [];
 						const versionedApk = previousAssets.find(
 							(asset) =>
-								asset.name === `PropertyManager-${previousVersion}.apk`,
+								asset.label === `PropertyManager-${previousVersion}.apk` ||
+								asset.name === `PropertyManager-${previousVersion}.apk` ||
+								asset.name === 'app-release.apk',
 						);
 						if (versionedApk?.size) {
 							versionedApkSize = versionedApk.size;
@@ -148,7 +150,9 @@ const LandingPageComponent = () => {
 
 		try {
 			// Using a simple mailto approach for now
-			const mailtoLink = `mailto:contact@mypropertymanager.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
+			const mailtoLink = `mailto:contact@mypropertymanager.com?subject=${encodeURIComponent(
+				formData.subject,
+			)}&body=${encodeURIComponent(
 				`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`,
 			)}`;
 
