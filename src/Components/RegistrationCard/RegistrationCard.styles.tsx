@@ -160,6 +160,33 @@ export const SectionLabel = styled.p`
 	}
 `;
 
+export const TenantPlanCard = styled.div`
+	border: 1.5px solid ${COLORS.gray200};
+	border-radius: 8px;
+	background-color: ${COLORS.gray50};
+	padding: 16px;
+	margin: 8px 0 16px 0;
+`;
+
+export const TenantPlanTitle = styled.h3`
+	margin: 0 0 6px 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: ${COLORS.textPrimary};
+`;
+
+export const TenantPlanPrice = styled.div`
+	font-size: 22px;
+	font-weight: 800;
+	color: ${COLORS.primaryDark};
+`;
+
+export const TenantPlanNote = styled.p`
+	margin: 8px 0 0 0;
+	font-size: 13px;
+	color: ${COLORS.textSecondary};
+`;
+
 export const QuestionLabel = styled.label`
 	font-weight: 500;
 	font-size: 15px;

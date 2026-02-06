@@ -16,6 +16,10 @@ import {
 	RadioOption,
 	ButtonGroup,
 	PasswordMatchText,
+	TenantPlanCard,
+	TenantPlanTitle,
+	TenantPlanPrice,
+	TenantPlanNote,
 } from './RegistrationCard.styles';
 import { faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -32,6 +36,7 @@ const getRoleFromUserType = (userType: string): string => {
 	const roleMapping: { [key: string]: string } = {
 		homeowner: USER_ROLES.ADMIN, // Homeowners are admins of their properties
 		propertyManager: USER_ROLES.PROPERTY_MANAGER,
+		tenant: USER_ROLES.TENANT,
 	};
 	return roleMapping[userType] || USER_ROLES.ADMIN; // Default to admin
 };
@@ -68,11 +73,11 @@ export const RegistrationCard = () => {
 		}
 		if (!userType) {
 			setError(
-				'Please select if you are registering as a homeowner or a landlord',
+				'Please select if you are registering as a homeowner, property manager, or tenant',
 			);
 			return false;
 		}
-		if (!['homeowner', 'propertyManager'].includes(userType)) {
+		if (!['homeowner', 'propertyManager', 'tenant'].includes(userType)) {
 			setError('Invalid user type selected');
 			return false;
 		}
@@ -101,6 +106,13 @@ export const RegistrationCard = () => {
 	};
 
 	const validateStep3 = () => {
+		if (userType === 'tenant') {
+			if (!promoCode.trim()) {
+				setError('Tenant promo code is required');
+				return false;
+			}
+			return true;
+		}
 		// Plan selection is handled by the embedded paywall
 		// User must select a plan to proceed
 		if (!selectedPlan) {
@@ -177,7 +189,9 @@ export const RegistrationCard = () => {
 	}, [password, passwordConfirm]);
 
 	return (
-		<Wrapper $wide={step === 3} onSubmit={(e) => e.preventDefault()}>
+		<Wrapper
+			$wide={step === 3 && userType !== 'tenant'}
+			onSubmit={(e) => e.preventDefault()}>
 			<BackButton href='#/login'>
 				<FontAwesomeIcon icon={faArrowCircleLeft} />
 			</BackButton>
@@ -216,7 +230,7 @@ export const RegistrationCard = () => {
 						required
 					/>
 					<QuestionLabel>
-						Are you registering as a homeowner or a property manager?
+						Are you registering as a homeowner, property manager, or tenant?
 					</QuestionLabel>
 					<RadioGrid>
 						<RadioOption>
@@ -247,8 +261,7 @@ export const RegistrationCard = () => {
 							/>
 							Property Manager
 						</RadioOption>
-						{/* Temporarily commented out - need to rework tenant/contractor flow */}
-						{/* <RadioOption>
+						<RadioOption>
 							<input
 								type='radio'
 								name='userType'
@@ -256,26 +269,14 @@ export const RegistrationCard = () => {
 								checked={userType === 'tenant'}
 								onChange={() => {
 									setUserType('tenant');
+									setSelectedPlan('free');
+									setPromoCode('');
 									setError('');
 								}}
 								required
 							/>
 							Tenant
 						</RadioOption>
-						<RadioOption>
-							<input
-								type='radio'
-								name='userType'
-								value='contractor'
-								checked={userType === 'contractor'}
-								onChange={() => {
-									setUserType('contractor');
-									setError('');
-								}}
-								required
-							/>
-							Contractor
-						</RadioOption> */}
 					</RadioGrid>
 					<Submit type='button' onClick={handleNext}>
 						Next
@@ -363,7 +364,7 @@ export const RegistrationCard = () => {
 			)}
 
 			{/* Step 3: Plan Selection with Paywall */}
-			{step === 3 && (
+			{step === 3 && userType !== 'tenant' && (
 				<>
 					<PaywallPage
 						subscription={{
@@ -392,6 +393,41 @@ export const RegistrationCard = () => {
 					<ButtonGroup>
 						<Submit type='button' onClick={handleBack}>
 							Back
+						</Submit>
+					</ButtonGroup>
+				</>
+			)}
+
+			{/* Step 3: Tenant Plan + Promo Code */}
+			{step === 3 && userType === 'tenant' && (
+				<>
+					<SectionLabel>Tenant plan</SectionLabel>
+					<TenantPlanCard>
+						<TenantPlanTitle>Tenant Free</TenantPlanTitle>
+						<TenantPlanPrice>$0</TenantPlanPrice>
+						<TenantPlanNote>
+							Free tenant access with a one-time promo code from your property
+							manager.
+						</TenantPlanNote>
+					</TenantPlanCard>
+					<SectionLabel>Promo code</SectionLabel>
+					<Input
+						placeholder='Enter your promo code *'
+						type='text'
+						autoComplete='off'
+						value={promoCode}
+						onChange={(event) => {
+							setPromoCode(event.target.value);
+							setError('');
+						}}
+						required
+					/>
+					<ButtonGroup>
+						<Submit type='button' onClick={handleBack}>
+							Back
+						</Submit>
+						<Submit type='button' onClick={handleNext}>
+							Next
 						</Submit>
 					</ButtonGroup>
 				</>

@@ -46,6 +46,23 @@ export interface UserInvitation {
 	expiresAt: string;
 }
 
+export interface TenantPromoCode {
+	id: string;
+	code: string;
+	codeLower: string;
+	status: 'active' | 'redeemed' | 'revoked';
+	createdByUserId: string;
+	createdByEmail?: string;
+	propertyId?: string;
+	tenantEmail?: string;
+	redeemedByUserId?: string;
+	redeemedByEmail?: string;
+	createdAt: string;
+	updatedAt: string;
+	redeemedAt?: string;
+	revokedAt?: string;
+}
+
 export interface Notification {
 	id: string;
 	userId: string; // Recipient of the notification
@@ -342,6 +359,7 @@ export const apiSlice = createApi({
 		'UserInvitations',
 		'Notifications',
 		'TenantProfiles',
+		'TenantPromoCodes',
 		'MaintenanceHistory',
 		'Contractors',
 	],
@@ -2528,6 +2546,7 @@ export const apiSlice = createApi({
 				unit?: string;
 				leaseStart?: string;
 				leaseEnd?: string;
+				tenantPromoCodeId?: string;
 			}
 		>({
 			async queryFn(tenantData) {
@@ -2551,6 +2570,9 @@ export const apiSlice = createApi({
 						unit: tenantData.unit || '',
 						leaseStart: tenantData.leaseStart || '',
 						leaseEnd: tenantData.leaseEnd || '',
+						...(tenantData.tenantPromoCodeId && {
+							tenantPromoCodeId: tenantData.tenantPromoCodeId,
+						}),
 						createdAt: new Date().toISOString(),
 					};
 
@@ -2563,6 +2585,167 @@ export const apiSlice = createApi({
 				}
 			},
 			invalidatesTags: ['Properties'],
+		}),
+
+		updateTenant: builder.mutation<
+			void,
+			{
+				propertyId: string;
+				tenantId: string;
+				updates: Partial<{
+					firstName: string;
+					lastName: string;
+					email: string;
+					phone: string;
+					unit: string;
+					leaseStart: string;
+					leaseEnd: string;
+					tenantPromoCodeId: string;
+				}>;
+			}
+		>({
+			async queryFn({ propertyId, tenantId, updates }) {
+				try {
+					const propertyRef = doc(db, 'properties', propertyId);
+					const propertySnap = await getDoc(propertyRef);
+
+					if (!propertySnap.exists()) {
+						return { error: 'Property not found' };
+					}
+
+					const property = propertySnap.data();
+					const tenants = (property.tenants || []).map((tenant: any) =>
+						tenant.id === tenantId
+							? {
+									...tenant,
+									...updates,
+									updatedAt: new Date().toISOString(),
+							  }
+							: tenant,
+					);
+
+					await updateDoc(propertyRef, { tenants });
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['Properties'],
+		}),
+
+		createTenantPromoCode: builder.mutation<
+			TenantPromoCode,
+			{ propertyId?: string; tenantEmail?: string; code: string }
+		>({
+			async queryFn({ propertyId, tenantEmail, code }) {
+				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+
+					const now = new Date().toISOString();
+					const promoData = {
+						code,
+						codeLower: code.toLowerCase(),
+						status: 'active' as const,
+						createdByUserId: currentUser.uid,
+						createdByEmail: currentUser.email || undefined,
+						propertyId,
+						tenantEmail: tenantEmail?.toLowerCase() || undefined,
+						createdAt: now,
+						updatedAt: now,
+					};
+					const sanitizedPromoData = Object.fromEntries(
+						Object.entries(promoData).filter(
+							([, value]) => value !== undefined,
+						),
+					);
+
+					const docRef = await addDoc(
+						collection(db, 'tenantPromoCodes'),
+						sanitizedPromoData,
+					);
+					return {
+						data: { id: docRef.id, ...sanitizedPromoData } as TenantPromoCode,
+					};
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['TenantPromoCodes'],
+		}),
+
+		revokeTenantPromoCode: builder.mutation<
+			void,
+			{ propertyId?: string; tenantEmail: string }
+		>({
+			async queryFn({ propertyId, tenantEmail }) {
+				try {
+					const clauses = [
+						where('tenantEmail', '==', tenantEmail.toLowerCase()),
+						where('status', '==', 'active'),
+					];
+					if (propertyId) {
+						clauses.push(where('propertyId', '==', propertyId));
+					}
+					const q = query(collection(db, 'tenantPromoCodes'), ...clauses);
+					const snapshot = await getDocs(q);
+					const now = new Date().toISOString();
+					for (const docSnap of snapshot.docs) {
+						await updateDoc(docSnap.ref, {
+							status: 'revoked',
+							revokedAt: now,
+							updatedAt: now,
+						});
+					}
+
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['TenantPromoCodes'],
+		}),
+
+		getTenantPromoCode: builder.query<TenantPromoCode | null, string>({
+			async queryFn(promoCodeId) {
+				try {
+					const docRef = doc(db, 'tenantPromoCodes', promoCodeId);
+					const docSnap = await getDoc(docRef);
+					if (docSnap.exists()) {
+						return {
+							data: { id: docSnap.id, ...docSnap.data() } as TenantPromoCode,
+						};
+					} else {
+						return { data: null };
+					}
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['TenantPromoCodes'],
+		}),
+
+		getTenantPromoCodesByEmail: builder.query<TenantPromoCode[], string>({
+			async queryFn(tenantEmail) {
+				try {
+					const q = query(
+						collection(db, 'tenantPromoCodes'),
+						where('tenantEmail', '==', tenantEmail.toLowerCase()),
+						orderBy('createdAt', 'desc'),
+					);
+					const snapshot = await getDocs(q);
+					const promoCodes = snapshot.docs.map((doc) => ({
+						id: doc.id,
+						...doc.data(),
+					})) as TenantPromoCode[];
+					return { data: promoCodes };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['TenantPromoCodes'],
 		}),
 
 		removeTenant: builder.mutation<
@@ -2849,6 +3032,13 @@ export const {
 	useGetAllPropertyInvitationsQuery,
 	// Tenants
 	useAddTenantMutation,
+	useUpdateTenantMutation,
+	useCreateTenantPromoCodeMutation,
+	useRevokeTenantPromoCodeMutation,
+	useGetTenantPromoCodeQuery,
+	useLazyGetTenantPromoCodeQuery,
+	useGetTenantPromoCodesByEmailQuery,
+	useLazyGetTenantPromoCodesByEmailQuery,
 	useRemoveTenantMutation,
 	// Notifications
 	useGetUserNotificationsQuery,

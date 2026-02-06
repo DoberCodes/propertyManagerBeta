@@ -76,6 +76,9 @@ export interface TenantsTabProps {
 	property: any;
 	currentUser: any;
 	setShowAddTenantModal: (show: boolean) => void;
+	onEditTenant: (tenant: any) => void;
+	onDeleteTenant: (tenant: any) => void;
+	onViewTenantPromo: (tenant: any) => void;
 }
 
 export interface UnitsTabProps {

@@ -28,6 +28,12 @@ import {
 	useGetMaintenanceHistoryByPropertyQuery,
 	useGetDevicesQuery,
 	useGetContractorsByPropertyQuery,
+	useRemoveTenantMutation,
+	useRevokeTenantPromoCodeMutation,
+	useLazyGetTenantPromoCodeQuery,
+	useLazyGetTenantPromoCodesByEmailQuery,
+	useCreateTenantPromoCodeMutation,
+	useUpdateTenantMutation,
 } from '../../Redux/API/apiSlice';
 import {
 	canApproveMaintenanceRequest,
@@ -124,6 +130,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [deleteTaskMutation] = useDeleteTaskMutation();
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
 	const [createNotification] = useCreateNotificationMutation();
+	const [removeTenant] = useRemoveTenantMutation();
+	const [revokeTenantPromoCode] = useRevokeTenantPromoCodeMutation();
+	const [getTenantPromoCode] = useLazyGetTenantPromoCodeQuery();
+	const [getTenantPromoCodesByEmail] = useLazyGetTenantPromoCodesByEmailQuery();
+	const [createTenantPromoCode] = useCreateTenantPromoCodeMutation();
+	const [updateTenant] = useUpdateTenantMutation();
 
 	const dispatch = useDispatch();
 
@@ -141,6 +153,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 	const [showShareModal, setShowShareModal] = useState(false);
 	const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+	const [showEditTenantModal, setShowEditTenantModal] = useState(false);
+	const [editingTenant, setEditingTenant] = useState<any | null>(null);
+	const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
+	const [tenantToDelete, setTenantToDelete] = useState<any | null>(null);
 	const [deleteTaskModalOpen, setDeleteTaskModalOpen] = useState(false);
 	const [taskToDelete, setTaskToDelete] = useState<{
 		id: string;
@@ -154,6 +170,143 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			? propertyOverride
 			: firebaseProperties.find((p: any) => p.slug === slug);
 	}, [slug, firebaseProperties, propertyOverride]);
+
+	const handleEditTenant = (tenant: any) => {
+		setEditingTenant(tenant);
+		setShowEditTenantModal(true);
+	};
+
+	const handleDeleteTenant = (tenant: any) => {
+		setTenantToDelete(tenant);
+		setShowDeleteTenantModal(true);
+	};
+
+	const handleConfirmDeleteTenant = async () => {
+		if (!tenantToDelete || !property?.id) return;
+		try {
+			await removeTenant({
+				propertyId: property.id,
+				tenantId: tenantToDelete.id,
+			}).unwrap();
+		} catch (error) {
+			console.error('Failed to delete tenant:', error);
+		} finally {
+			setShowDeleteTenantModal(false);
+			setTenantToDelete(null);
+		}
+	};
+
+	const handleRevokeTenantPromo = async (tenant: any) => {
+		if (!property?.id || !tenant?.email) return;
+		const confirmRevoke = window.confirm(
+			`Revoke any active promo code for ${tenant.email}?`,
+		);
+		if (!confirmRevoke) return;
+		try {
+			await revokeTenantPromoCode({
+				propertyId: property.id,
+				tenantEmail: tenant.email,
+			}).unwrap();
+		} catch (error) {
+			console.error('Failed to revoke promo code:', error);
+		}
+	};
+
+	const handleViewTenantPromo = async (tenant: any) => {
+		if (!tenant?.email) {
+			alert('Tenant email is required to find promo code.');
+			return;
+		}
+
+		let promoCode: any = null;
+
+		// First try to get promo code by direct ID if available
+		if (tenant.tenantPromoCodeId) {
+			try {
+				promoCode = await getTenantPromoCode(tenant.tenantPromoCodeId).unwrap();
+			} catch (error) {
+				console.error('Failed to fetch promo code by ID:', error);
+			}
+		}
+
+		// If no promo code found by ID, search by email
+		if (!promoCode) {
+			try {
+				const promoCodes = await getTenantPromoCodesByEmail(
+					tenant.email,
+				).unwrap();
+				if (promoCodes && promoCodes.length > 0) {
+					// Get the most recent promo code
+					promoCode = promoCodes[0];
+				}
+			} catch (error) {
+				console.error('Failed to fetch promo codes by email:', error);
+			}
+		}
+
+		if (promoCode) {
+			let statusMessage = `Status: ${promoCode.status}`;
+			if (promoCode.status === 'redeemed' && promoCode.redeemedAt) {
+				statusMessage += ` (Redeemed on ${new Date(
+					promoCode.redeemedAt,
+				).toLocaleDateString()})`;
+			} else if (promoCode.status === 'revoked' && promoCode.revokedAt) {
+				statusMessage += ` (Revoked on ${new Date(
+					promoCode.revokedAt,
+				).toLocaleDateString()})`;
+			}
+			alert(`Promo Code: ${promoCode.code}\n${statusMessage}`);
+		} else {
+			alert('No promo code found for this tenant.');
+		}
+	};
+
+	const handleRegenerateTenantPromo = async (tenant: any) => {
+		if (!tenant?.email || !property?.id) {
+			alert('Tenant email and property ID are required.');
+			return;
+		}
+
+		const confirmRegenerate = window.confirm(
+			`This will revoke any existing promo codes for ${tenant.email} and create a new one. Continue?`,
+		);
+		if (!confirmRegenerate) return;
+
+		try {
+			// First revoke any existing active promo codes
+			await revokeTenantPromoCode({
+				propertyId: property.id,
+				tenantEmail: tenant.email,
+			}).unwrap();
+
+			// Create a new promo code
+			const promoCodeResult = await createTenantPromoCode({
+				propertyId: property.id,
+				tenantEmail: tenant.email,
+				code: `TENANT-${Math.random()
+					.toString(36)
+					.slice(2, 6)
+					.toUpperCase()}-${Math.random()
+					.toString(36)
+					.slice(2, 6)
+					.toUpperCase()}`,
+			}).unwrap();
+
+			// Update the tenant record with the new promo code ID
+			if (tenant.id) {
+				await updateTenant({
+					propertyId: property.id,
+					tenantId: tenant.id,
+					updates: { tenantPromoCodeId: promoCodeResult.id },
+				}).unwrap();
+			}
+
+			alert(`New promo code created: ${promoCodeResult.code}`);
+		} catch (error) {
+			console.error('Failed to regenerate promo code:', error);
+			alert('Failed to regenerate promo code. Please try again.');
+		}
+	};
 
 	// Handle task deletion with confirmation
 	const handleTaskDeleteClick = (taskIds: string[]) => {
@@ -1246,6 +1399,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 							property={property}
 							currentUser={currentUser}
 							setShowAddTenantModal={setShowAddTenantModal}
+							onEditTenant={handleEditTenant}
+							onDeleteTenant={handleDeleteTenant}
+							onViewTenantPromo={handleViewTenantPromo}
 						/>
 					)}
 				{/* Units Tab */}
@@ -1544,6 +1700,20 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				/>
 			)}
 
+			{/* Edit Tenant Modal */}
+			{property && editingTenant && (
+				<AddTenantModal
+					open={showEditTenantModal}
+					onClose={() => {
+						setShowEditTenantModal(false);
+						setEditingTenant(null);
+					}}
+					propertyId={property.id}
+					mode='edit'
+					tenant={editingTenant}
+				/>
+			)}
+
 			{/* Delete Task Confirmation Modal */}
 			<DeleteConfirmationModal
 				isOpen={deleteTaskModalOpen}
@@ -1557,6 +1727,18 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				onCancel={() => {
 					setDeleteTaskModalOpen(false);
 					setTaskToDelete(null);
+				}}
+			/>
+
+			{/* Delete Tenant Confirmation Modal */}
+			<DeleteConfirmationModal
+				isOpen={showDeleteTenantModal}
+				itemName={tenantToDelete?.email || ''}
+				itemType='tenant'
+				onConfirm={handleConfirmDeleteTenant}
+				onCancel={() => {
+					setShowDeleteTenantModal(false);
+					setTenantToDelete(null);
 				}}
 			/>
 

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import styled from 'styled-components';
 import { TenantsTabProps } from '../../../types/PropertyDetailPage.types';
 import {
 	SectionContainer,
@@ -9,6 +10,7 @@ import {
 	GridContainer,
 	GridTable,
 	EmptyState,
+	ToolbarButton,
 } from '../PropertyDetailPage.styles';
 import { UserRole } from '../../../constants/roles';
 import { isTenant } from '../../../utils/permissions';
@@ -24,6 +26,9 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 	property,
 	currentUser,
 	setShowAddTenantModal,
+	onEditTenant,
+	onDeleteTenant,
+	onViewTenantPromo,
 }) => {
 	const [filters, setFilters] = useState<FilterValues>({});
 
@@ -63,11 +68,14 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 			],
 		});
 	}, [property.tenants, filters]);
+	const canManageTenants =
+		currentUser && !isTenant(currentUser.role as UserRole);
+
 	return (
 		<SectionContainer>
 			<SectionHeader>
 				Property Tenants
-				{currentUser && !isTenant(currentUser.role as UserRole) && (
+				{canManageTenants && (
 					<AddButton onClick={() => setShowAddTenantModal(true)}>
 						+ Add Tenant
 					</AddButton>
@@ -87,6 +95,7 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 								<th>Phone</th>
 								<th>Lease Start</th>
 								<th>Lease End</th>
+								{canManageTenants && <th>Actions</th>}
 							</tr>
 						</thead>
 						<tbody>
@@ -100,6 +109,24 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 									<td>{tenant.phone}</td>
 									<td>{tenant.leaseStart || 'N/A'}</td>
 									<td>{tenant.leaseEnd || 'N/A'}</td>
+									{canManageTenants && (
+										<td>
+											<ActionRow>
+												<ToolbarButton onClick={() => onEditTenant(tenant)}>
+													Edit
+												</ToolbarButton>
+												<ToolbarButton
+													onClick={() => onViewTenantPromo(tenant)}>
+													View Promo
+												</ToolbarButton>
+												<ToolbarButton
+													className='delete'
+													onClick={() => onDeleteTenant(tenant)}>
+													Delete
+												</ToolbarButton>
+											</ActionRow>
+										</td>
+									)}
 								</tr>
 							))}
 						</tbody>
@@ -113,3 +140,9 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 		</SectionContainer>
 	);
 };
+
+const ActionRow = styled.div`
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+`;

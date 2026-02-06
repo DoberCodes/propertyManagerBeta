@@ -7,12 +7,23 @@ import {
 	updateProfile,
 	sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+	collection,
+	query,
+	where,
+	getDocs,
+	updateDoc,
+	doc,
+	getDoc,
+	setDoc,
+	serverTimestamp,
+} from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { clearUserLocalStorage } from '../utils/localStorageCleanup';
 import { User } from '../Redux/Slices/userSlice';
 import { USER_ROLES } from '../constants/roles';
 import { createTrialSubscription } from '../utils/subscriptionUtils';
+import { SUBSCRIPTION_STATUS } from '../constants/subscriptions';
 
 /**
  * Sign in with email and password
@@ -35,6 +46,22 @@ export const signInWithEmail = async (
 	}
 };
 
+const findActiveTenantPromoCode = async (promoCode: string) => {
+	const normalizedCode = promoCode.trim().toLowerCase();
+	const q = query(
+		collection(db, 'tenantPromoCodes'),
+		where('codeLower', '==', normalizedCode),
+	);
+	const snapshot = await getDocs(q);
+	if (snapshot.empty) {
+		return null;
+	}
+	const match = snapshot.docs.find(
+		(docSnap) => docSnap.data()?.status === 'active',
+	);
+	return match || null;
+};
+
 /**
  * Create new user account
  */
@@ -48,6 +75,18 @@ export const signUpWithEmail = async (
 	promoCode?: string,
 ): Promise<User> => {
 	try {
+		let promoDocRef: any = null;
+		if (role === USER_ROLES.TENANT) {
+			if (!promoCode?.trim()) {
+				throw new Error('Tenant promo code is required');
+			}
+			const promoDoc = await findActiveTenantPromoCode(promoCode);
+			if (!promoDoc) {
+				throw new Error('Invalid or expired tenant promo code');
+			}
+			promoDocRef = promoDoc.ref;
+		}
+
 		// Create Firebase Auth user
 		const userCredential = await createUserWithEmailAndPassword(
 			auth,
@@ -71,7 +110,17 @@ export const signUpWithEmail = async (
 			image: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=22c55e&color=fff`,
 		};
 
-		const subscription = createTrialSubscription(selectedPlan, promoCode);
+		const subscription =
+			role === USER_ROLES.TENANT
+				? {
+						status: SUBSCRIPTION_STATUS.ACTIVE,
+						plan: 'free',
+						currentPeriodStart: Math.floor(Date.now() / 1000),
+						currentPeriodEnd:
+							Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60,
+						trialEndsAt: null,
+				  }
+				: createTrialSubscription(selectedPlan, promoCode);
 
 		await setDoc(doc(db, 'users', userCredential.user.uid), {
 			...userProfile,
@@ -79,6 +128,16 @@ export const signUpWithEmail = async (
 			updatedAt: serverTimestamp(),
 			subscription,
 		});
+
+		if (promoDocRef) {
+			await updateDoc(promoDocRef, {
+				status: 'redeemed',
+				redeemedByUserId: userCredential.user.uid,
+				redeemedByEmail: email.trim().toLowerCase(),
+				redeemedAt: serverTimestamp(),
+				updatedAt: serverTimestamp(),
+			});
+		}
 
 		// Always create default groups for new users
 		await setDoc(

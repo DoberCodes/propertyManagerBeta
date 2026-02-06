@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { useAddTenantMutation } from '../../Redux/API/apiSlice';
+import {
+	useAddTenantMutation,
+	useCreateTenantPromoCodeMutation,
+	useRevokeTenantPromoCodeMutation,
+	useUpdateTenantMutation,
+} from '../../Redux/API/apiSlice';
 import { GenericModal, FormGroup, FormLabel, FormInput } from '../Library';
 import { COLORS } from '../../constants/colors';
 
@@ -10,12 +13,16 @@ interface AddTenantModalProps {
 	open: boolean;
 	onClose: () => void;
 	propertyId: string;
+	mode?: 'create' | 'edit';
+	tenant?: any;
 }
 
 export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 	open,
 	onClose,
 	propertyId,
+	mode = 'create',
+	tenant,
 }) => {
 	const [formData, setFormData] = useState({
 		firstName: '',
@@ -29,8 +36,43 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const [isRegenerating, setIsRegenerating] = useState(false);
 
 	const [addTenant, { isLoading }] = useAddTenantMutation();
+	const [updateTenant, { isLoading: isUpdating }] = useUpdateTenantMutation();
+	const [createTenantPromoCode] = useCreateTenantPromoCodeMutation();
+	const [revokeTenantPromoCode, { isLoading: isRevoking }] =
+		useRevokeTenantPromoCodeMutation();
+
+	useEffect(() => {
+		if (mode === 'edit' && tenant) {
+			setFormData({
+				firstName: tenant.firstName || '',
+				lastName: tenant.lastName || '',
+				email: tenant.email || '',
+				phone: tenant.phone || '',
+				unit: tenant.unit || '',
+				leaseStart: tenant.leaseStart || '',
+				leaseEnd: tenant.leaseEnd || '',
+			});
+		} else if (mode === 'create') {
+			setFormData({
+				firstName: '',
+				lastName: '',
+				email: '',
+				phone: '',
+				unit: '',
+				leaseStart: '',
+				leaseEnd: '',
+			});
+		}
+	}, [mode, tenant, open]);
+
+	const buildPromoCode = () => {
+		const partA = Math.random().toString(36).slice(2, 6).toUpperCase();
+		const partB = Math.random().toString(36).slice(2, 6).toUpperCase();
+		return `TENANT-${partA}-${partB}`;
+	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -57,6 +99,27 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 		}
 
 		try {
+			if (mode === 'edit' && tenant?.id) {
+				await updateTenant({
+					propertyId,
+					tenantId: tenant.id,
+					updates: {
+						firstName: formData.firstName,
+						lastName: formData.lastName,
+						email: formData.email.toLowerCase(),
+						phone: formData.phone,
+						unit: formData.unit,
+						leaseStart: formData.leaseStart,
+						leaseEnd: formData.leaseEnd,
+					},
+				}).unwrap();
+				setSuccess('Tenant updated successfully!');
+				setTimeout(() => {
+					onClose();
+				}, 800);
+				return;
+			}
+
 			await addTenant({
 				propertyId,
 				firstName: formData.firstName,
@@ -69,6 +132,25 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 			}).unwrap();
 
 			setSuccess('Tenant added successfully!');
+			const normalizedEmail = formData.email.toLowerCase();
+			const promoCodeResult = await createTenantPromoCode({
+				propertyId,
+				tenantEmail: normalizedEmail,
+				code: buildPromoCode(),
+			}).unwrap();
+			const promoCodeId = promoCodeResult.id;
+
+			await addTenant({
+				propertyId,
+				firstName: formData.firstName,
+				lastName: formData.lastName,
+				email: normalizedEmail,
+				phone: formData.phone,
+				unit: formData.unit,
+				leaseStart: formData.leaseStart,
+				leaseEnd: formData.leaseEnd,
+				tenantPromoCodeId: promoCodeId,
+			}).unwrap();
 			setFormData({
 				firstName: '',
 				lastName: '',
@@ -83,20 +165,95 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 				onClose();
 			}, 1000);
 		} catch (err: any) {
-			setError(err.message || 'Failed to add tenant');
+			setError(
+				err.message ||
+					(mode === 'edit'
+						? 'Failed to update tenant'
+						: 'Failed to add tenant'),
+			);
+		}
+	};
+
+	const handleRevokePromo = async () => {
+		if (!formData.email) {
+			setError('Tenant email is required to revoke promo code');
+			return;
+		}
+		setError('');
+		setSuccess('');
+		try {
+			await revokeTenantPromoCode({
+				propertyId,
+				tenantEmail: formData.email.toLowerCase(),
+			}).unwrap();
+			setSuccess('Promo code revoked.');
+		} catch (err: any) {
+			setError(err.message || 'Failed to revoke promo code');
+		}
+	};
+
+	const handleRegeneratePromo = async () => {
+		if (!formData.email) {
+			setError('Tenant email is required to regenerate promo code');
+			return;
+		}
+		const confirmRegenerate = window.confirm(
+			`This will revoke any existing promo codes for ${formData.email} and create a new one. Continue?`,
+		);
+		if (!confirmRegenerate) return;
+
+		setError('');
+		setSuccess('');
+		setIsRegenerating(true);
+		try {
+			// First revoke any existing active promo codes
+			await revokeTenantPromoCode({
+				propertyId,
+				tenantEmail: formData.email.toLowerCase(),
+			}).unwrap();
+
+			// Create a new promo code
+			const promoCodeResult = await createTenantPromoCode({
+				propertyId,
+				tenantEmail: formData.email.toLowerCase(),
+				code: buildPromoCode(),
+			}).unwrap();
+
+			// Update the tenant record with the new promo code ID if we have tenant data
+			if (mode === 'edit' && tenant?.id) {
+				await updateTenant({
+					propertyId,
+					tenantId: tenant.id,
+					updates: { tenantPromoCodeId: promoCodeResult.id },
+				}).unwrap();
+			}
+
+			setSuccess(`New promo code created: ${promoCodeResult.code}`);
+		} catch (err: any) {
+			setError(err.message || 'Failed to regenerate promo code');
+		} finally {
+			setIsRegenerating(false);
 		}
 	};
 
 	return (
 		<GenericModal
 			isOpen={open}
-			title='Add Tenant'
+			title={mode === 'edit' ? 'Edit Tenant' : 'Add Tenant'}
 			onClose={onClose}
 			onSubmit={handleSubmit}
-			primaryButtonLabel={isLoading ? 'Adding...' : 'Add Tenant'}
+			primaryButtonLabel={
+				mode === 'edit'
+					? isUpdating
+						? 'Saving...'
+						: 'Save Changes'
+					: isLoading
+					? 'Adding...'
+					: 'Add Tenant'
+			}
 			secondaryButtonLabel='Cancel'
-			primaryButtonDisabled={isLoading}
-			isLoading={isLoading}>
+			primaryButtonDisabled={isLoading || isUpdating}
+			isLoading={isLoading || isUpdating}>
 			{error && <Alert type='error'>{error}</Alert>}
 			{success && <Alert type='success'>{success}</Alert>}
 
@@ -177,6 +334,26 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 					onChange={handleChange}
 				/>
 			</FormGroup>
+
+			{mode === 'edit' && (
+				<FormGroup>
+					<RetryRow>
+						<PromoStatus>Manage promo codes for this tenant.</PromoStatus>
+						<RetryButton
+							type='button'
+							disabled={isRegenerating || isRevoking}
+							onClick={handleRegeneratePromo}>
+							{isRegenerating ? 'Regenerating...' : 'Regenerate Promo'}
+						</RetryButton>
+						<RetryButton
+							type='button'
+							disabled={isRevoking}
+							onClick={handleRevokePromo}>
+							{isRevoking ? 'Revoking...' : 'Revoke Promo'}
+						</RetryButton>
+					</RetryRow>
+				</FormGroup>
+			)}
 		</GenericModal>
 	);
 };
@@ -194,4 +371,27 @@ const Alert = styled.div<{ type: 'error' | 'success' }>`
 			props.type === 'error' ? COLORS.alertError : COLORS.alertSuccess};
 	font-size: 14px;
 	margin: 0 0 16px 0;
+`;
+
+const PromoStatus = styled.p`
+	margin: 8px 0 0 0;
+	font-size: 12px;
+	color: ${COLORS.textSecondary};
+`;
+
+const RetryRow = styled.div`
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 8px;
+`;
+
+const RetryButton = styled.button`
+	border: 1px solid ${COLORS.primary};
+	background: ${COLORS.bgWhite};
+	color: ${COLORS.primary};
+	padding: 6px 10px;
+	border-radius: 6px;
+	font-size: 12px;
+	cursor: pointer;
 `;
