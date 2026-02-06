@@ -21,6 +21,7 @@ interface tab {
 }
 
 const Tabs: React.FC<TabsProps> = ({
+	property,
 	hasCommercialSuites,
 	currentUser,
 	propertyMaintenanceRequests,
@@ -41,36 +42,34 @@ const Tabs: React.FC<TabsProps> = ({
 		return () => window.removeEventListener('resize', checkIsMobile);
 	}, []);
 
-	const homeownerTabs: tab[] = [
+	// Build tabs dynamically based on property attributes and user type
+	const baseTabs: tab[] = [
 		{ label: 'Details', value: 'details' },
 		{ label: 'Devices', value: 'devices' },
 		{ label: 'Tasks', value: 'tasks' },
 		{ label: 'Maintenance History', value: 'maintenance' },
-		{ label: 'Contractors', value: 'contractors' },
 	];
-	const comercialTabs: tab[] = [
-		{ label: 'Details', value: 'details' },
-		{ label: 'Devices', value: 'devices' },
-		{ label: 'Tasks', value: 'tasks' },
-		{ label: 'Maintenance History', value: 'maintenance' },
-		{ label: 'Suites', value: 'suites' },
-		{ label: 'Contractors', value: 'contractors' },
-	];
-	const landlordTabs: tab[] = [
-		{ label: 'Details', value: 'details' },
-		{ label: 'Devices', value: 'devices' },
-		{ label: 'Tasks', value: 'tasks' },
-		{ label: 'Maintenance History', value: 'maintenance' },
-		{
-			label: 'Tenants',
-			value: 'tenants',
-		},
-		{ label: 'Suites', value: 'suites' },
-		{
-			label: 'Units',
-			value: 'units',
-		},
-		{
+
+	const tabsForProperty: tab[] = [...baseTabs];
+
+	// Suites for commercial properties with suites enabled
+	if (property?.propertyType === 'Commercial' && hasCommercialSuites) {
+		tabsForProperty.push({ label: 'Suites', value: 'suites' });
+	}
+
+	// Units for multi-family properties
+	if (property?.propertyType === 'Multi-Family') {
+		tabsForProperty.push({ label: 'Units', value: 'units' });
+	}
+
+	// Tenants and Requests only for rental properties and non-homeowner users
+	const isPropertyManager = currentUser?.subscription
+		? currentUser.subscription.plan !== 'homeowner'
+		: true;
+
+	if (property?.isRental && isPropertyManager) {
+		tabsForProperty.push({ label: 'Tenants', value: 'tenants' });
+		tabsForProperty.push({
 			label: 'Requests',
 			value: 'requests',
 			badgeCount: propertyMaintenanceRequests.filter(
@@ -78,25 +77,15 @@ const Tabs: React.FC<TabsProps> = ({
 					request.status === 'pending' &&
 					canApproveMaintenanceRequest(currentUser.role),
 			).length,
-		},
-		{ label: 'Contractors', value: 'contractors' },
-	];
+		});
+	}
+
+	// Contractors tab always available
+	tabsForProperty.push({ label: 'Contractors', value: 'contractors' });
 
 	console.info(currentUser);
 
-	const tabOptions: tab[] = [];
-	const settabsOptions = () => {
-		if (currentUser?.subscription?.plan === 'homeowner') {
-			tabOptions.push(...homeownerTabs);
-		} else if (hasCommercialSuites) {
-			tabOptions.push(...comercialTabs);
-		} else {
-			tabOptions.push(...landlordTabs);
-		}
-		return tabOptions;
-	};
-
-	const tabs = settabsOptions();
+	const tabs = tabsForProperty;
 
 	if (isMobile) {
 		return (

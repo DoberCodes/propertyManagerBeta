@@ -1239,21 +1239,22 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				)}
 
 				{/* Tenants Tab */}
-				{activeTab === 'tenants' && !hasCommercialSuites && (
-					<TenantsTab
-						property={property}
-						currentUser={currentUser}
-						setShowAddTenantModal={setShowAddTenantModal}
-					/>
-				)}
-
+				{activeTab === 'tenants' &&
+					property?.isRental &&
+					!hasCommercialSuites && (
+						<TenantsTab
+							property={property}
+							currentUser={currentUser}
+							setShowAddTenantModal={setShowAddTenantModal}
+						/>
+					)}
 				{/* Units Tab */}
 				{activeTab === 'units' && property?.propertyType === 'Multi-Family' && (
 					<UnitsTab property={property} />
 				)}
 
 				{/* Maintenance Requests Tab */}
-				{activeTab === 'requests' && (
+				{activeTab === 'requests' && property?.isRental && (
 					<RequestsTab
 						propertyMaintenanceRequests={propertyMaintenanceRequests}
 						currentUser={currentUser}

@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import { User } from '../Slices/userSlice';
+import { Contractor } from '../../types/Contractor.types';
 import { TenantProfile } from '../../types/TenantProfile.types';
 
 // Types
@@ -110,6 +111,7 @@ export interface Property {
 	notes?: string;
 	taskHistory?: Array<{ date: string; description: string }>;
 	maintenanceHistory?: Array<{ date: string; description: string }>; // Alias for taskHistory
+	isRental?: boolean;
 	isFavorite?: boolean;
 	createdAt?: string;
 	updatedAt?: string;
@@ -299,10 +301,28 @@ export interface Favorite {
 	createdAt?: string;
 }
 
-// Helper function to convert Firestore docs to data with IDs
+// Helper to recursively sanitize Firestore data, converting Timestamp objects to ISO strings
+const sanitizeFirestoreData = (data: any): any => {
+	if (data === undefined || data === null) return data;
+	if (Array.isArray(data)) return data.map(sanitizeFirestoreData);
+	if (typeof data === 'object') {
+		// Firestore Timestamp object has a toDate() method
+		if (typeof (data as any).toDate === 'function') {
+			return (data as any).toDate().toISOString();
+		}
+		const out: any = {};
+		for (const [k, v] of Object.entries(data)) {
+			out[k] = sanitizeFirestoreData(v as any);
+		}
+		return out;
+	}
+	return data;
+};
+
+// Helper function to convert Firestore docs to data with IDs and sanitized fields
 const docToData = (docSnapshot: any) => {
 	if (!docSnapshot.exists()) return null;
-	return { id: docSnapshot.id, ...docSnapshot.data() };
+	return { id: docSnapshot.id, ...sanitizeFirestoreData(docSnapshot.data()) };
 };
 
 export const apiSlice = createApi({
@@ -347,11 +367,9 @@ export const apiSlice = createApi({
 						where('userId', '==', userId),
 					);
 					const querySnapshot = await getDocs(q);
-					const groups = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as PropertyGroup[];
-
+					const groups = querySnapshot.docs
+						.map((doc) => docToData(doc) as PropertyGroup)
+						.filter(Boolean) as PropertyGroup[];
 					// Fetch properties for each group
 					const groupsWithProperties = await Promise.all(
 						groups.map(async (group) => {
@@ -365,11 +383,9 @@ export const apiSlice = createApi({
 								where('groupId', '==', group.id),
 							);
 							const propertiesSnapshot = await getDocs(propertiesQuery);
-							const ownedProperties = propertiesSnapshot.docs.map((doc) => ({
-								id: doc.id,
-								...doc.data(),
-							})) as Property[];
-
+							const ownedProperties = propertiesSnapshot.docs
+								.map((doc) => docToData(doc) as Property)
+								.filter(Boolean) as Property[];
 							// Get shared properties that should appear in this group
 							let sharedProperties: Property[] = [];
 							if (userEmail) {
@@ -378,10 +394,9 @@ export const apiSlice = createApi({
 									where('sharedWithEmail', '==', userEmail),
 								);
 								const sharesSnapshot = await getDocs(sharesQuery);
-								const shares = sharesSnapshot.docs.map((doc) => ({
-									id: doc.id,
-									...doc.data(),
-								})) as PropertyShare[];
+								const shares = sharesSnapshot.docs
+									.map((doc) => docToData(doc) as PropertyShare)
+									.filter(Boolean) as PropertyShare[];
 
 								// Fetch shared property documents
 								const propertyIds = shares.map((share) => share.propertyId);
@@ -396,12 +411,9 @@ export const apiSlice = createApi({
 										const sharedPropertiesSnapshot = await getDocs(
 											sharedPropertiesQuery,
 										);
-										const properties = sharedPropertiesSnapshot.docs.map(
-											(doc) => ({
-												id: doc.id,
-												...doc.data(),
-											}),
-										) as Property[];
+										const properties = sharedPropertiesSnapshot.docs
+											.map((doc) => docToData(doc) as Property)
+											.filter(Boolean) as Property[];
 
 										// Determine which properties should go in this group based on permission
 										const groupSharedProperties = properties.filter((prop) => {
@@ -586,10 +598,9 @@ export const apiSlice = createApi({
 								where('groupId', 'in', batch),
 							);
 							const propertiesSnapshot = await getDocs(propertiesQuery);
-							const properties = propertiesSnapshot.docs.map((doc) => ({
-								id: doc.id,
-								...doc.data(),
-							})) as Property[];
+							const properties = propertiesSnapshot.docs
+								.map((doc) => docToData(doc) as Property)
+								.filter(Boolean) as Property[];
 							ownedProperties.push(...properties);
 						}
 					}
@@ -602,12 +613,9 @@ export const apiSlice = createApi({
 					const coOwnerPropertiesSnapshot = await getDocs(
 						coOwnerPropertiesQuery,
 					);
-					const coOwnerProperties = coOwnerPropertiesSnapshot.docs.map(
-						(doc) => ({
-							id: doc.id,
-							...doc.data(),
-						}),
-					) as Property[];
+					const coOwnerProperties = coOwnerPropertiesSnapshot.docs
+						.map((doc) => docToData(doc) as Property)
+						.filter(Boolean) as Property[];
 
 					// Also fetch properties where user is an administrator
 					const adminPropertiesQuery = query(
@@ -615,10 +623,9 @@ export const apiSlice = createApi({
 						where('administrators', 'array-contains', userId),
 					);
 					const adminPropertiesSnapshot = await getDocs(adminPropertiesQuery);
-					const adminProperties = adminPropertiesSnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as Property[];
+					const adminProperties = adminPropertiesSnapshot.docs
+						.map((doc) => docToData(doc) as Property)
+						.filter(Boolean) as Property[];
 
 					// Get shared properties - separate co-owners from regular shares
 					const coOwnerSharedProperties: Property[] = [];
@@ -629,10 +636,9 @@ export const apiSlice = createApi({
 							where('sharedWithEmail', '==', userEmail),
 						);
 						const sharesSnapshot = await getDocs(sharesQuery);
-						const shares = sharesSnapshot.docs.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						})) as PropertyShare[];
+						const shares = sharesSnapshot.docs
+							.map((doc) => docToData(doc) as PropertyShare)
+							.filter(Boolean) as PropertyShare[];
 
 						const coOwnerShares = shares.filter(
 							(share) => share.permission === 'co-owner',
@@ -654,10 +660,9 @@ export const apiSlice = createApi({
 									where('__name__', 'in', batch),
 								);
 								const propertiesSnapshot = await getDocs(propertiesQuery);
-								const properties = propertiesSnapshot.docs.map((doc) => ({
-									id: doc.id,
-									...doc.data(),
-								})) as Property[];
+								const properties = propertiesSnapshot.docs
+									.map((doc) => docToData(doc) as Property)
+									.filter(Boolean) as Property[];
 								coOwnerSharedProperties.push(...properties);
 							}
 						}
@@ -675,10 +680,9 @@ export const apiSlice = createApi({
 									where('__name__', 'in', batch),
 								);
 								const propertiesSnapshot = await getDocs(propertiesQuery);
-								const properties = propertiesSnapshot.docs.map((doc) => ({
-									id: doc.id,
-									...doc.data(),
-								})) as Property[];
+								const properties = propertiesSnapshot.docs
+									.map((doc) => docToData(doc) as Property)
+									.filter(Boolean) as Property[];
 								regularSharedProperties.push(...properties);
 							}
 						}
@@ -726,7 +730,9 @@ export const apiSlice = createApi({
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newProperty } as Property };
+					const savedSnapshot = await getDoc(doc(db, 'properties', docRef.id));
+					const savedData = docToData(savedSnapshot) as Property;
+					return { data: savedData };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -745,7 +751,9 @@ export const apiSlice = createApi({
 						...updates,
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id, ...updates } as Property };
+					const savedSnapshot = await getDoc(docRef);
+					const savedData = docToData(savedSnapshot) as Property;
+					return { data: savedData };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -827,9 +835,10 @@ export const apiSlice = createApi({
 								where('sharedWithEmail', '==', userEmail),
 							);
 							const sharesSnapshot = await getDocs(sharesQuery);
-							sharedPropertyIds = sharesSnapshot.docs.map(
-								(doc) => doc.data().propertyId,
-							);
+							sharedPropertyIds = sharesSnapshot.docs
+								.map((doc) => docToData(doc) as PropertyShare)
+								.filter(Boolean)
+								.map((share) => share.propertyId);
 						}
 					} catch (shareError) {
 						// If getting shared properties fails, continue with owned properties only
@@ -858,10 +867,9 @@ export const apiSlice = createApi({
 							where('propertyId', 'in', batch),
 						);
 						const tasksSnapshot = await getDocs(tasksQuery);
-						const tasks = tasksSnapshot.docs.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						})) as Task[];
+						const tasks = tasksSnapshot.docs
+							.map((doc) => docToData(doc) as Task)
+							.filter(Boolean) as Task[];
 						allTasks.push(...tasks);
 					}
 
@@ -1049,7 +1057,8 @@ export const apiSlice = createApi({
 					);
 					const primarySnapshot = await getDocs(primaryQuery);
 					primarySnapshot.docs.forEach((doc) => {
-						records.push({ id: doc.id, ...doc.data() });
+						const data = docToData(doc);
+						if (data) records.push(data);
 					});
 
 					if (records.length === 0) {
@@ -1063,7 +1072,8 @@ export const apiSlice = createApi({
 							);
 							const titleSnapshot = await getDocs(titleQuery);
 							titleSnapshot.docs.forEach((doc) => {
-								records.push({ id: doc.id, ...doc.data() });
+								const data = docToData(doc);
+								if (data) records.push(data);
 							});
 						}
 					}
@@ -1113,10 +1123,9 @@ export const apiSlice = createApi({
 						where('propertyId', '==', propertyId),
 					);
 					const snapshot = await getDocs(contractorQuery);
-					const contractors = snapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					}));
+					const contractors = snapshot.docs
+						.map((doc) => docToData(doc) as Contractor)
+						.filter(Boolean) as Contractor[];
 					return { data: contractors };
 				} catch (error: any) {
 					return { error: error.message };
@@ -1280,10 +1289,9 @@ export const apiSlice = createApi({
 						where('userId', '==', userId),
 					);
 					const querySnapshot = await getDocs(q);
-					const groups = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as TeamGroup[];
+					const groups = querySnapshot.docs
+						.map((doc) => docToData(doc) as TeamGroup)
+						.filter(Boolean) as TeamGroup[];
 					return { data: groups };
 				} catch (error: any) {
 					return { error: error.message };
@@ -1355,10 +1363,9 @@ export const apiSlice = createApi({
 						where('userId', '==', userId),
 					);
 					const membersSnapshot = await getDocs(membersQuery);
-					const members = membersSnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as TeamMember[];
+					const members = membersSnapshot.docs
+						.map((doc) => docToData(doc) as TeamMember)
+						.filter(Boolean) as TeamMember[];
 					return { data: members };
 				} catch (error: any) {
 					return { error: error.message };
@@ -1597,10 +1604,9 @@ export const apiSlice = createApi({
 						where('location.propertyId', '==', propertyId),
 					);
 					const querySnapshot = await getDocs(q);
-					const devices = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as Device[];
+					const devices = querySnapshot.docs
+						.map((doc) => docToData(doc) as Device)
+						.filter(Boolean) as Device[];
 					return { data: devices };
 				} catch (error: any) {
 					return { error: error.message };
@@ -1679,10 +1685,9 @@ export const apiSlice = createApi({
 						where('userId', '==', userId),
 					);
 					const querySnapshot = await getDocs(q);
-					const favorites = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as Favorite[];
+					const favorites = querySnapshot.docs
+						.map((doc) => docToData(doc) as Favorite)
+						.filter(Boolean) as Favorite[];
 					// Sort by timestamp descending (most recent first)
 					favorites.sort((a, b) => b.timestamp - a.timestamp);
 					return { data: favorites };
@@ -1775,10 +1780,9 @@ export const apiSlice = createApi({
 						where('propertyId', '==', propertyId),
 					);
 					const querySnapshot = await getDocs(q);
-					const shares = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as PropertyShare[];
+					const shares = querySnapshot.docs
+						.map((doc) => docToData(doc) as PropertyShare)
+						.filter(Boolean) as PropertyShare[];
 					return { data: shares };
 				} catch (error: any) {
 					return { error: error.message };
@@ -1839,10 +1843,9 @@ export const apiSlice = createApi({
 							where('propertyId', 'in', batch),
 						);
 						const sharesSnapshot = await getDocs(sharesQuery);
-						const shares = sharesSnapshot.docs.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						})) as PropertyShare[];
+						const shares = sharesSnapshot.docs
+							.map((doc) => docToData(doc) as PropertyShare)
+							.filter(Boolean) as PropertyShare[];
 						allShares.push(...shares);
 					}
 
@@ -1852,10 +1855,9 @@ export const apiSlice = createApi({
 						where('sharedWithEmail', '==', userEmail),
 					);
 					const receivedSharesSnapshot = await getDocs(receivedSharesQuery);
-					const receivedShares = receivedSharesSnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as PropertyShare[];
+					const receivedShares = receivedSharesSnapshot.docs
+						.map((doc) => docToData(doc) as PropertyShare)
+						.filter(Boolean) as PropertyShare[];
 					allShares.push(...receivedShares);
 
 					// Remove duplicates
@@ -1921,10 +1923,9 @@ export const apiSlice = createApi({
 						where('sharedWithEmail', '==', userEmail),
 					);
 					const receivedSharesSnapshot = await getDocs(receivedSharesQuery);
-					const receivedShares = receivedSharesSnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as PropertyShare[];
+					const receivedShares = receivedSharesSnapshot.docs
+						.map((doc) => docToData(doc) as PropertyShare)
+						.filter(Boolean) as PropertyShare[];
 					const sharedPropertyIds = receivedShares.map(
 						(share) => share.propertyId,
 					);
@@ -1941,10 +1942,9 @@ export const apiSlice = createApi({
 							where('propertyId', 'in', batch),
 						);
 						const maintenanceSnapshot = await getDocs(maintenanceQuery);
-						const maintenanceRecords = maintenanceSnapshot.docs.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						}));
+						const maintenanceRecords = maintenanceSnapshot.docs
+							.map((doc) => docToData(doc) as Record<string, unknown>)
+							.filter(Boolean) as Record<string, unknown>[];
 						allMaintenanceHistory.push(...maintenanceRecords);
 					}
 
@@ -1980,10 +1980,9 @@ export const apiSlice = createApi({
 						where('sharedWithEmail', '==', userEmail),
 					);
 					const sharesSnapshot = await getDocs(sharesQuery);
-					const shares = sharesSnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as PropertyShare[];
+					const shares = sharesSnapshot.docs
+						.map((doc) => docToData(doc) as PropertyShare)
+						.filter(Boolean) as PropertyShare[];
 
 					// Get all shared properties
 					const propertyIds = shares.map((share) => share.propertyId);
@@ -2000,10 +1999,9 @@ export const apiSlice = createApi({
 							where('__name__', 'in', batch),
 						);
 						const propertiesSnapshot = await getDocs(propertiesQuery);
-						const properties = propertiesSnapshot.docs.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						})) as Property[];
+						const properties = propertiesSnapshot.docs
+							.map((doc) => docToData(doc) as Property)
+							.filter(Boolean) as Property[];
 						allProperties.push(...properties);
 					}
 
@@ -2051,7 +2049,8 @@ export const apiSlice = createApi({
 						updatedAt: new Date().toISOString(),
 					});
 					const updatedDoc = await getDoc(docRef);
-					return { data: { id, ...updatedDoc.data() } as PropertyShare };
+					const data = docToData(updatedDoc) as PropertyShare;
+					return { data };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -2114,10 +2113,9 @@ export const apiSlice = createApi({
 						where('status', '==', 'pending'),
 					);
 					const querySnapshot = await getDocs(q);
-					const invitations = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as UserInvitation[];
+					const invitations = querySnapshot.docs
+						.map((doc) => docToData(doc) as UserInvitation)
+						.filter(Boolean) as UserInvitation[];
 					return { data: invitations };
 				} catch (error: any) {
 					return { error: error.message };
@@ -2200,10 +2198,7 @@ export const apiSlice = createApi({
 					// Get the invitation
 					const invitationRef = doc(db, 'userInvitations', invitationId);
 					const invitationDoc = await getDoc(invitationRef);
-					const invitation = {
-						id: invitationDoc.id,
-						...invitationDoc.data(),
-					} as UserInvitation;
+					const invitation = docToData(invitationDoc) as UserInvitation;
 
 					// Get user's email and name
 					const userDocRef = doc(db, 'users', userId);
@@ -2362,10 +2357,9 @@ export const apiSlice = createApi({
 						where('status', '==', 'pending'),
 					);
 					const querySnapshot = await getDocs(q);
-					const invitations = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as UserInvitation[];
+					const invitations = querySnapshot.docs
+						.map((doc) => docToData(doc) as UserInvitation)
+						.filter(Boolean) as UserInvitation[];
 					return { data: invitations };
 				} catch (error: any) {
 					return { error: error.message };
@@ -2384,10 +2378,8 @@ export const apiSlice = createApi({
 					);
 					const querySnapshot = await getDocs(q);
 					const invitations = querySnapshot.docs
-						.map((doc) => ({
-							id: doc.id,
-							...doc.data(),
-						}))
+						.map((doc) => docToData(doc) as UserInvitation)
+						.filter(Boolean)
 						.sort(
 							(a: any, b: any) =>
 								new Date(b.createdAt).getTime() -
@@ -2415,10 +2407,9 @@ export const apiSlice = createApi({
 						orderBy('createdAt', 'desc'),
 					);
 					const querySnapshot = await getDocs(q);
-					const notifications = querySnapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as Notification[];
+					const notifications = querySnapshot.docs
+						.map((doc) => docToData(doc) as Notification)
+						.filter(Boolean) as Notification[];
 					return { data: notifications };
 				} catch (error: any) {
 					return { error: error.message };
@@ -2477,12 +2468,8 @@ export const apiSlice = createApi({
 					});
 
 					const updatedDoc = await getDoc(notificationRef);
-					return {
-						data: {
-							id: updatedDoc.id,
-							...updatedDoc.data(),
-						} as Notification,
-					};
+					const data = docToData(updatedDoc) as Notification;
+					return { data };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -2650,9 +2637,8 @@ export const apiSlice = createApi({
 						return { error: 'Tenant profile not found' };
 					}
 
-					return {
-						data: { id: profileDoc.id, ...profileDoc.data() } as TenantProfile,
-					};
+					const data = docToData(profileDoc) as TenantProfile;
+					return { data };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -2735,10 +2721,9 @@ export const apiSlice = createApi({
 					const q = query(profilesRef, where('isPublic', '==', true));
 					const snapshot = await getDocs(q);
 
-					const profiles: TenantProfile[] = snapshot.docs.map((doc) => ({
-						id: doc.id,
-						...doc.data(),
-					})) as TenantProfile[];
+					const profiles = snapshot.docs
+						.map((doc) => docToData(doc) as TenantProfile)
+						.filter(Boolean) as TenantProfile[];
 
 					return { data: profiles };
 				} catch (error: any) {

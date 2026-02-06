@@ -49,6 +49,7 @@ interface PropertyFormData {
 	owner: string;
 	address: string;
 	propertyType: 'Single Family' | 'Multi-Family' | 'Commercial';
+	isRental?: boolean;
 	units: string[]; // For multi-family properties
 	hasSuites?: boolean; // For commercial properties
 	suites: string[]; // For commercial properties with multiple suites
@@ -147,6 +148,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 					units: unitStrings,
 					suites: suiteStrings,
 					hasSuites: initialData.hasSuites ?? false,
+					isRental: initialData.isRental ?? false,
 					groupId: selectedGroupId ?? null,
 				});
 			} else {
@@ -155,6 +157,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 					owner: '',
 					address: '',
 					propertyType: 'Single Family',
+					isRental: false,
 					units: [],
 					hasSuites: false,
 					suites: [],
@@ -498,6 +501,30 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 								</FormField>
 							</FormRow>
 						)}
+					</FormSection>
+
+					{/* Rental Settings */}
+					<FormSection>
+						<SectionTitle>Rental Settings</SectionTitle>
+						<FormRow>
+							<FormField>
+								<Label>Is Rental?</Label>
+								<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+									<input
+										type='checkbox'
+										checked={!!formData.isRental}
+										onChange={(e) =>
+											handleInputChange('isRental', e.target.checked)
+										}
+										style={{ width: '16px', height: '16px' }}
+									/>
+									<span style={{ color: '#4b5563', fontSize: '14px' }}>
+										This property is a rental and will enable tenant & request
+										management.
+									</span>
+								</div>
+							</FormField>
+						</FormRow>
 					</FormSection>
 
 					{/* Units Section - Only for Multi-Family */}

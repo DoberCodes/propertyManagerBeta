@@ -65,14 +65,14 @@ export const TopActions = styled.div`
 `;
 
 export const GroupsContainer = styled.div`
-	display: flex;
-	flex-direction: row;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 	gap: 40px;
 	flex: 1;
-	align-items: flex-start;
+	align-items: start;
 
 	@media (max-width: 1024px) {
-		flex-direction: column;
+		grid-template-columns: 1fr;
 		gap: 30px;
 	}
 
@@ -90,8 +90,7 @@ export const GroupSection = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
-	flex: 1;
-	min-width: 0;
+	width: 100%;
 
 	@media (max-width: 480px) {
 		gap: 15px;

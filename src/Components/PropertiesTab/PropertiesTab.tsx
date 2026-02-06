@@ -481,30 +481,34 @@ export const Properties = () => {
 		if (selectedPropertyForEdit) {
 			// Edit existing property
 			try {
+				const updates = {
+					title: formData.name,
+					image: formData.photo || selectedPropertyForEdit.image,
+					owner: formData.owner,
+					address: formData.address,
+					propertyType: formData.propertyType,
+					units:
+						formData.propertyType === 'Multi-Family' ? unitsData : undefined,
+					hasSuites:
+						formData.propertyType === 'Commercial'
+							? !!formData.hasSuites
+							: undefined,
+					suites:
+						formData.propertyType === 'Commercial' && formData.hasSuites
+							? suitesData
+							: undefined,
+					bedrooms: formData.bedrooms,
+					bathrooms: formData.bathrooms,
+					notes: formData.notes,
+					isRental: !!formData.isRental,
+					taskHistory: formData.maintenanceHistory || [],
+				};
+				const sanitizedUpdates = Object.fromEntries(
+					Object.entries(updates).filter(([, value]) => value !== undefined),
+				);
 				await updateProperty({
 					id: selectedPropertyForEdit.id,
-					updates: {
-						title: formData.name,
-						image: formData.photo || selectedPropertyForEdit.image,
-						owner: formData.owner,
-						address: formData.address,
-						propertyType: formData.propertyType,
-						units:
-							formData.propertyType === 'Multi-Family' ? unitsData : undefined,
-						hasSuites:
-							formData.propertyType === 'Commercial'
-								? !!formData.hasSuites
-								: undefined,
-						suites:
-							formData.propertyType === 'Commercial' && formData.hasSuites
-								? suitesData
-								: undefined,
-						bedrooms: formData.bedrooms,
-						bathrooms: formData.bathrooms,
-
-						notes: formData.notes,
-						taskHistory: formData.maintenanceHistory || [],
-					},
+					updates: sanitizedUpdates,
 				}).unwrap();
 
 				// Create notification for property update
@@ -558,6 +562,7 @@ export const Properties = () => {
 				propertyType: formData.propertyType,
 				bedrooms: formData.bedrooms,
 				bathrooms: formData.bathrooms,
+				isRental: !!formData.isRental,
 
 				taskHistory: formData.maintenanceHistory || [],
 			};
@@ -681,6 +686,7 @@ export const Properties = () => {
 								bedrooms: selectedPropertyForEdit.bedrooms || 0,
 								bathrooms: selectedPropertyForEdit.bathrooms || 0,
 								notes: selectedPropertyForEdit.notes || '',
+								isRental: selectedPropertyForEdit.isRental ?? false,
 								maintenanceHistory:
 									selectedPropertyForEdit.maintenanceHistory || [],
 						  }

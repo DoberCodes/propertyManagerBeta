@@ -25,6 +25,7 @@ export interface Property {
 	notes?: string;
 	taskHistory?: Array<{ date: string; description: string }>;
 	maintenanceHistory?: Array<{ date: string; description: string }>;
+	isRental?: boolean;
 	isFavorite?: boolean;
 	createdAt?: string;
 	updatedAt?: string;
