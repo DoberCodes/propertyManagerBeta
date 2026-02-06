@@ -27,12 +27,13 @@ export const NavWrapper = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		height: auto;
-		min-height: 140px;
+		height: 120px;
+		min-height: 120px;
 		flex-direction: column;
 		justify-content: center;
 		padding: 12px 8px;
 		gap: 8px;
+		flex-wrap: nowrap;
 	}
 `;
 
@@ -55,18 +56,25 @@ export const NavTitle = styled.div`
 	@media (max-width: 768px) {
 		width: auto;
 		flex: 1;
+		max-height: 60px;
 
 		img {
 			height: 100%;
+			max-height: 60px;
+			object-fit: contain;
 		}
 	}
 
 	@media (max-width: 480px) {
 		width: 100%;
 		padding: 4px 0;
+		max-height: 48px;
 
 		img {
 			height: 100%;
+			max-height: 48px;
+			max-width: 70%;
+			object-fit: contain;
 		}
 	}
 `;
