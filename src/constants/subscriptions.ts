@@ -23,7 +23,7 @@ export const SUBSCRIPTION_PLANS = {
 		features: [
 			'Continuous service record for properties',
 			'Unlimited maintenance tracking for devices and their maintenance history',
-			'Maintain a verified record of contractor/vendor work',
+			'Maintain a complete record of contractor/vendor work',
 			'Attach documents and photos to create a full property audit trail',
 			'Basic reporting for insurance or resale documentation',
 		],
@@ -41,8 +41,11 @@ export const SUBSCRIPTION_PLANS = {
 		maxProperties: 5,
 		features: [
 			'All of Homeowner features, plus:',
-			'Up to 5 properties',
-			'Add team members and tenants',
+			'Track maintenance for up to 5 properties',
+			'Maintain per unit device history for each property',
+			'Add team members to keep maintenance organized and well documented',
+			'Invite tenants to submit maintenance requests directly into the propery history',
+			'Tenant-requested maintenance becomes part of the property audit trail',
 		],
 		permissions: {
 			canManageTeam: true,
@@ -57,12 +60,10 @@ export const SUBSCRIPTION_PLANS = {
 		priceMonthly: 16,
 		maxProperties: 10,
 		features: [
-			'Continuous service record for up to 10 homes',
-			'Track maintenance for devices in each property and unit',
-			'Maintain a verified record of contractor/vendor work',
-			'Add team members and tenants (tenant-requested maintenance)',
-			'Advanced reporting with export capabilities',
-			'Priority customer support',
+			'Everything in Basic, plus:',
+			'Track maintenance for up to 10 properties',
+			'Advanced reporting & export (PDF/CSV) for insurance, resale, or audits',
+			'Full audit trail for each property and unit',
 		],
 		permissions: {
 			canManageTeam: true,
