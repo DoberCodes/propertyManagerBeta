@@ -12,38 +12,39 @@ import {
 const MissionSectionComponent = () => {
 	return (
 		<MissionSection id='Mission'>
-			<MissionTitle>Why We're Different</MissionTitle>
+			<MissionTitle>Property Management, Simplified</MissionTitle>
 			<MissionContent>
 				<MissionCard>
-					<MissionCardIcon>🎯</MissionCardIcon>
-					<MissionCardTitle>Built for You</MissionCardTitle>
+					<MissionCardIcon>🏠</MissionCardIcon>
+					<MissionCardTitle>Complete Property Oversight</MissionCardTitle>
 					<MissionCardDescription>
-						We get it. You're managing everything yourself or with a small team.
-						No bloat, no overwhelming features.
+						Manage multiple properties, units, and tenants from one intuitive
+						dashboard. Track everything from maintenance to tenant
+						communications.
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>⚡</MissionCardIcon>
-					<MissionCardTitle>Quick to Set Up</MissionCardTitle>
+					<MissionCardIcon>👥</MissionCardIcon>
+					<MissionCardTitle>Team Collaboration</MissionCardTitle>
 					<MissionCardDescription>
-						Get started in minutes. Invite your tenants or contractors. Done. No
-						training needed.
+						Invite contractors, tenants, and team members. Assign roles and
+						permissions. Keep everyone coordinated on property tasks.
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>💰</MissionCardIcon>
-					<MissionCardTitle>Affordable</MissionCardTitle>
+					<MissionCardIcon>📊</MissionCardIcon>
+					<MissionCardTitle>Smart Task Management</MissionCardTitle>
 					<MissionCardDescription>
-						No enterprise pricing schemes. Fair rates for individuals and small
-						landlords. Tenants and contractors can join for free.
+						Automated task tracking with priority levels, due dates, and status
+						updates. Never miss maintenance or follow-ups again.
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>🛡️</MissionCardIcon>
-					<MissionCardTitle>Secure & Private</MissionCardTitle>
+					<MissionCardIcon>📱</MissionCardIcon>
+					<MissionCardTitle>Mobile-First Design</MissionCardTitle>
 					<MissionCardDescription>
-						Your property details stay private. Built on secure, trusted
-						infrastructure.
+						Access your properties anywhere with our native mobile app. Get push
+						notifications and manage tasks on the go.
 					</MissionCardDescription>
 				</MissionCard>
 			</MissionContent>
