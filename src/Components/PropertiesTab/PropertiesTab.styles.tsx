@@ -96,7 +96,8 @@ export const GroupSection = styled.div`
 		gap: 15px;
 		align-items: center;
 		width: 100%;
-		max-width: 300px;
+		max-width: 320px;
+		margin: 0 auto;
 	}
 `;
 
@@ -262,58 +263,63 @@ export const PropertiesGrid = styled.div<{
 	$singleProperty?: boolean;
 }>`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	gap: 20px;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 24px;
 	margin-top: 8px; /* space from header */
+	justify-items: center;
 
 	${({ $isHomeowner, $singleProperty }) =>
 		$isHomeowner && $singleProperty
 			? `
 		justify-items: center;
-		grid-template-columns: 250px;
-		max-width: 250px;
+		grid-template-columns: 280px;
+		max-width: 280px;
 		margin: 8px auto 0;
 	`
 			: ''}
 
 	@media (max-width: 1024px) {
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-		gap: 16px;
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		gap: 20px;
+		justify-items: center;
 
 		${({ $isHomeowner, $singleProperty }) =>
 			$isHomeowner && $singleProperty
 				? `
-			grid-template-columns: 200px;
-			max-width: 200px;
+			grid-template-columns: 260px;
+			max-width: 260px;
 		`
 				: ''}
 	}
 
 	@media (max-width: 768px) {
-		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-		gap: 14px;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 18px;
+		justify-items: center;
 
 		${({ $isHomeowner, $singleProperty }) =>
 			$isHomeowner && $singleProperty
 				? `
-			grid-template-columns: 160px;
-			max-width: 160px;
+			grid-template-columns: 220px;
+			max-width: 220px;
 		`
 				: ''}
 	}
 
-	@media (max-width: 480px) {
+	@media (max-width: 600px) {
 		grid-template-columns: 1fr;
-		gap: 12px;
+		gap: 14px;
 		justify-items: center;
-		max-width: 250px;
+		align-items: start;
 		margin: 8px auto 0;
+		padding: 0 8px;
 
 		${({ $isHomeowner, $singleProperty }) =>
 			$isHomeowner && $singleProperty
 				? `
-			grid-template-columns: 140px;
-			max-width: 140px;
+			grid-template-columns: 1fr;
+			width: 100%;
+			max-width: none;
 		`
 				: ''}
 	}
@@ -321,12 +327,15 @@ export const PropertiesGrid = styled.div<{
 
 export const PropertyTile = styled.div`
 	position: relative;
-	height: 200px;
+	height: 320px;
 	border-radius: 8px;
 	overflow: hidden;
 	cursor: pointer;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	max-width: 100%;
+	width: 100%;
+	aspect-ratio: auto;
 
 	&:hover {
 		transform: translateY(-4px);
@@ -334,11 +343,14 @@ export const PropertyTile = styled.div`
 	}
 
 	@media (max-width: 768px) {
-		height: 170px;
+		height: 260px;
 	}
 
-	@media (max-width: 480px) {
-		height: 150px;
+	@media (max-width: 600px) {
+		height: auto;
+		aspect-ratio: 8 / 9;
+		width: min(90vw, 340px);
+		min-height: 150px;
 	}
 `;
 

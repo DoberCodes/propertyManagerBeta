@@ -154,6 +154,8 @@ export const Toolbar = styled.div`
 
 	@media (max-width: 480px) {
 		gap: 8px;
+		justify-content: center;
+		margin-bottom: 16px;
 	}
 `;
 
@@ -762,6 +764,13 @@ export const AddDeviceButton = styled.button`
 // Info Card and Grid Components for Property Detail Section
 export const SectionContainer = styled.div`
 	margin-bottom: 24px;
+
+	@media (max-width: 480px) {
+		margin-bottom: 20px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
 `;
 
 export const InfoGrid = styled.div`
@@ -769,6 +778,21 @@ export const InfoGrid = styled.div`
 	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 	gap: 16px;
 	margin-top: 12px;
+	justify-items: center;
+
+	@media (max-width: 768px) {
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 14px;
+		justify-items: center;
+	}
+
+	@media (max-width: 480px) {
+		grid-template-columns: 1fr;
+		gap: 12px;
+		justify-items: center;
+		max-width: 320px;
+		margin: 12px auto 0;
+	}
 `;
 
 export const InfoCard = styled.div`
@@ -832,5 +856,8 @@ export const TabContentContainer = styled.div`
 
 	@media (max-width: 480px) {
 		padding: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 `;
