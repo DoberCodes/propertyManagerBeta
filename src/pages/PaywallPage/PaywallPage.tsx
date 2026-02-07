@@ -180,7 +180,6 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 			'mailto:sales@propertymanager.com?subject=Custom Pricing Inquiry';
 	};
 
-	console.info('Days remaining:', daysRemaining);
 	return (
 		<PaywallWrapper variant={variant} wide={wide}>
 			<PaywallContainer variant={variant} wide={wide}>
@@ -279,8 +278,8 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 									? 'Selected'
 									: 'Current Plan'
 								: selectionOnly
-									? 'Select Plan'
-									: 'Upgrade'}
+								? 'Select Plan'
+								: 'Upgrade'}
 						</SelectPlanButton>
 					</PricingCard>
 					{/* Basic Plan */}
@@ -319,8 +318,8 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 									? 'Selected'
 									: 'Current Plan'
 								: selectionOnly
-									? 'Select Plan'
-									: 'Upgrade'}
+								? 'Select Plan'
+								: 'Upgrade'}
 						</SelectPlanButton>
 					</PricingCard>
 
@@ -361,8 +360,8 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 									? 'Selected'
 									: 'Current Plan'
 								: selectionOnly
-									? 'Select Plan'
-									: 'Upgrade'}
+								? 'Select Plan'
+								: 'Upgrade'}
 						</SelectPlanButton>
 					</PricingCard>
 
@@ -416,8 +415,8 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 							Need More Properties?
 						</ContactSalesTitle>
 						<ContactSalesText layout={layout}>
-							Managing more than 10 properties? Contact our sales team for
-							custom pricing tailored to your needs.
+							Managing more than 10 properties? Get a customized plan with
+							per-unit pricing, advanced reporting and priority support.
 						</ContactSalesText>
 						<ContactSalesButtonStyled
 							layout={layout}

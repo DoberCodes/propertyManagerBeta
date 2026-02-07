@@ -5,8 +5,11 @@ import { canExportData } from '../../utils/subscriptionUtils';
 import {
 	useGetTasksQuery,
 	useGetPropertiesQuery,
-	useGetPropertyGroupsQuery,
 	useGetTeamMembersQuery,
+	useGetAllMaintenanceHistoryForUserQuery,
+	useGetPublicTenantProfilesQuery,
+	useGetAllPropertySharesForUserQuery,
+	useGetContractorsQuery,
 } from '../../Redux/API/apiSlice';
 import {
 	FormGroup as LibraryFormGroup,
@@ -42,11 +45,25 @@ import {
 	TEAM_MEMBER_COLUMN_OPTIONS,
 	EMPLOYEE_EFFICIENCY_COLUMN_OPTIONS,
 	PROPERTY_SUMMARY_COLUMN_OPTIONS,
+	CONTRACTOR_COLUMN_OPTIONS,
+	SUITE_COLUMN_OPTIONS,
+	UNIT_COLUMN_OPTIONS,
+	DEVICE_COLUMN_OPTIONS,
+	MAINTENANCE_HISTORY_COLUMN_OPTIONS,
+	TENANT_PROFILE_COLUMN_OPTIONS,
+	PROPERTY_SHARE_COLUMN_OPTIONS,
 	generateTaskReport,
 	generateMaintenanceRequestReport,
 	generateTeamReport,
 	generateEmployeeEfficiencyReport,
 	generatePropertySummaryReport,
+	generateContractorReport,
+	generateSuiteReport,
+	generateUnitReport,
+	generateDeviceReport,
+	generateMaintenanceHistoryReport,
+	generateTenantProfileReport,
+	generatePropertyShareReport,
 	EmployeeEfficiencyMetrics,
 	PropertySummaryMetrics,
 } from '../../utils/csvExport';
@@ -62,6 +79,13 @@ type ReportType =
 	| 'team'
 	| 'employee-efficiency'
 	| 'property-summary'
+	| 'contractors'
+	| 'suites'
+	| 'units'
+	| 'devices'
+	| 'maintenance-history'
+	| 'tenant-profiles'
+	| 'property-shares'
 	| '';
 
 export const ReportBuilder: React.FC = () => {
@@ -82,11 +106,94 @@ export const ReportBuilder: React.FC = () => {
 	const { data: properties = [], isLoading: propertiesLoading } =
 		useGetPropertiesQuery();
 
-	const { data: propertyGroups = [], isLoading: groupsLoading } =
-		useGetPropertyGroupsQuery();
-
 	const { data: firebaseTeamMembers = [], isLoading: teamLoading } =
 		useGetTeamMembersQuery();
+
+	// New data queries for expanded reporting
+	const {
+		data: allMaintenanceHistory = [],
+		isLoading: maintenanceHistoryLoading,
+	} = useGetAllMaintenanceHistoryForUserQuery();
+
+	const { data: publicTenantProfiles = [], isLoading: tenantProfilesLoading } =
+		useGetPublicTenantProfilesQuery();
+
+	const { data: propertyShares = [], isLoading: propertySharesLoading } =
+		useGetAllPropertySharesForUserQuery();
+
+	const { data: contractors = [], isLoading: contractorsLoading } =
+		useGetContractorsQuery();
+
+	// For property-specific data, we'll aggregate across all properties
+	const suitesData = useMemo(() => {
+		const allSuites: any[] = [];
+		properties.forEach((property: any) => {
+			if (property.hasSuites && property.suites) {
+				property.suites.forEach((suite: any) => {
+					allSuites.push({
+						...suite,
+						propertyTitle: property.title,
+						propertyId: property.id,
+					});
+				});
+			}
+		});
+		return allSuites;
+	}, [properties]);
+
+	const unitsData = useMemo(() => {
+		const allUnits: any[] = [];
+		properties.forEach((property: any) => {
+			if (property.units) {
+				property.units.forEach((unit: any) => {
+					allUnits.push({
+						...unit,
+						propertyTitle: property.title,
+						propertyId: property.id,
+					});
+				});
+			}
+		});
+		return allUnits;
+	}, [properties]);
+
+	const devicesData = useMemo(() => {
+		const allDevices: any[] = [];
+		properties.forEach((property: any) => {
+			if (property.deviceIds && property.deviceIds.length > 0) {
+				// For now, we'll create device entries from the deviceIds
+				// In a real implementation, you'd fetch actual device data
+				property.deviceIds.forEach((deviceId: string) => {
+					allDevices.push({
+						id: deviceId,
+						type: 'Device',
+						brand: 'Unknown',
+						model: 'Unknown',
+						serialNumber: 'Unknown',
+						installationDate: 'Unknown',
+						status: 'Active',
+						location: `Property: ${property.title}`,
+						notes: 'Device details available in property management',
+						propertyTitle: property.title,
+						propertyId: property.id,
+					});
+				});
+			}
+		});
+		return allDevices;
+	}, [properties]);
+
+	const contractorsData = useMemo(() => {
+		return contractors.map((contractor: any) => {
+			const property = properties.find(
+				(p: any) => p.id === contractor.propertyId,
+			);
+			return {
+				...contractor,
+				propertyTitle: property?.title || 'Unknown Property',
+			};
+		});
+	}, [contractors, properties]);
 
 	// Filter tasks to get maintenance requests (tasks with specific properties)
 	const maintenanceRequests = tasks.filter(
@@ -94,14 +201,6 @@ export const ReportBuilder: React.FC = () => {
 			t.type === 'maintenance' ||
 			t.title?.toLowerCase().includes('maintenance'),
 	);
-
-	// Build properties list for filters
-	const propertiesList = useMemo(() => {
-		return properties.map((prop) => ({
-			id: prop.id,
-			title: prop.title,
-		}));
-	}, [properties]);
 
 	// Get column options based on report type
 	const columnOptions = useMemo(() => {
@@ -111,10 +210,29 @@ export const ReportBuilder: React.FC = () => {
 			team: TEAM_MEMBER_COLUMN_OPTIONS,
 			'employee-efficiency': EMPLOYEE_EFFICIENCY_COLUMN_OPTIONS,
 			'property-summary': PROPERTY_SUMMARY_COLUMN_OPTIONS,
+			contractors: CONTRACTOR_COLUMN_OPTIONS,
+			suites: SUITE_COLUMN_OPTIONS,
+			units: UNIT_COLUMN_OPTIONS,
+			devices: DEVICE_COLUMN_OPTIONS,
+			'maintenance-history': MAINTENANCE_HISTORY_COLUMN_OPTIONS,
+			'tenant-profiles': TENANT_PROFILE_COLUMN_OPTIONS,
+			'property-shares': PROPERTY_SHARE_COLUMN_OPTIONS,
 			'': {},
 		};
 		return optionsMap[reportType];
 	}, [reportType]);
+
+	// Determine which report types should show property filter
+	const shouldShowPropertyFilter = [
+		'tasks',
+		'maintenance-requests',
+		'contractors',
+		'suites',
+		'units',
+		'devices',
+		'maintenance-history',
+		'property-shares',
+	].includes(reportType);
 
 	// Get preview data based on report type
 	const previewData = useMemo(() => {
@@ -126,6 +244,27 @@ export const ReportBuilder: React.FC = () => {
 			data = maintenanceRequests;
 		} else if (reportType === 'team') {
 			data = firebaseTeamMembers;
+		} else if (reportType === 'contractors') {
+			data = contractorsData;
+		} else if (reportType === 'suites') {
+			data = suitesData;
+		} else if (reportType === 'units') {
+			data = unitsData;
+		} else if (reportType === 'devices') {
+			data = devicesData;
+		} else if (reportType === 'maintenance-history') {
+			data = allMaintenanceHistory;
+		} else if (reportType === 'tenant-profiles') {
+			data = publicTenantProfiles;
+		} else if (reportType === 'property-shares') {
+			// Transform property shares data to include property titles
+			data = propertyShares.map((share: any) => {
+				const property = properties.find((p: any) => p.id === share.propertyId);
+				return {
+					...share,
+					propertyTitle: property?.title || 'Unknown Property',
+				};
+			});
 		} else if (reportType === 'employee-efficiency') {
 			// Calculate employee efficiency metrics
 			data = firebaseTeamMembers.map((member: any) => {
@@ -169,7 +308,7 @@ export const ReportBuilder: React.FC = () => {
 						completed.length > 0
 							? new Date(
 									completed[completed.length - 1].completionDate!,
-								).toLocaleDateString()
+							  ).toLocaleDateString()
 							: 'N/A',
 				} as EmployeeEfficiencyMetrics;
 			});
@@ -219,7 +358,7 @@ export const ReportBuilder: React.FC = () => {
 			});
 		}
 
-		// Apply filters if applicable
+		// Apply filters
 		if (reportType === 'maintenance-requests') {
 			if (filters.status) {
 				data = data.filter((r: any) => r.status === filters.status);
@@ -230,15 +369,26 @@ export const ReportBuilder: React.FC = () => {
 			if (filters.propertyId) {
 				data = data.filter((r: any) => r.propertyId === filters.propertyId);
 			}
+		} else if (shouldShowPropertyFilter && filters.propertyId) {
+			// Apply property filter to other report types that have property data
+			data = data.filter((item: any) => item.propertyId === filters.propertyId);
 		}
 
 		return data;
 	}, [
 		reportType,
+		shouldShowPropertyFilter,
 		tasks,
 		maintenanceRequests,
 		firebaseTeamMembers,
 		properties,
+		contractorsData,
+		suitesData,
+		unitsData,
+		devicesData,
+		allMaintenanceHistory,
+		publicTenantProfiles,
+		propertyShares,
 		filters,
 	]);
 
@@ -253,6 +403,9 @@ export const ReportBuilder: React.FC = () => {
 			dateTo: '',
 		});
 	};
+
+	// Determine which report types should show maintenance-specific filters
+	const shouldShowMaintenanceFilters = reportType === 'maintenance-requests';
 
 	const handleColumnToggle = (column: string) => {
 		setSelectedColumns((prev) =>
@@ -300,6 +453,27 @@ export const ReportBuilder: React.FC = () => {
 			case 'team':
 				generateTeamReport(previewData, selectedColumns);
 				break;
+			case 'contractors':
+				generateContractorReport(previewData, selectedColumns);
+				break;
+			case 'suites':
+				generateSuiteReport(previewData, selectedColumns);
+				break;
+			case 'units':
+				generateUnitReport(previewData, selectedColumns);
+				break;
+			case 'devices':
+				generateDeviceReport(previewData, selectedColumns);
+				break;
+			case 'maintenance-history':
+				generateMaintenanceHistoryReport(previewData, selectedColumns);
+				break;
+			case 'tenant-profiles':
+				generateTenantProfileReport(previewData, selectedColumns);
+				break;
+			case 'property-shares':
+				generatePropertyShareReport(previewData, selectedColumns);
+				break;
 			case 'employee-efficiency':
 				generateEmployeeEfficiencyReport(previewData, selectedColumns);
 				break;
@@ -311,7 +485,13 @@ export const ReportBuilder: React.FC = () => {
 
 	// Check if any queries are loading
 	const isLoading =
-		tasksLoading || propertiesLoading || groupsLoading || teamLoading;
+		tasksLoading ||
+		propertiesLoading ||
+		teamLoading ||
+		maintenanceHistoryLoading ||
+		tenantProfilesLoading ||
+		propertySharesLoading ||
+		contractorsLoading;
 
 	return (
 		<Wrapper>
@@ -337,58 +517,71 @@ export const ReportBuilder: React.FC = () => {
 							<option value='tasks'>Task Report</option>
 							<option value='maintenance-requests'>Maintenance Requests</option>
 							<option value='team'>Team Members</option>
+							<option value='contractors'>Contractors</option>
+							<option value='suites'>Suites</option>
+							<option value='units'>Units</option>
+							<option value='devices'>Devices</option>
+							<option value='maintenance-history'>Maintenance History</option>
+							<option value='tenant-profiles'>Tenant Profiles</option>
+							<option value='property-shares'>Property Shares</option>
 							<option value='employee-efficiency'>Employee Efficiency</option>
 							<option value='property-summary'>Property Summary</option>
 						</Select>
 					</FormGroup>
-					{reportType === 'maintenance-requests' && (
+					{(shouldShowMaintenanceFilters || shouldShowPropertyFilter) && (
 						<FilterContainer>
 							<Label style={{ marginTop: '12px' }}>Filters</Label>
-							<FormGroup>
-								<Label>Status</Label>
-								<Select
-									value={filters.status}
-									onChange={(e) =>
-										setFilters({ ...filters, status: e.target.value })
-									}>
-									<option value=''>All Statuses</option>
-									<option value='Pending'>Pending</option>
-									<option value='Under Review'>Under Review</option>
-									<option value='Approved'>Approved</option>
-									<option value='Rejected'>Rejected</option>
-								</Select>
-							</FormGroup>
+							{shouldShowMaintenanceFilters && (
+								<>
+									<FormGroup>
+										<Label>Status</Label>
+										<Select
+											value={filters.status}
+											onChange={(e) =>
+												setFilters({ ...filters, status: e.target.value })
+											}>
+											<option value=''>All Statuses</option>
+											<option value='Pending'>Pending</option>
+											<option value='Under Review'>Under Review</option>
+											<option value='Approved'>Approved</option>
+											<option value='Rejected'>Rejected</option>
+										</Select>
+									</FormGroup>
 
-							<FormGroup>
-								<Label>Priority</Label>
-								<Select
-									value={filters.priority}
-									onChange={(e) =>
-										setFilters({ ...filters, priority: e.target.value })
-									}>
-									<option value=''>All Priorities</option>
-									<option value='Low'>Low</option>
-									<option value='Medium'>Medium</option>
-									<option value='High'>High</option>
-									<option value='Urgent'>Urgent</option>
-								</Select>
-							</FormGroup>
+									<FormGroup>
+										<Label>Priority</Label>
+										<Select
+											value={filters.priority}
+											onChange={(e) =>
+												setFilters({ ...filters, priority: e.target.value })
+											}>
+											<option value=''>All Priorities</option>
+											<option value='Low'>Low</option>
+											<option value='Medium'>Medium</option>
+											<option value='High'>High</option>
+											<option value='Urgent'>Urgent</option>
+										</Select>
+									</FormGroup>
+								</>
+							)}
 
-							<FormGroup>
-								<Label>Property</Label>
-								<Select
-									value={filters.propertyId}
-									onChange={(e) =>
-										setFilters({ ...filters, propertyId: e.target.value })
-									}>
-									<option value=''>All Properties</option>
-									{properties.map((prop) => (
-										<option key={prop.id} value={prop.id}>
-											{prop.title}
-										</option>
-									))}
-								</Select>
-							</FormGroup>
+							{shouldShowPropertyFilter && (
+								<FormGroup>
+									<Label>Property</Label>
+									<Select
+										value={filters.propertyId}
+										onChange={(e) =>
+											setFilters({ ...filters, propertyId: e.target.value })
+										}>
+										<option value=''>All Properties</option>
+										{properties.map((prop) => (
+											<option key={prop.id} value={prop.id}>
+												{prop.title}
+											</option>
+										))}
+									</Select>
+								</FormGroup>
+							)}
 						</FilterContainer>
 					)}
 					{reportType && (

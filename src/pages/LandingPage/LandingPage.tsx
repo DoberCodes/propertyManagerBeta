@@ -208,7 +208,7 @@ const LandingPageComponent = () => {
 						<StoryText>
 							Whether you’re managing a rental, taking care of your family car,
 							or making sure your tools are ready for the next job, we’re here
-							to make life a little easier—one task, one reminder, one win at a
+							to make life a little easier—one task, one record, one win at a
 							time.
 						</StoryText>
 						<StoryText>
@@ -235,17 +235,19 @@ const LandingPageComponent = () => {
 							/>
 						</BenefitImage>
 						<BenefitContent>
-							<BenefitTitle>Finally, Peace of Mind</BenefitTitle>
+							<BenefitTitle>
+								Peace of Mind Through Reliable History
+							</BenefitTitle>
 							<BenefitDescription>
-								Never miss a maintenance issue again. No more second-guessing
-								whether you told the contractor about that leak. Everything’s
-								organized, documented, and right where you need it — so you can
-								relax knowing nothing slips through the cracks.
+								Your maintenance history is your security blanket. When you
+								diligently log every repair, service, and update, you build
+								records you can trust. No guarantees—just the peace of mind that
+								comes from knowing your history is complete and accessible.
 							</BenefitDescription>
 							<BenefitList>
-								<BenefitItem>⏰ Never forget a task</BenefitItem>
-								<BenefitItem>📝 Keep detailed records</BenefitItem>
-								<BenefitItem>✓ Know what's been done</BenefitItem>
+								<BenefitItem>📚 Build comprehensive records</BenefitItem>
+								<BenefitItem>🔍 Access your history anytime</BenefitItem>
+								<BenefitItem>🛡️ Your logging, your peace of mind</BenefitItem>
 							</BenefitList>
 						</BenefitContent>
 					</BenefitRow>
@@ -305,8 +307,9 @@ const LandingPageComponent = () => {
 							<BenefitTitle>Manage More Than Properties</BenefitTitle>
 							<BenefitDescription>
 								From the truck in the driveway to the mower in the shed, we help
-								you keep track of the things you rely on. Maintenance reminders,
-								service history, and asset details — all in one place.
+								you keep track of the things you rely on. Custom reminders you
+								set, service history you build, and asset details — all in one
+								place.
 							</BenefitDescription>
 							<BenefitList>
 								<BenefitItem>🚗 Vehicle maintenance tracking</BenefitItem>

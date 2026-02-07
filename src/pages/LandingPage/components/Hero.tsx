@@ -15,12 +15,12 @@ const HeroSection = () => {
 	return (
 		<Hero>
 			<HeroContent>
-				<HeroTitle>Your Maintenance, Simplified</HeroTitle>
+				<HeroTitle>Never Lose Track of Your Maintenance History</HeroTitle>
 				<HeroSubtitle>
-					Whether you own a single home or manage a small portfolio, keeping up
-					with maintenance shouldn’t feel like a second job—or a second
-					mortgage. We offer simple, affordable tools that help homeowners,
-					small landlords, and DIYers stay on top of it all.
+					Your maintenance records are your peace of mind. Whether managing
+					properties, vehicles, or equipment, keep every repair, service, and
+					update documented in one reliable place. You handle the logging—we
+					provide the history you can trust.
 				</HeroSubtitle>
 				<HeroCTA onClick={() => navigate('/register')}>
 					Get Started Free

@@ -110,7 +110,9 @@ export const generateMaintenanceReport = (
 		? maintenanceRecords.filter((m) => m.property === propertyFilter)
 		: maintenanceRecords;
 
-	const filename = `maintenance-report-${new Date().toISOString().split('T')[0]}.csv`;
+	const filename = `maintenance-report-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
 	exportToCSV({
 		filename,
 		data: filtered,
@@ -169,7 +171,9 @@ export const generateMaintenanceRequestReport = (
 		);
 	}
 
-	const filename = `maintenance-requests-${new Date().toISOString().split('T')[0]}.csv`;
+	const filename = `maintenance-requests-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
 	exportToCSV({
 		filename,
 		data: filtered,
@@ -202,31 +206,183 @@ export const generateTeamReport = (
 	});
 };
 
-// ============= TENANT REPORTS =============
+// ============= CONTRACTOR REPORTS =============
 
-export const TENANT_COLUMN_OPTIONS = {
+export const CONTRACTOR_COLUMN_OPTIONS = {
+	name: 'Name',
+	company: 'Company',
+	category: 'Category',
+	phone: 'Phone',
+	email: 'Email',
+	address: 'Address',
+	notes: 'Notes',
+	propertyTitle: 'Property',
+};
+
+export const generateContractorReport = (
+	contractors: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `contractor-report-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
+	exportToCSV({
+		filename,
+		data: contractors,
+		columns: selectedColumns,
+	});
+};
+
+// ============= SUITE REPORTS =============
+
+export const SUITE_COLUMN_OPTIONS = {
+	name: 'Suite Name',
+	floor: 'Floor',
+	bedrooms: 'Bedrooms',
+	bathrooms: 'Bathrooms',
+	area: 'Area (sq ft)',
+	isOccupied: 'Occupied',
+	propertyTitle: 'Property',
+};
+
+export const generateSuiteReport = (
+	suites: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `suite-report-${new Date().toISOString().split('T')[0]}.csv`;
+	exportToCSV({
+		filename,
+		data: suites,
+		columns: selectedColumns,
+	});
+};
+
+// ============= UNIT REPORTS =============
+
+export const UNIT_COLUMN_OPTIONS = {
+	name: 'Unit Name',
+	floor: 'Floor',
+	area: 'Area (sq ft)',
+	isOccupied: 'Occupied',
+	propertyTitle: 'Property',
+};
+
+export const generateUnitReport = (
+	units: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `unit-report-${new Date().toISOString().split('T')[0]}.csv`;
+	exportToCSV({
+		filename,
+		data: units,
+		columns: selectedColumns,
+	});
+};
+
+// ============= DEVICE REPORTS =============
+
+export const DEVICE_COLUMN_OPTIONS = {
+	type: 'Type',
+	brand: 'Brand',
+	model: 'Model',
+	serialNumber: 'Serial Number',
+	installationDate: 'Installation Date',
+	status: 'Status',
+	location: 'Location',
+	notes: 'Notes',
+	propertyTitle: 'Property',
+};
+
+export const generateDeviceReport = (
+	devices: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `device-report-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
+	exportToCSV({
+		filename,
+		data: devices,
+		columns: selectedColumns,
+	});
+};
+
+// ============= MAINTENANCE HISTORY REPORTS =============
+
+export const MAINTENANCE_HISTORY_COLUMN_OPTIONS = {
+	date: 'Date',
+	description: 'Description',
+	status: 'Status',
+	propertyTitle: 'Property',
+	unit: 'Unit',
+	suite: 'Suite',
+	completedBy: 'Completed By',
+	approvedBy: 'Approved By',
+	completionDate: 'Completion Date',
+};
+
+export const generateMaintenanceHistoryReport = (
+	maintenanceRecords: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `maintenance-history-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
+	exportToCSV({
+		filename,
+		data: maintenanceRecords,
+		columns: selectedColumns,
+	});
+};
+
+// ============= TENANT PROFILE REPORTS =============
+
+export const TENANT_PROFILE_COLUMN_OPTIONS = {
 	firstName: 'First Name',
 	lastName: 'Last Name',
 	email: 'Email',
 	phone: 'Phone',
-	unit: 'Unit',
-	leaseStart: 'Lease Start',
-	leaseEnd: 'Lease End',
+	emergencyContact: 'Emergency Contact',
+	preferences: 'Preferences',
+	profileCompleteness: 'Profile Completeness (%)',
+	isPublic: 'Public Profile',
 };
 
-export const generateTenantReport = (
-	tenants: any[],
+export const generateTenantProfileReport = (
+	tenantProfiles: any[],
 	selectedColumns: string[],
-	propertyFilter?: string,
 ): void => {
-	const filtered = propertyFilter
-		? tenants.filter((t) => t.propertyTitle === propertyFilter)
-		: tenants;
-
-	const filename = `tenant-report-${new Date().toISOString().split('T')[0]}.csv`;
+	const filename = `tenant-profile-report-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
 	exportToCSV({
 		filename,
-		data: filtered,
+		data: tenantProfiles,
+		columns: selectedColumns,
+	});
+};
+
+// ============= PROPERTY SHARE REPORTS =============
+
+export const PROPERTY_SHARE_COLUMN_OPTIONS = {
+	propertyTitle: 'Property',
+	sharedWithFirstName: 'Shared With (First Name)',
+	sharedWithLastName: 'Shared With (Last Name)',
+	sharedWithEmail: 'Shared With (Email)',
+	permission: 'Permission',
+	createdAt: 'Shared Date',
+};
+
+export const generatePropertyShareReport = (
+	propertyShares: any[],
+	selectedColumns: string[],
+): void => {
+	const filename = `property-share-report-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
+	exportToCSV({
+		filename,
+		data: propertyShares,
 		columns: selectedColumns,
 	});
 };
@@ -266,7 +422,9 @@ export const generateEmployeeEfficiencyReport = (
 	metrics: EmployeeEfficiencyMetrics[],
 	selectedColumns: string[],
 ): void => {
-	const filename = `employee-efficiency-${new Date().toISOString().split('T')[0]}.csv`;
+	const filename = `employee-efficiency-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
 	exportToCSV({
 		filename,
 		data: metrics,
@@ -307,7 +465,9 @@ export const generatePropertySummaryReport = (
 	metrics: PropertySummaryMetrics[],
 	selectedColumns: string[],
 ): void => {
-	const filename = `property-summary-${new Date().toISOString().split('T')[0]}.csv`;
+	const filename = `property-summary-${
+		new Date().toISOString().split('T')[0]
+	}.csv`;
 	exportToCSV({
 		filename,
 		data: metrics,

@@ -12,72 +12,74 @@ import {
 const FeaturesSectionComponent = () => {
 	return (
 		<FeaturesSection id='Features'>
-			<FeaturesTitle>Powerful Property Management Tools</FeaturesTitle>
+			<FeaturesTitle>Comprehensive Maintenance History Tools</FeaturesTitle>
 			<FeatureGrid>
 				<FeatureCard>
-					<FeatureIcon>📋</FeatureIcon>
-					<FeatureTitle>Task Management & Tracking</FeatureTitle>
+					<FeatureIcon>�</FeatureIcon>
+					<FeatureTitle>Detailed Maintenance Records</FeatureTitle>
 					<FeatureDescription>
-						Create, assign, and track maintenance tasks with priority levels,
-						due dates, and status updates. Automated overdue notifications.
-					</FeatureDescription>
-				</FeatureCard>
-				<FeatureCard>
-					<FeatureIcon>🏢</FeatureIcon>
-					<FeatureTitle>Multi-Property Support</FeatureTitle>
-					<FeatureDescription>
-						Manage multiple properties and units from one dashboard. Assign team
-						members to specific properties with role-based permissions.
+						Create and maintain comprehensive maintenance history for every
+						property, unit, device, and component. Build records you can rely
+						on.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
 					<FeatureIcon>�</FeatureIcon>
-					<FeatureTitle>Contractor Management</FeatureTitle>
+					<FeatureTitle>Individual Unit History</FeatureTitle>
 					<FeatureDescription>
-						Track and assign contractors and service providers to tasks for
-						organized property maintenance. Keep all your service contacts in
-						one place.
+						Track maintenance history for each individual unit and device
+						separately. Know the complete service history of every component.
+					</FeatureDescription>
+				</FeatureCard>
+				<FeatureCard>
+					<FeatureIcon>👷</FeatureIcon>
+					<FeatureTitle>Contractor History Tracking</FeatureTitle>
+					<FeatureDescription>
+						Maintain detailed records of all contractor work and services. Build
+						a complete history of who did what, when, and how.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
 					<FeatureIcon>📊</FeatureIcon>
-					<FeatureTitle>Efficiency Dashboard</FeatureTitle>
+					<FeatureTitle>History Analytics & Reporting</FeatureTitle>
 					<FeatureDescription>
-						Visual analytics showing task completion rates, team performance,
-						and property maintenance trends.
+						Generate detailed reports on maintenance history, patterns, and
+						trends. Export your complete maintenance records for reference or
+						compliance.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
 					<FeatureIcon>📸</FeatureIcon>
-					<FeatureTitle>Photo Documentation</FeatureTitle>
+					<FeatureTitle>Visual Documentation</FeatureTitle>
 					<FeatureDescription>
-						Attach photos to maintenance requests and task completions. Build a
-						visual history of property repairs and updates.
+						Attach photos, notes, and details to every maintenance entry. Build
+						a visual history that tells the complete story of your property's
+						care.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
 					<FeatureIcon>🔔</FeatureIcon>
-					<FeatureTitle>Push Notifications</FeatureTitle>
+					<FeatureTitle>Personalized Reminders</FeatureTitle>
 					<FeatureDescription>
-						Real-time notifications for new tasks, updates, and deadlines. Stay
-						connected with your properties from anywhere.
+						Set custom reminders based on your own maintenance history patterns.
+						Stay proactive with notifications tied to the schedules you
+						establish through your documented service records.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>💬</FeatureIcon>
-					<FeatureTitle>Tenant Access & Maintenance Requests</FeatureTitle>
+					<FeatureIcon>�</FeatureIcon>
+					<FeatureTitle>Searchable History</FeatureTitle>
 					<FeatureDescription>
-						Give tenants secure access to submit maintenance requests directly
-						through the app. Include notes, photos, and priority levels for
-						efficient handling.
+						Quickly find any maintenance record with powerful search and
+						filtering. Access your complete history instantly when you need it.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
 					<FeatureIcon>📱</FeatureIcon>
-					<FeatureTitle>Native Mobile App</FeatureTitle>
+					<FeatureTitle>Mobile History Access</FeatureTitle>
 					<FeatureDescription>
-						Download our Android APK for the full mobile experience with push
-						notifications and offline capabilities.
+						Access your complete maintenance history on any device. Your records
+						are always available when you need to reference past work.
 					</FeatureDescription>
 				</FeatureCard>
 			</FeatureGrid>

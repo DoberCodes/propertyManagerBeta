@@ -12,39 +12,42 @@ import {
 const MissionSectionComponent = () => {
 	return (
 		<MissionSection id='Mission'>
-			<MissionTitle>Property Management, Simplified</MissionTitle>
+			<MissionTitle>
+				Peace of Mind Through Reliable Maintenance History
+			</MissionTitle>
 			<MissionContent>
 				<MissionCard>
+					<MissionCardIcon>📚</MissionCardIcon>
+					<MissionCardTitle>Complete Maintenance History</MissionCardTitle>
+					<MissionCardDescription>
+						Build a comprehensive record of every repair, service, and update.
+						From individual unit devices to property-wide maintenance, keep your
+						history organized and accessible.
+					</MissionCardDescription>
+				</MissionCard>
+				<MissionCard>
 					<MissionCardIcon>🏠</MissionCardIcon>
-					<MissionCardTitle>Complete Property Oversight</MissionCardTitle>
+					<MissionCardTitle>Individual Unit Tracking</MissionCardTitle>
 					<MissionCardDescription>
-						Manage multiple properties, units, and tenants from one intuitive
-						dashboard. Track everything from maintenance to tenant
-						communications.
+						Track maintenance for each unit, device, and component separately.
+						Know exactly what was done, when, and by whom for every part of your
+						property.
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>👥</MissionCardIcon>
-					<MissionCardTitle>Team Collaboration</MissionCardTitle>
+					<MissionCardIcon>🛡️</MissionCardIcon>
+					<MissionCardTitle>Your Records, Your Responsibility</MissionCardTitle>
 					<MissionCardDescription>
-						Invite contractors, tenants, and team members. Assign roles and
-						permissions. Keep everyone coordinated on property tasks.
-					</MissionCardDescription>
-				</MissionCard>
-				<MissionCard>
-					<MissionCardIcon>📊</MissionCardIcon>
-					<MissionCardTitle>Smart Task Management</MissionCardTitle>
-					<MissionCardDescription>
-						Automated task tracking with priority levels, due dates, and status
-						updates. Never miss maintenance or follow-ups again.
+						You maintain the logging discipline—we provide the tools. Build the
+						maintenance history that gives you confidence and peace of mind.
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
 					<MissionCardIcon>📱</MissionCardIcon>
-					<MissionCardTitle>Mobile-First Design</MissionCardTitle>
+					<MissionCardTitle>Always Available History</MissionCardTitle>
 					<MissionCardDescription>
-						Access your properties anywhere with our native mobile app. Get push
-						notifications and manage tasks on the go.
+						Access your complete maintenance history anywhere, anytime. Whether
+						on desktop or mobile, your records are always at your fingertips.
 					</MissionCardDescription>
 				</MissionCard>
 			</MissionContent>
