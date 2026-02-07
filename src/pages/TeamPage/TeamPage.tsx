@@ -119,8 +119,9 @@ export default function TeamPage() {
 	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
-	// Read from Redux cache instead of making new queries
-	const teamGroupsCache = useSelector((state: RootState) => state.team.groups);
+	// Use RTK Query hooks directly instead of Redux cache to avoid synchronization issues
+	const { data: teamGroups = [] } = useGetTeamGroupsQuery();
+	const { data: teamMembers = [] } = useGetTeamMembersQuery();
 	const properties = useSelector((state: RootState) =>
 		state.propertyData.groups.flatMap((g) => g.properties || []),
 	);
@@ -148,11 +149,31 @@ export default function TeamPage() {
 
 	// Combine groups with their members
 	const groupsWithMembers = useMemo(() => {
-		return teamGroupsCache.map((group) => ({
+		// Merge team members into their groups
+		const normalized = teamGroups.map((group) => ({
 			...group,
-			members: group.members || [],
+			members: teamMembers.filter((m) => m.groupId === group.id),
 		}));
-	}, [teamGroupsCache]);
+
+		// Find team members not associated with any group
+		const orphanMembers = teamMembers.filter(
+			(m) => !teamGroups.some((g) => g.id === m.groupId),
+		);
+
+		// If there are orphan members, add a fallback group
+		let allGroups = [...normalized];
+		if (orphanMembers.length > 0) {
+			allGroups.push({
+				id: 'orphan',
+				userId: '',
+				name: 'Other Team Members',
+				linkedProperties: [],
+				members: orphanMembers,
+			});
+		}
+
+		return allGroups;
+	}, [teamGroups, teamMembers]);
 
 	// Check if user can manage team members based on subscription plan
 	const canManage = currentUser?.subscription
@@ -347,7 +368,7 @@ export default function TeamPage() {
 
 	const handleDeleteTeamMember = async (memberId: string) => {
 		try {
-			const memberToDelete = teamGroupsCache
+			const memberToDelete = groupsWithMembers
 				.flatMap((g) => g.members || [])
 				.find((m) => m?.id === memberId);
 			await deleteTeamMemberApi(memberId).unwrap();
@@ -416,7 +437,8 @@ export default function TeamPage() {
 			// Save the name change
 			if (
 				editingGroupName.trim() &&
-				editingGroupName !== teamGroupsCache.find((g) => g.id === groupId)?.name
+				editingGroupName !==
+					groupsWithMembers.find((g) => g.id === groupId)?.name
 			) {
 				try {
 					await updateTeamGroup({
@@ -459,7 +481,7 @@ export default function TeamPage() {
 			setEditingGroupName('');
 		} else {
 			// Start editing
-			const group = teamGroupsCache.find((g) => g.id === groupId);
+			const group = groupsWithMembers.find((g) => g.id === groupId);
 			if (group) {
 				setEditingGroupId(groupId);
 				setEditingGroupName(group.name);
@@ -477,7 +499,7 @@ export default function TeamPage() {
 		setWarningDialogOnConfirm(() => async () => {
 			setWarningDialogOpen(false);
 			try {
-				const groupToDelete = teamGroupsCache.find((g) => g.id === groupId);
+				const groupToDelete = groupsWithMembers.find((g) => g.id === groupId);
 				await deleteTeamGroupApi(groupId).unwrap();
 				try {
 					if (groupToDelete) {
@@ -762,7 +784,7 @@ export default function TeamPage() {
 											// If editing a member in the 'Shared Properties' group, make checkboxes read-only
 											const isSharedGroup =
 												currentGroupId &&
-												teamGroupsCache
+												groupsWithMembers
 													.find((g) => g.id === currentGroupId)
 													?.name?.toLowerCase() === 'shared properties';
 											const isLinked = formData.linkedProperties.includes(
@@ -789,7 +811,7 @@ export default function TeamPage() {
 										})}
 									</PropertyMultiSelect>
 									{currentGroupId &&
-										teamGroupsCache
+										groupsWithMembers
 											.find((g) => g.id === currentGroupId)
 											?.name?.toLowerCase() === 'shared properties' && (
 											<InfoText>
