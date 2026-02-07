@@ -6,6 +6,7 @@
 export interface TeamMember {
 	id: string;
 	groupId: string;
+	userId: string;
 	firstName: string;
 	lastName: string;
 	title: string;

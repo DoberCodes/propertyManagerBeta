@@ -718,11 +718,18 @@ export const EditableFieldInput = styled.input`
 	font-size: 14px;
 	font-family: inherit;
 	background-color: #ffffff;
+	width: 100%;
+	box-sizing: border-box;
 
 	&:focus {
 		outline: none;
 		border-color: #22c55e;
 		box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+	}
+
+	@media (max-width: 480px) {
+		padding: 10px 12px;
+		font-size: 16px;
 	}
 `;
 
@@ -789,8 +796,8 @@ export const InfoGrid = styled.div`
 	@media (max-width: 480px) {
 		grid-template-columns: 1fr;
 		gap: 12px;
-		justify-items: center;
-		max-width: 320px;
+		justify-items: stretch;
+		width: 100%;
 		margin: 12px auto 0;
 	}
 `;
@@ -810,6 +817,7 @@ export const InfoCard = styled.div`
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 	backdrop-filter: blur(8px);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	min-height: 120px;
 
 	&:hover {
 		transform: translateY(-2px);
@@ -819,11 +827,14 @@ export const InfoCard = styled.div`
 	@media (max-width: 768px) {
 		padding: 16px;
 		gap: 8px;
+		min-height: 100px;
 	}
 
 	@media (max-width: 480px) {
-		padding: 12px;
+		padding: 14px;
 		gap: 6px;
+		width: 100%;
+		min-height: 80px;
 	}
 `;
 

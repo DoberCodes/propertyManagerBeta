@@ -21,6 +21,7 @@ describe('teamSlice', () => {
 		email: 'john@example.com',
 		role: 'contractor',
 		groupId: 'group-1',
+		userId: 'user-1',
 		firstName: '',
 		lastName: '',
 		title: '',

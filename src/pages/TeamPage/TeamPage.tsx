@@ -252,9 +252,12 @@ export default function TeamPage() {
 
 		const memberData = {
 			groupId: currentGroupId,
+			userId: currentUser!.id,
 			firstName: formData.firstName,
 			lastName: formData.lastName,
-			title: `${ROLE_OPTIONS.find((r) => r.value === formData.role)?.label || ''}`,
+			title: `${
+				ROLE_OPTIONS.find((r) => r.value === formData.role)?.label || ''
+			}`,
 			email: formData.email,
 			phone: formData.phone,
 			role: formData.role,

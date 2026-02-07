@@ -211,6 +211,43 @@ export const PropertyDetailSection = (props: PropertyDetailSectionProps) => {
 						</InfoValue>
 					)}
 				</InfoCard>
+				<InfoCard>
+					<InfoLabel>Rental Property</InfoLabel>
+					<InfoValue>{props.property?.isRental ? 'Yes' : 'No'}</InfoValue>
+				</InfoCard>
+				<InfoCard>
+					<InfoLabel>Notes</InfoLabel>
+					{props.isEditMode ? (
+						<EditableFieldInput
+							type='text'
+							value={props.getPropertyFieldValue('notes') || ''}
+							onChange={(e) =>
+								props.handlePropertyFieldChange('notes', e.target.value)
+							}
+							placeholder='Add any notes about this property'
+						/>
+					) : (
+						<InfoValue>
+							{props.getPropertyFieldValue('notes') || 'No notes'}
+						</InfoValue>
+					)}
+				</InfoCard>
+				<InfoCard>
+					<InfoLabel>Created</InfoLabel>
+					<InfoValue>
+						{props.property?.createdAt
+							? new Date(props.property.createdAt).toLocaleDateString()
+							: 'N/A'}
+					</InfoValue>
+				</InfoCard>
+				<InfoCard>
+					<InfoLabel>Last Updated</InfoLabel>
+					<InfoValue>
+						{props.property?.updatedAt
+							? new Date(props.property.updatedAt).toLocaleDateString()
+							: 'N/A'}
+					</InfoValue>
+				</InfoCard>
 			</InfoGrid>
 		</SectionContainer>
 	);
