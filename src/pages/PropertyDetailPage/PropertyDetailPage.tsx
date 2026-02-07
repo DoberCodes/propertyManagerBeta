@@ -29,10 +29,10 @@ import {
 	useGetDevicesQuery,
 	useGetContractorsByPropertyQuery,
 	useRemoveTenantMutation,
-	useRevokeTenantPromoCodeMutation,
-	useLazyGetTenantPromoCodeQuery,
-	useLazyGetTenantPromoCodesByEmailQuery,
-	useCreateTenantPromoCodeMutation,
+	useRevokeTenantInvitationCodeMutation,
+	useLazyGetTenantInvitationCodeQuery,
+	useLazyGetTenantInvitationCodesByEmailQuery,
+	useCreateTenantInvitationCodeMutation,
 	useUpdateTenantMutation,
 } from '../../Redux/API/apiSlice';
 import {
@@ -131,10 +131,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
 	const [createNotification] = useCreateNotificationMutation();
 	const [removeTenant] = useRemoveTenantMutation();
-	const [revokeTenantPromoCode] = useRevokeTenantPromoCodeMutation();
-	const [getTenantPromoCode] = useLazyGetTenantPromoCodeQuery();
-	const [getTenantPromoCodesByEmail] = useLazyGetTenantPromoCodesByEmailQuery();
-	const [createTenantPromoCode] = useCreateTenantPromoCodeMutation();
+	const [revokeTenantInvitationCode] = useRevokeTenantInvitationCodeMutation();
+	const [getTenantInvitationCode] = useLazyGetTenantInvitationCodeQuery();
+	const [getTenantInvitationCodesByEmail] =
+		useLazyGetTenantInvitationCodesByEmailQuery();
+	const [createTenantInvitationCode] = useCreateTenantInvitationCodeMutation();
 	const [updateTenant] = useUpdateTenantMutation();
 
 	const dispatch = useDispatch();
@@ -199,11 +200,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const handleRevokeTenantPromo = async (tenant: any) => {
 		if (!property?.id || !tenant?.email) return;
 		const confirmRevoke = window.confirm(
-			`Revoke any active promo code for ${tenant.email}?`,
+			`Revoke any active invitation code for ${tenant.email}?`,
 		);
 		if (!confirmRevoke) return;
 		try {
-			await revokeTenantPromoCode({
+			await revokeTenantInvitationCode({
 				propertyId: property.id,
 				tenantEmail: tenant.email,
 			}).unwrap();
@@ -221,9 +222,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		let promoCode: any = null;
 
 		// First try to get promo code by direct ID if available
-		if (tenant.tenantPromoCodeId) {
+		if (tenant.tenantInvitationCodeId) {
 			try {
-				promoCode = await getTenantPromoCode(tenant.tenantPromoCodeId).unwrap();
+				promoCode = await getTenantInvitationCode(
+					tenant.tenantInvitationCodeId,
+				).unwrap();
 			} catch (error) {
 				console.error('Failed to fetch promo code by ID:', error);
 			}
@@ -232,7 +235,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		// If no promo code found by ID, search by email
 		if (!promoCode) {
 			try {
-				const promoCodes = await getTenantPromoCodesByEmail(
+				const promoCodes = await getTenantInvitationCodesByEmail(
 					tenant.email,
 				).unwrap();
 				if (promoCodes && promoCodes.length > 0) {
@@ -273,14 +276,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		if (!confirmRegenerate) return;
 
 		try {
-			// First revoke any existing active promo codes
-			await revokeTenantPromoCode({
+			// First revoke any existing active invitation codes
+			await revokeTenantInvitationCode({
 				propertyId: property.id,
 				tenantEmail: tenant.email,
 			}).unwrap();
 
-			// Create a new promo code
-			const promoCodeResult = await createTenantPromoCode({
+			// Create a new invitation code
+			const promoCodeResult = await createTenantInvitationCode({
 				propertyId: property.id,
 				tenantEmail: tenant.email,
 				code: `TENANT-${Math.random()
@@ -297,7 +300,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				await updateTenant({
 					propertyId: property.id,
 					tenantId: tenant.id,
-					updates: { tenantPromoCodeId: promoCodeResult.id },
+					updates: { tenantInvitationCodeId: promoCodeResult.id },
 				}).unwrap();
 			}
 

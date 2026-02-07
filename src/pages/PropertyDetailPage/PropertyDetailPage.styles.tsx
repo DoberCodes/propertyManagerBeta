@@ -771,7 +771,11 @@ export const AddDeviceButton = styled.button`
 // Info Card and Grid Components for Property Detail Section
 export const SectionContainer = styled.div`
 	margin-bottom: 24px;
+	width: 100%;
 
+	@media (max-width: 768px) {
+		margin-bottom: 20px;
+	}
 	@media (max-width: 480px) {
 		margin-bottom: 20px;
 		display: flex;
@@ -786,11 +790,13 @@ export const InfoGrid = styled.div`
 	gap: 16px;
 	margin-top: 12px;
 	justify-items: center;
+	width: 100%;
 
 	@media (max-width: 768px) {
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 14px;
 		justify-items: center;
+		width: 100%;
 	}
 
 	@media (max-width: 480px) {
@@ -818,6 +824,7 @@ export const InfoCard = styled.div`
 	backdrop-filter: blur(8px);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 	min-height: 120px;
+	width: 100%;
 
 	&:hover {
 		transform: translateY(-2px);
@@ -828,6 +835,7 @@ export const InfoCard = styled.div`
 		padding: 16px;
 		gap: 8px;
 		min-height: 100px;
+		width: 100%;
 	}
 
 	@media (max-width: 480px) {

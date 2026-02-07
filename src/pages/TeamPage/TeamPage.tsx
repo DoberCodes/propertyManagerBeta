@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../Redux/store';
 import { canManageTeam } from '../../utils/subscriptionUtils';
 import { filterTeamMembersByRole } from '../../utils/dataFilters';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import {
 	addTeamGroup,
 	deleteTeamGroup,
@@ -27,6 +29,9 @@ import {
 	useUpdateTeamMemberMutation,
 	useDeleteTeamMemberMutation,
 	useCreateNotificationMutation,
+	useCreateTeamMemberInvitationCodeMutation,
+	useRedeemTeamMemberInvitationCodeMutation,
+	useRevokeTeamMemberInvitationCodeMutation,
 } from '../../Redux/API/apiSlice';
 import {
 	PageHeaderSection,
@@ -106,6 +111,7 @@ interface FormData {
 	address: string;
 	notes: string;
 	linkedProperties: number[];
+	enableInvitationCode?: boolean;
 }
 
 // Styled info text for read-only property assignment message
@@ -114,6 +120,34 @@ const InfoText = styled.div`
 	font-size: 0.95em;
 	margin-top: 8px;
 `;
+
+// Helper function to format expiration date
+const formatExpirationDate = (expiresAt: string) => {
+	if (!expiresAt) {
+		return 'No expiration';
+	}
+
+	const date = new Date(expiresAt);
+
+	// Check if date is valid
+	if (isNaN(date.getTime())) {
+		return 'Invalid date';
+	}
+
+	const now = new Date();
+	const diffTime = date.getTime() - now.getTime();
+	const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+	if (diffDays < 0) {
+		return 'Expired';
+	} else if (diffDays === 0) {
+		return 'Expires today';
+	} else if (diffDays === 1) {
+		return 'Expires in 1 day';
+	} else {
+		return `Expires in ${diffDays} days`;
+	}
+};
 
 export default function TeamPage() {
 	const dispatch = useDispatch<AppDispatch>();
@@ -134,6 +168,12 @@ export default function TeamPage() {
 	const [updateTeamMemberApi] = useUpdateTeamMemberMutation();
 	const [deleteTeamMemberApi] = useDeleteTeamMemberMutation();
 	const [createNotification] = useCreateNotificationMutation();
+	const [createTeamMemberInvitationCode] =
+		useCreateTeamMemberInvitationCodeMutation();
+	const [redeemTeamMemberInvitationCode] =
+		useRedeemTeamMemberInvitationCodeMutation();
+	const [revokeTeamMemberInvitationCode] =
+		useRevokeTeamMemberInvitationCodeMutation();
 
 	// WarningDialog state
 	const [warningDialogOpen, setWarningDialogOpen] = useState(false);
@@ -196,10 +236,42 @@ export default function TeamPage() {
 		address: '',
 		notes: '',
 		linkedProperties: [] as string[],
+		enableInvitationCode: true,
 	});
 	const [uploadedFiles, setUploadedFiles] = useState<
 		Array<{ name: string; id: string }>
 	>([]);
+	const [generatedInvitationCode, setGeneratedInvitationCode] =
+		useState<string>('');
+
+	// Generate invitation code only once when modal opens for new team members
+	React.useEffect(() => {
+		if (
+			showTeamMemberDialog &&
+			!editingMember &&
+			formData.enableInvitationCode !== false &&
+			formData.firstName &&
+			formData.lastName &&
+			!generatedInvitationCode
+		) {
+			const namePart = `${formData.firstName.charAt(
+				0,
+			)}${formData.lastName.charAt(0)}`.toUpperCase();
+			const randomPart = Math.random()
+				.toString(36)
+				.substring(2, 8)
+				.toUpperCase();
+			const promoCode = `TEAM-${namePart}${randomPart}`;
+			setGeneratedInvitationCode(promoCode);
+		}
+	}, [
+		showTeamMemberDialog,
+		editingMember,
+		formData.firstName,
+		formData.lastName,
+		formData.enableInvitationCode,
+		generatedInvitationCode,
+	]);
 
 	// Filter out tenants from team management - tenants belong to properties, not teams
 	const filteredTeamGroups = groupsWithMembers.map((group) => ({
@@ -219,9 +291,11 @@ export default function TeamPage() {
 			address: '',
 			notes: '',
 			linkedProperties: [],
+			enableInvitationCode: true,
 		});
 		setImagePreview(null);
 		setUploadedFiles([]);
+		setGeneratedInvitationCode(''); // Reset so it generates fresh for new member
 		setShowTeamMemberDialog(true);
 	};
 
@@ -268,8 +342,64 @@ export default function TeamPage() {
 		}));
 	};
 
+	// Generate a unique invitation code for a team member
+	const generateTeamMemberPromoCode = (
+		firstName: string,
+		lastName: string,
+	): string => {
+		const namePart = `${firstName.charAt(0)}${lastName.charAt(
+			0,
+		)}`.toUpperCase();
+		const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+		return `TEAM-${namePart}${randomPart}`;
+	};
+
 	const handleSaveTeamMember = async () => {
 		if (!currentGroupId) return;
+
+		let invitationCodeId: string | undefined;
+		let invitationCodeStatus: 'active' | 'revoked' | undefined;
+		let invitationCodeExpiresAt: string | undefined;
+
+		// Handle promo code logic only if enabled
+		if (canManage && formData.enableInvitationCode) {
+			// Property managers can always add team members
+			// Generate or update promo code for the team member
+			try {
+				const promoCode = generatedInvitationCode;
+
+				if ((editingMember as any)?.invitationCodeId) {
+					// Update existing invitation code if it exists
+					// For now, we'll create a new one since we don't have an update mutation
+					const result = await createTeamMemberInvitationCode({
+						teamMemberId: editingMember!.id,
+						teamMemberEmail: formData.email,
+						code: promoCode,
+					}).unwrap();
+					invitationCodeId = result.id;
+					invitationCodeStatus = 'active';
+					invitationCodeExpiresAt = result.expiresAt;
+				} else {
+					// Create new invitation code for new team member
+					const result = await createTeamMemberInvitationCode({
+						teamMemberId: '', // Will be set after team member is created
+						teamMemberEmail: formData.email,
+						code: promoCode,
+					}).unwrap();
+					invitationCodeId = result.id;
+					invitationCodeStatus = 'active';
+					invitationCodeExpiresAt = result.expiresAt;
+				}
+			} catch (error) {
+				console.error('Failed to create invitation code:', error);
+				// Continue without invitation code for now
+			}
+		} else if (editingMember) {
+			// When editing, preserve existing invitation code data if not changing the setting
+			invitationCodeId = (editingMember as any).invitationCodeId;
+			invitationCodeStatus = (editingMember as any).invitationCodeStatus;
+			invitationCodeExpiresAt = (editingMember as any).invitationCodeExpiresAt;
+		}
 
 		const memberData = {
 			groupId: currentGroupId,
@@ -288,6 +418,9 @@ export default function TeamPage() {
 			linkedProperties: formData.linkedProperties,
 			taskHistory: editingMember?.taskHistory || [],
 			files: uploadedFiles,
+			invitationCodeId,
+			invitationCodeStatus,
+			invitationCodeExpiresAt,
 		};
 
 		try {
@@ -319,6 +452,27 @@ export default function TeamPage() {
 				}
 			} else {
 				const result = await createTeamMember(memberData).unwrap();
+
+				// Update invitation code with team member ID if we created one
+				if (invitationCodeId && canManage) {
+					try {
+						// Update the invitation code document to include the team member ID
+						const invitationRef = doc(
+							db,
+							'teamMemberInvitationCodes',
+							invitationCodeId,
+						);
+						await updateDoc(invitationRef, {
+							teamMemberId: result.id,
+							updatedAt: new Date().toISOString(),
+						});
+					} catch (promoError) {
+						console.error(
+							'Failed to update promo code with team member ID:',
+							promoError,
+						);
+					}
+				}
 
 				// Create notification for team member creation
 				try {
@@ -360,9 +514,11 @@ export default function TeamPage() {
 			address: member.address,
 			notes: member.notes,
 			linkedProperties: member.linkedProperties,
+			enableInvitationCode: !!(member as any).invitationCodeId, // Enable if they already have an invitation code
 		});
 		setImagePreview(member.image || null);
 		setUploadedFiles(member.files);
+		setGeneratedInvitationCode(''); // Reset - will be generated if needed
 		setShowTeamMemberDialog(true);
 	};
 
@@ -372,6 +528,17 @@ export default function TeamPage() {
 				.flatMap((g) => g.members || [])
 				.find((m) => m?.id === memberId);
 			await deleteTeamMemberApi(memberId).unwrap();
+
+			// Revoke invitation code if it exists
+			if ((memberToDelete as any)?.invitationCodeId) {
+				try {
+					await revokeTeamMemberInvitationCode({
+						teamMemberId: memberId,
+					}).unwrap();
+				} catch (revokeError) {
+					console.error('Failed to revoke invitation code:', revokeError);
+				}
+			}
 
 			// Create notification for team member deletion
 			try {
@@ -397,6 +564,59 @@ export default function TeamPage() {
 		} catch (error) {
 			console.error('Error deleting team member:', error);
 		}
+	};
+
+	const handleRevokeAccess = async (member: TeamMember) => {
+		setWarningDialogTitle('Revoke Access');
+		setWarningDialogMessage(
+			`Are you sure you want to revoke access for ${member.firstName} ${member.lastName}? This will deactivate their invitation code and they will lose access to the system.`,
+		);
+		setWarningDialogConfirmText('Revoke Access');
+		setWarningDialogCancelText('Cancel');
+		setWarningDialogOnConfirm(() => async () => {
+			setWarningDialogOpen(false);
+			try {
+				await revokeTeamMemberInvitationCode({
+					teamMemberId: member.id,
+				}).unwrap();
+
+				// Update the team member record to reflect the revoked status
+				await updateTeamMemberApi({
+					id: member.id,
+					updates: {
+						invitationCodeStatus: 'revoked',
+					} as any,
+				}).unwrap();
+
+				try {
+					await createNotification({
+						userId: currentUser!.id,
+						type: 'team_member_updated',
+						title: 'Team Member Access Revoked',
+						message: `Access has been revoked for team member "${member.firstName} ${member.lastName}"`,
+						data: {
+							memberId: member.id,
+							memberName: `${member.firstName} ${member.lastName}`,
+						},
+						status: 'unread',
+						actionUrl: `/team`,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					}).unwrap();
+				} catch (notifError) {
+					console.error('Notification failed:', notifError);
+				}
+			} catch (error) {
+				console.error('Failed to revoke access:', error);
+				setWarningDialogTitle('Revoke Failed');
+				setWarningDialogMessage('Failed to revoke access. Please try again.');
+				setWarningDialogConfirmText('OK');
+				setWarningDialogCancelText('');
+				setWarningDialogOnConfirm(() => () => setWarningDialogOpen(false));
+				setWarningDialogOpen(true);
+			}
+		});
+		setWarningDialogOpen(true);
 	};
 
 	const handleAddTeamGroup = async () => {
@@ -559,11 +779,13 @@ export default function TeamPage() {
 			/>
 			<PageHeaderSection>
 				<StandardPageTitle>Team Management</StandardPageTitle>
-				{canManage && (
-					<AddTeamGroupButton onClick={handleAddTeamGroup}>
-						+ Add Team Group
-					</AddTeamGroupButton>
-				)}
+				<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+					{canManage && (
+						<AddTeamGroupButton onClick={handleAddTeamGroup}>
+							+ Add Team Group
+						</AddTeamGroupButton>
+					)}
+				</div>
 			</PageHeaderSection>
 
 			<TeamGroupSection>
@@ -618,6 +840,17 @@ export default function TeamPage() {
 									}}>
 									{canManage && currentUser?.email !== member.email && (
 										<TeamMemberActions>
+											{(member as any).invitationCodeStatus === 'active' && (
+												<TeamMemberActionButton
+													className='revoke'
+													title='Revoke access'
+													onClick={(e) => {
+														e.stopPropagation();
+														handleRevokeAccess(member);
+													}}>
+													🚫
+												</TeamMemberActionButton>
+											)}
 											<TeamMemberActionButton
 												className='delete'
 												title='Delete team member'
@@ -643,6 +876,23 @@ export default function TeamPage() {
 										{member.firstName} {member.lastName}
 									</TeamMemberName>
 									<TeamMemberTitle>{member.title}</TeamMemberTitle>
+									{(member as any).invitationCodeStatus && (
+										<div
+											style={{
+												fontSize: '0.75em',
+												color:
+													(member as any).invitationCodeStatus === 'active'
+														? '#10b981'
+														: '#ef4444',
+												marginTop: '4px',
+											}}>
+											{(member as any).invitationCodeStatus === 'active'
+												? `✓ Active - ${formatExpirationDate(
+														(member as any).invitationCodeExpiresAt,
+												  )}`
+												: '✗ Revoked'}
+										</div>
+									)}
 								</TeamMemberCard>
 							))}
 
@@ -751,6 +1001,206 @@ export default function TeamPage() {
 										))}
 									</FormSelect>
 								</FormGroup>
+
+								{/* Promo Code Section */}
+								{canManage && (
+									<FormGroup>
+										<SectionTitle>Access Control</SectionTitle>
+										<div style={{ marginBottom: '12px' }}>
+											<label
+												style={{
+													display: 'flex',
+													alignItems: 'center',
+													gap: '8px',
+													fontSize: '0.9em',
+												}}>
+												<input
+													type='checkbox'
+													checked={formData.enableInvitationCode !== false}
+													onChange={(e) =>
+														handleFormChange(
+															'enableInvitationCode',
+															e.target.checked,
+														)
+													}
+												/>
+												Generate invitation code for team member access
+											</label>
+										</div>
+
+										{formData.enableInvitationCode !== false &&
+											formData.firstName &&
+											formData.lastName &&
+											!editingMember && (
+												<div style={{ marginTop: '8px' }}>
+													<FormLabel
+														style={{ fontSize: '0.85em', marginBottom: '4px' }}>
+														Generated Invitation Code:
+													</FormLabel>
+													<div
+														style={{
+															padding: '8px 12px',
+															backgroundColor: '#f8f9fa',
+															border: '1px solid #e9ecef',
+															borderRadius: '4px',
+															fontFamily: 'monospace',
+															fontSize: '0.9em',
+															color: '#495057',
+															wordBreak: 'break-all',
+														}}>
+														{generatedInvitationCode ||
+															'Code will be generated...'}
+													</div>
+													<div
+														style={{
+															fontSize: '0.75em',
+															color: '#6c757d',
+															marginTop: '4px',
+														}}>
+														This invitation code will expire in 7 days and can
+														be used by the team member to access the system.
+													</div>
+												</div>
+											)}
+
+										{editingMember &&
+											(editingMember as any).invitationCodeStatus && (
+												<div style={{ marginTop: '8px' }}>
+													<FormLabel
+														style={{ fontSize: '0.85em', marginBottom: '4px' }}>
+														Current Status:
+													</FormLabel>
+													<div
+														style={{
+															display: 'flex',
+															alignItems: 'center',
+															gap: '8px',
+														}}>
+														<div
+															style={{
+																padding: '4px 8px',
+																borderRadius: '4px',
+																fontSize: '0.8em',
+																color:
+																	(editingMember as any)
+																		.invitationCodeStatus === 'active'
+																		? '#10b981'
+																		: '#ef4444',
+																backgroundColor:
+																	(editingMember as any)
+																		.invitationCodeStatus === 'active'
+																		? '#d1fae5'
+																		: '#fee2e2',
+															}}>
+															{(editingMember as any).invitationCodeStatus ===
+															'active'
+																? '✓ Active'
+																: '✗ Revoked'}
+														</div>
+														{(editingMember as any).invitationCodeStatus ===
+															'active' && (
+															<div
+																style={{ fontSize: '0.7em', color: '#6c757d' }}>
+																{formatExpirationDate(
+																	(editingMember as any)
+																		.invitationCodeExpiresAt,
+																)}
+															</div>
+														)}
+														{(editingMember as any).invitationCodeStatus ===
+															'active' && (
+															<button
+																type='button'
+																onClick={() =>
+																	handleRevokeAccess(editingMember)
+																}
+																style={{
+																	padding: '4px 8px',
+																	fontSize: '0.75em',
+																	backgroundColor: '#dc3545',
+																	color: 'white',
+																	border: 'none',
+																	borderRadius: '4px',
+																	cursor: 'pointer',
+																}}>
+																Revoke Access
+															</button>
+														)}
+														{(editingMember as any).invitationCodeStatus ===
+															'revoked' && (
+															<button
+																type='button'
+																onClick={async () => {
+																	try {
+																		// Generate a new promo code
+																		const namePart =
+																			`${formData.firstName.charAt(
+																				0,
+																			)}${formData.lastName.charAt(
+																				0,
+																			)}`.toUpperCase();
+																		const randomPart = Math.random()
+																			.toString(36)
+																			.substring(2, 8)
+																			.toUpperCase();
+																		const promoCode = `TEAM-${namePart}${randomPart}`;
+
+																		const result =
+																			await createTeamMemberInvitationCode({
+																				teamMemberId: editingMember!.id,
+																				teamMemberEmail: formData.email,
+																				code: promoCode,
+																			}).unwrap();
+
+																		// Update the editing member with new promo code data
+																		setEditingMember({
+																			...editingMember,
+																			invitationCodeId: result.id,
+																			invitationCodeStatus: 'active',
+																			invitationCodeExpiresAt: result.expiresAt,
+																		} as any);
+
+																		// Update the team member record in the database
+																		await updateTeamMemberApi({
+																			id: editingMember!.id,
+																			updates: {
+																				invitationCodeId: result.id,
+																				invitationCodeStatus: 'active',
+																				invitationCodeExpiresAt:
+																					result.expiresAt,
+																			} as any,
+																		}).unwrap();
+
+																		alert(
+																			'Invitation code regenerated successfully! New code expires in 7 days.',
+																		);
+																	} catch (error) {
+																		console.error(
+																			'Failed to regenerate invitation code:',
+																			error,
+																		);
+																		alert(
+																			'Failed to regenerate invitation code. Please try again.',
+																		);
+																	}
+																}}
+																style={{
+																	padding: '4px 8px',
+																	fontSize: '0.75em',
+																	backgroundColor: '#007bff',
+																	color: 'white',
+																	border: 'none',
+																	borderRadius: '4px',
+																	cursor: 'pointer',
+																}}>
+																Regenerate Invitation Code
+															</button>
+														)}
+													</div>
+												</div>
+											)}
+									</FormGroup>
+								)}
 
 								<FormGroup>
 									<FormLabel>Address</FormLabel>
@@ -878,6 +1328,17 @@ export default function TeamPage() {
 					</DialogContent>
 				</DialogOverlay>
 			)}
+
+			{/* Warning Dialog */}
+			<WarningDialog
+				open={warningDialogOpen}
+				title={warningDialogTitle}
+				message={warningDialogMessage}
+				confirmText={warningDialogConfirmText}
+				cancelText={warningDialogCancelText}
+				onConfirm={warningDialogOnConfirm}
+				onCancel={() => setWarningDialogOpen(false)}
+			/>
 		</Wrapper>
 	);
 }

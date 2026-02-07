@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
 	useAddTenantMutation,
-	useCreateTenantPromoCodeMutation,
-	useRevokeTenantPromoCodeMutation,
+	useCreateTenantInvitationCodeMutation,
+	useRevokeTenantInvitationCodeMutation,
 	useUpdateTenantMutation,
 } from '../../Redux/API/apiSlice';
 import { GenericModal, FormGroup, FormLabel, FormInput } from '../Library';
@@ -40,9 +40,9 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 
 	const [addTenant, { isLoading }] = useAddTenantMutation();
 	const [updateTenant, { isLoading: isUpdating }] = useUpdateTenantMutation();
-	const [createTenantPromoCode] = useCreateTenantPromoCodeMutation();
-	const [revokeTenantPromoCode, { isLoading: isRevoking }] =
-		useRevokeTenantPromoCodeMutation();
+	const [createTenantInvitationCode] = useCreateTenantInvitationCodeMutation();
+	const [revokeTenantInvitationCode, { isLoading: isRevoking }] =
+		useRevokeTenantInvitationCodeMutation();
 
 	useEffect(() => {
 		if (mode === 'edit' && tenant) {
@@ -133,7 +133,7 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 
 			setSuccess('Tenant added successfully!');
 			const normalizedEmail = formData.email.toLowerCase();
-			const promoCodeResult = await createTenantPromoCode({
+			const promoCodeResult = await createTenantInvitationCode({
 				propertyId,
 				tenantEmail: normalizedEmail,
 				code: buildPromoCode(),
@@ -149,7 +149,7 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 				unit: formData.unit,
 				leaseStart: formData.leaseStart,
 				leaseEnd: formData.leaseEnd,
-				tenantPromoCodeId: promoCodeId,
+				tenantInvitationCodeId: promoCodeId,
 			}).unwrap();
 			setFormData({
 				firstName: '',
@@ -182,11 +182,11 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 		setError('');
 		setSuccess('');
 		try {
-			await revokeTenantPromoCode({
+			await revokeTenantInvitationCode({
 				propertyId,
 				tenantEmail: formData.email.toLowerCase(),
 			}).unwrap();
-			setSuccess('Promo code revoked.');
+			setSuccess('Invitation code revoked.');
 		} catch (err: any) {
 			setError(err.message || 'Failed to revoke promo code');
 		}
@@ -206,14 +206,14 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 		setSuccess('');
 		setIsRegenerating(true);
 		try {
-			// First revoke any existing active promo codes
-			await revokeTenantPromoCode({
+			// First revoke any existing active invitation codes
+			await revokeTenantInvitationCode({
 				propertyId,
 				tenantEmail: formData.email.toLowerCase(),
 			}).unwrap();
 
-			// Create a new promo code
-			const promoCodeResult = await createTenantPromoCode({
+			// Create a new invitation code
+			const promoCodeResult = await createTenantInvitationCode({
 				propertyId,
 				tenantEmail: formData.email.toLowerCase(),
 				code: buildPromoCode(),
@@ -224,7 +224,7 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 				await updateTenant({
 					propertyId,
 					tenantId: tenant.id,
-					updates: { tenantPromoCodeId: promoCodeResult.id },
+					updates: { tenantInvitationCodeId: promoCodeResult.id },
 				}).unwrap();
 			}
 

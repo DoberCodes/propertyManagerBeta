@@ -11,7 +11,7 @@ const Overlay = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 2000; /* Increased from 1000 to be above modals */
 `;
 
 const Dialog = styled.div`

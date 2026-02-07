@@ -46,7 +46,7 @@ export interface UserInvitation {
 	expiresAt: string;
 }
 
-export interface TenantPromoCode {
+export interface TenantInvitationCode {
 	id: string;
 	code: string;
 	codeLower: string;
@@ -59,6 +59,24 @@ export interface TenantPromoCode {
 	redeemedByEmail?: string;
 	createdAt: string;
 	updatedAt: string;
+	redeemedAt?: string;
+	revokedAt?: string;
+}
+
+export interface TeamMemberInvitationCode {
+	id: string;
+	code: string;
+	codeLower: string;
+	status: 'active' | 'redeemed' | 'revoked';
+	createdByUserId: string;
+	createdByEmail?: string;
+	teamMemberEmail?: string;
+	teamMemberId?: string; // ID of the associated team member
+	redeemedByUserId?: string;
+	redeemedByEmail?: string;
+	createdAt: string;
+	updatedAt: string;
+	expiresAt?: string; // Expiration date for the invitation code (only for unclaimed codes)
 	redeemedAt?: string;
 	revokedAt?: string;
 }
@@ -360,7 +378,8 @@ export const apiSlice = createApi({
 		'UserInvitations',
 		'Notifications',
 		'TenantProfiles',
-		'TenantPromoCodes',
+		'TenantInvitationCodes',
+		'TeamMemberInvitationCodes',
 		'MaintenanceHistory',
 		'Contractors',
 	],
@@ -2638,7 +2657,7 @@ export const apiSlice = createApi({
 				unit?: string;
 				leaseStart?: string;
 				leaseEnd?: string;
-				tenantPromoCodeId?: string;
+				tenantInvitationCodeId?: string;
 			}
 		>({
 			async queryFn(tenantData) {
@@ -2662,8 +2681,8 @@ export const apiSlice = createApi({
 						unit: tenantData.unit || '',
 						leaseStart: tenantData.leaseStart || '',
 						leaseEnd: tenantData.leaseEnd || '',
-						...(tenantData.tenantPromoCodeId && {
-							tenantPromoCodeId: tenantData.tenantPromoCodeId,
+						...(tenantData.tenantInvitationCodeId && {
+							tenantInvitationCodeId: tenantData.tenantInvitationCodeId,
 						}),
 						createdAt: new Date().toISOString(),
 					};
@@ -2692,7 +2711,7 @@ export const apiSlice = createApi({
 					unit: string;
 					leaseStart: string;
 					leaseEnd: string;
-					tenantPromoCodeId: string;
+					tenantInvitationCodeId: string;
 				}>;
 			}
 		>({
@@ -2725,8 +2744,8 @@ export const apiSlice = createApi({
 			invalidatesTags: ['Properties'],
 		}),
 
-		createTenantPromoCode: builder.mutation<
-			TenantPromoCode,
+		createTenantInvitationCode: builder.mutation<
+			TenantInvitationCode,
 			{ propertyId?: string; tenantEmail?: string; code: string }
 		>({
 			async queryFn({ propertyId, tenantEmail, code }) {
@@ -2755,20 +2774,23 @@ export const apiSlice = createApi({
 					);
 
 					const docRef = await addDoc(
-						collection(db, 'tenantPromoCodes'),
+						collection(db, 'tenantInvitationCodes'),
 						sanitizedPromoData,
 					);
 					return {
-						data: { id: docRef.id, ...sanitizedPromoData } as TenantPromoCode,
+						data: {
+							id: docRef.id,
+							...sanitizedPromoData,
+						} as TenantInvitationCode,
 					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
 			},
-			invalidatesTags: ['TenantPromoCodes'],
+			invalidatesTags: ['TenantInvitationCodes'],
 		}),
 
-		revokeTenantPromoCode: builder.mutation<
+		revokeTenantInvitationCode: builder.mutation<
 			void,
 			{ propertyId?: string; tenantEmail: string }
 		>({
@@ -2781,7 +2803,7 @@ export const apiSlice = createApi({
 					if (propertyId) {
 						clauses.push(where('propertyId', '==', propertyId));
 					}
-					const q = query(collection(db, 'tenantPromoCodes'), ...clauses);
+					const q = query(collection(db, 'tenantInvitationCodes'), ...clauses);
 					const snapshot = await getDocs(q);
 					const now = new Date().toISOString();
 					for (const docSnap of snapshot.docs) {
@@ -2797,17 +2819,190 @@ export const apiSlice = createApi({
 					return { error: error.message };
 				}
 			},
-			invalidatesTags: ['TenantPromoCodes'],
+			invalidatesTags: ['TenantInvitationCodes'],
 		}),
 
-		getTenantPromoCode: builder.query<TenantPromoCode | null, string>({
+		getTenantInvitationCode: builder.query<TenantInvitationCode | null, string>(
+			{
+				async queryFn(promoCodeId) {
+					try {
+						const docRef = doc(db, 'tenantInvitationCodes', promoCodeId);
+						const docSnap = await getDoc(docRef);
+						if (docSnap.exists()) {
+							return {
+								data: {
+									id: docSnap.id,
+									...docSnap.data(),
+								} as TenantInvitationCode,
+							};
+						} else {
+							return { data: null };
+						}
+					} catch (error: any) {
+						return { error: error.message };
+					}
+				},
+				providesTags: ['TenantInvitationCodes'],
+			},
+		),
+
+		getTenantInvitationCodesByEmail: builder.query<
+			TenantInvitationCode[],
+			string
+		>({
+			async queryFn(tenantEmail) {
+				try {
+					const q = query(
+						collection(db, 'tenantInvitationCodes'),
+						where('tenantEmail', '==', tenantEmail.toLowerCase()),
+						orderBy('createdAt', 'desc'),
+					);
+					const snapshot = await getDocs(q);
+					const promoCodes = snapshot.docs.map((doc) => ({
+						id: doc.id,
+						...doc.data(),
+					})) as TenantInvitationCode[];
+					return { data: promoCodes };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['TenantInvitationCodes'],
+		}),
+
+		// Team Member Invitation Code mutations
+		createTeamMemberInvitationCode: builder.mutation<
+			TeamMemberInvitationCode,
+			{ teamMemberId: string; teamMemberEmail: string; code: string }
+		>({
+			async queryFn({ teamMemberId, teamMemberEmail, code }) {
+				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+
+					const now = new Date().toISOString();
+					const expiresAt = new Date(
+						Date.now() + 7 * 24 * 60 * 60 * 1000,
+					).toISOString(); // 7 days from now
+					const promoData = {
+						code,
+						codeLower: code.toLowerCase(),
+						status: 'active' as const,
+						createdByUserId: currentUser.uid,
+						createdByEmail: currentUser.email || undefined,
+						teamMemberEmail: teamMemberEmail.toLowerCase(),
+						teamMemberId, // Associate with specific team member
+						createdAt: now,
+						updatedAt: now,
+						expiresAt,
+					};
+
+					const docRef = await addDoc(
+						collection(db, 'teamMemberInvitationCodes'),
+						promoData,
+					);
+					return {
+						data: { id: docRef.id, ...promoData } as TeamMemberInvitationCode,
+					};
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['TeamMemberInvitationCodes'],
+		}),
+
+		revokeTeamMemberInvitationCode: builder.mutation<
+			void,
+			{ teamMemberId: string }
+		>({
+			async queryFn({ teamMemberId }) {
+				try {
+					const clauses = [
+						where('teamMemberId', '==', teamMemberId),
+						where('status', '==', 'active'),
+					];
+
+					const q = query(
+						collection(db, 'teamMemberInvitationCodes'),
+						...clauses,
+					);
+					const snapshot = await getDocs(q);
+					const now = new Date().toISOString();
+					for (const docSnap of snapshot.docs) {
+						await updateDoc(docSnap.ref, {
+							status: 'revoked',
+							revokedAt: now,
+							updatedAt: now,
+						});
+					}
+
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['TeamMemberInvitationCodes'],
+		}),
+
+		redeemTeamMemberInvitationCode: builder.mutation<
+			void,
+			{ promoCode: string; teamMemberEmail: string }
+		>({
+			async queryFn({ promoCode }) {
+				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+
+					const normalizedCode = promoCode.trim().toLowerCase();
+					const q = query(
+						collection(db, 'teamMemberInvitationCodes'),
+						where('codeLower', '==', normalizedCode),
+						where('status', '==', 'active'),
+					);
+					const snapshot = await getDocs(q);
+
+					if (snapshot.empty) {
+						return { error: 'Invalid or expired promo code' };
+					}
+
+					const promoDoc = snapshot.docs[0];
+					const now = new Date().toISOString();
+
+					await updateDoc(promoDoc.ref, {
+						status: 'redeemed',
+						redeemedByUserId: currentUser.uid,
+						redeemedByEmail: currentUser.email || undefined,
+						redeemedAt: now,
+						expiresAt: null, // Remove expiration for redeemed codes - team member keeps permanent access
+						updatedAt: now,
+					});
+
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['TeamMemberInvitationCodes'],
+		}),
+
+		getTeamMemberInvitationCode: builder.query<
+			TeamMemberInvitationCode | null,
+			string
+		>({
 			async queryFn(promoCodeId) {
 				try {
-					const docRef = doc(db, 'tenantPromoCodes', promoCodeId);
+					const docRef = doc(db, 'teamMemberInvitationCodes', promoCodeId);
 					const docSnap = await getDoc(docRef);
 					if (docSnap.exists()) {
 						return {
-							data: { id: docSnap.id, ...docSnap.data() } as TenantPromoCode,
+							data: {
+								id: docSnap.id,
+								...docSnap.data(),
+							} as TeamMemberInvitationCode,
 						};
 					} else {
 						return { data: null };
@@ -2816,28 +3011,31 @@ export const apiSlice = createApi({
 					return { error: error.message };
 				}
 			},
-			providesTags: ['TenantPromoCodes'],
+			providesTags: ['TeamMemberInvitationCodes'],
 		}),
 
-		getTenantPromoCodesByEmail: builder.query<TenantPromoCode[], string>({
-			async queryFn(tenantEmail) {
+		getTeamMemberInvitationCodesByEmail: builder.query<
+			TeamMemberInvitationCode[],
+			string
+		>({
+			async queryFn(teamMemberEmail) {
 				try {
 					const q = query(
-						collection(db, 'tenantPromoCodes'),
-						where('tenantEmail', '==', tenantEmail.toLowerCase()),
+						collection(db, 'teamMemberInvitationCodes'),
+						where('teamMemberEmail', '==', teamMemberEmail.toLowerCase()),
 						orderBy('createdAt', 'desc'),
 					);
 					const snapshot = await getDocs(q);
-					const promoCodes = snapshot.docs.map((doc) => ({
+					const invitationCodes = snapshot.docs.map((doc) => ({
 						id: doc.id,
 						...doc.data(),
-					})) as TenantPromoCode[];
-					return { data: promoCodes };
+					})) as TeamMemberInvitationCode[];
+					return { data: invitationCodes };
 				} catch (error: any) {
 					return { error: error.message };
 				}
 			},
-			providesTags: ['TenantPromoCodes'],
+			providesTags: ['TeamMemberInvitationCodes'],
 		}),
 
 		removeTenant: builder.mutation<
@@ -3126,13 +3324,21 @@ export const {
 	// Tenants
 	useAddTenantMutation,
 	useUpdateTenantMutation,
-	useCreateTenantPromoCodeMutation,
-	useRevokeTenantPromoCodeMutation,
-	useGetTenantPromoCodeQuery,
-	useLazyGetTenantPromoCodeQuery,
-	useGetTenantPromoCodesByEmailQuery,
-	useLazyGetTenantPromoCodesByEmailQuery,
+	useCreateTenantInvitationCodeMutation,
+	useRevokeTenantInvitationCodeMutation,
+	useGetTenantInvitationCodeQuery,
+	useLazyGetTenantInvitationCodeQuery,
+	useGetTenantInvitationCodesByEmailQuery,
+	useLazyGetTenantInvitationCodesByEmailQuery,
 	useRemoveTenantMutation,
+	// Team Member Invitation Codes
+	useCreateTeamMemberInvitationCodeMutation,
+	useRevokeTeamMemberInvitationCodeMutation,
+	useRedeemTeamMemberInvitationCodeMutation,
+	useGetTeamMemberInvitationCodeQuery,
+	useLazyGetTeamMemberInvitationCodeQuery,
+	useGetTeamMemberInvitationCodesByEmailQuery,
+	useLazyGetTeamMemberInvitationCodesByEmailQuery,
 	// Notifications
 	useGetUserNotificationsQuery,
 	useCreateNotificationMutation,

@@ -49,7 +49,7 @@ export const signInWithEmail = async (
 const findActiveTenantPromoCode = async (promoCode: string) => {
 	const normalizedCode = promoCode.trim().toLowerCase();
 	const q = query(
-		collection(db, 'tenantPromoCodes'),
+		collection(db, 'tenantInvitationCodes'),
 		where('codeLower', '==', normalizedCode),
 	);
 	const snapshot = await getDocs(q);

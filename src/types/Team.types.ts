@@ -19,6 +19,9 @@ export interface TeamMember {
 	linkedProperties: string[];
 	taskHistory: Array<{ date: string; task: string }>;
 	files: Array<{ name: string; id: string }>;
+	invitationCodeId?: string; // ID of the associated invitation code
+	invitationCodeStatus?: 'active' | 'revoked'; // Status of the invitation code
+	invitationCodeExpiresAt?: string; // Expiration date of the invitation code
 	createdAt?: string;
 	updatedAt?: string;
 }
