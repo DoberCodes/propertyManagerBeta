@@ -35,10 +35,10 @@ export const GenericModal: React.FC<GenericModalProps> = ({
 	secondaryButtonLabel = 'Cancel',
 	secondaryButtonAction,
 	children,
-	primaryButtonDisabled = false,
-	isLoading = false,
+	primaryButtonDisabled,
+	isLoading,
 	onSubmit,
-	showActions = true,
+	showActions,
 }) => {
 	if (!isOpen) return null;
 

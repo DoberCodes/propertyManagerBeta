@@ -126,6 +126,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 			title={isEditing ? 'Edit Task' : 'Create New Task'}
 			onClose={onClose}
 			onSubmit={onSubmit}
+			showActions={true}
 			primaryButtonLabel={isEditing ? 'Update Task' : 'Create Task'}
 			secondaryButtonLabel='Cancel'>
 			<ModalTabContainer>

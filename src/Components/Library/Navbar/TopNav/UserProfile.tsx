@@ -26,7 +26,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
-		<UserProfileWrapper isOpen={isOpen}>
+		<UserProfileWrapper $isOpen={isOpen}>
 			<div
 				onClick={() => setIsOpen(!isOpen)}
 				style={{

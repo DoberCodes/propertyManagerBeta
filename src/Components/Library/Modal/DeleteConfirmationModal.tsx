@@ -30,6 +30,7 @@ export const DeleteConfirmationModal: React.FC<
 		<GenericModal
 			isOpen={isOpen}
 			title='Confirm Deletion'
+			showActions={true}
 			onClose={onCancel}
 			primaryButtonLabel='Delete'
 			primaryButtonAction={onConfirm}

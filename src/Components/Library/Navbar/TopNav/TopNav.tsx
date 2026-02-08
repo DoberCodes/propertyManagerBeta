@@ -115,8 +115,8 @@ export const TopNav = () => {
 					{/* Notification Icon */}
 					<NotificationIcon
 						onClick={() => setIsNotificationModalOpen(true)}
-						hasUnread={hasUnreadNotifications}
-						unreadCount={unreadCount}>
+						$hasUnread={hasUnreadNotifications}
+						$unreadCount={unreadCount}>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
 							fill='none'
@@ -260,7 +260,7 @@ export const TopNav = () => {
 			{isSidebarOpen && (
 				<SidebarOverlay onClick={() => setIsSidebarOpen(false)} />
 			)}
-			<MobileSidebar isOpen={isSidebarOpen}>
+			<MobileSidebar $isOpen={isSidebarOpen}>
 				{/* Navigation Menu */}
 				<div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
 					<h3

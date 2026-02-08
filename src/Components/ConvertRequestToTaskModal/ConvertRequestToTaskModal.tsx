@@ -103,6 +103,7 @@ Submitted by: ${request.submittedByName} on ${
 			isOpen={isOpen}
 			onClose={onClose}
 			title='Convert Request to Task'
+			showActions={true}
 			onSubmit={handleFormSubmit}
 			primaryButtonLabel='Create Task'
 			secondaryButtonLabel='Cancel'>

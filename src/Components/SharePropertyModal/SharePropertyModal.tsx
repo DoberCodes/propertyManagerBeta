@@ -158,6 +158,7 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 				isOpen={open}
 				onClose={onClose}
 				title='Share Property'
+				showActions={true}
 				secondaryButtonLabel='Close'
 				secondaryButtonAction={onClose}>
 				<PropertyTitle>{propertyTitle}</PropertyTitle>
@@ -321,8 +322,8 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 												invitation.status === 'accepted'
 													? 'success'
 													: invitation.permission === 'admin'
-														? 'primary'
-														: 'default'
+													? 'primary'
+													: 'default'
 											}>
 											{getSharePermissionLabel(invitation.permission)} •{' '}
 											{invitation.status === 'accepted' ? (
@@ -571,8 +572,8 @@ const Badge = styled.span<{ color: 'primary' | 'default' | 'success' }>`
 		props.color === 'primary'
 			? '#2196f3'
 			: props.color === 'success'
-				? '#4caf50'
-				: '#e0e0e0'};
+			? '#4caf50'
+			: '#e0e0e0'};
 	color: ${(props) => (props.color === 'default' ? '#666' : 'white')};
 `;
 

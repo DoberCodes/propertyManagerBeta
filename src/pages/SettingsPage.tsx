@@ -23,7 +23,7 @@ import {
 import { auth } from '../config/firebase';
 
 const Container = styled.div`
-	max-width: 600px;
+	max-width: 100%;
 	margin: 40px auto;
 	padding: 32px;
 	background: #fff;
@@ -459,6 +459,7 @@ const SettingsPage: React.FC = () => {
 			<GenericModal
 				isOpen={showFeedbackModal}
 				title='Submit Feedback'
+				showActions={false}
 				onClose={() => setShowFeedbackModal(false)}>
 				<FeedbackForm onClose={() => setShowFeedbackModal(false)} />
 			</GenericModal>

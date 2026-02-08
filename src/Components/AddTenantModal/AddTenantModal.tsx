@@ -241,6 +241,7 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 			isOpen={open}
 			title={mode === 'edit' ? 'Edit Tenant' : 'Add Tenant'}
 			onClose={onClose}
+			showActions={true}
 			onSubmit={handleSubmit}
 			primaryButtonLabel={
 				mode === 'edit'

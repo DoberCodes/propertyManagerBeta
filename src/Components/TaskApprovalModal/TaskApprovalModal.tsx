@@ -68,6 +68,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 				isOpen={true}
 				onClose={onClose}
 				title='Access Denied'
+				showActions={true}
 				secondaryButtonLabel='Close'
 				secondaryButtonAction={onClose}>
 				<ErrorMessage>
@@ -181,8 +182,8 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 						? 'Rejecting...'
 						: 'Confirm Rejection'
 					: isSubmitting
-						? 'Approving...'
-						: 'Approve Task'
+					? 'Approving...'
+					: 'Approve Task'
 			}
 			primaryButtonAction={showRejectForm ? handleReject : handleApprove}
 			primaryButtonDisabled={isSubmitting}
@@ -193,7 +194,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 							setShowRejectForm(false);
 							setRejectionReason('');
 							setError('');
-						}
+					  }
 					: () => setShowRejectForm(true)
 			}>
 			<InfoSection>

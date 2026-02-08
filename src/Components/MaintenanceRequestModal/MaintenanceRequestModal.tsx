@@ -57,6 +57,7 @@ export const MaintenanceRequestModal: React.FC<
 			title={`Request Maintenance - ${propertyTitle}`}
 			onClose={onClose}
 			onSubmit={handleSubmit}
+			showActions={true}
 			primaryButtonLabel='Submit Request'
 			secondaryButtonLabel='Cancel'>
 			<FormGroup>

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
-export const UserProfileWrapper = styled.div<{ isOpen: boolean }>`
+export const UserProfileWrapper = styled.div<{ $isOpen: boolean }>`
 	position: relative;
 	display: flex;
 	align-items: center;

@@ -239,7 +239,7 @@ export const SidebarOverlay = styled.div`
 	}
 `;
 
-export const MobileSidebar = styled.div<{ isOpen: boolean }>`
+export const MobileSidebar = styled.div<{ $isOpen: boolean }>`
 	display: none;
 	position: fixed;
 	left: 0;
@@ -253,7 +253,7 @@ export const MobileSidebar = styled.div<{ isOpen: boolean }>`
 	z-index: 1000;
 	box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 	transform: ${(props) =>
-		props.isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+		props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
 	transition: transform 0.3s ease;
 
 	@media (max-width: 768px) {
@@ -262,8 +262,8 @@ export const MobileSidebar = styled.div<{ isOpen: boolean }>`
 `;
 
 export const NotificationIcon = styled.div<{
-	hasUnread?: boolean;
-	unreadCount?: number;
+	$hasUnread?: boolean;
+	$unreadCount?: number;
 }>`
 	position: relative;
 	width: 40px;
@@ -288,12 +288,12 @@ export const NotificationIcon = styled.div<{
 	}
 
 	${(props) =>
-		props.hasUnread &&
-		props.unreadCount &&
-		props.unreadCount > 0 &&
+		props.$hasUnread &&
+		props.$unreadCount &&
+		props.$unreadCount > 0 &&
 		`
 		&::after {
-			content: '${props.unreadCount > 99 ? '99+' : props.unreadCount}';
+			content: '${props.$unreadCount > 99 ? '99+' : props.$unreadCount}';
 			position: absolute;
 			top: 4px;
 			right: 4px;
