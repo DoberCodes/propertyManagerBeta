@@ -566,10 +566,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 							Key features to explore:
 						</p>
 						<ul style={{ paddingLeft: '20px', margin: '0' }}>
-							<li>📋 View and edit property information</li>
-							<li>🔧 Manage maintenance tasks and schedules</li>
-							<li>👥 Share property access with other users</li>
-							<li> View maintenance history</li>
+							<li>View and edit property information</li>
+							<li>Manage maintenance tasks and schedules</li>
+							<li>Share property access with other users</li>
+							<li>View maintenance history</li>
 							<li>Manage contractors and vendors</li>
 						</ul>
 					</div>
@@ -592,7 +592,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 					'Tasks help you stay organized and never miss important maintenance work. Plus they add to your maintenance history which is super helpful for tracking and resale value.',
 				content: (
 					<div style={{ textAlign: 'left', marginTop: '20px' }}>
-						<p style={{ marginBottom: '16px' }}>
+						<p style={{ marginBottom: '16px', fontWeight: '500' }}>
 							With a maintenance task, you'll be able to:
 						</p>
 						<ul style={{ paddingLeft: '20px', margin: '0' }}>
