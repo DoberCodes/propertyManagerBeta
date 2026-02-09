@@ -25,6 +25,7 @@ export interface User {
 		canceledAt?: number;
 		stripeCustomerId?: string;
 		stripeSubscriptionId?: string;
+		updatedAt?: string;
 	};
 	onboardingCompleted?: boolean;
 	createdAt?: string;

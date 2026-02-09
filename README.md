@@ -1,4 +1,3 @@
-
 # My Property Manager Web App
 
 This is a full-featured property management web application built with React, Redux Toolkit, Firebase, and Capacitor. It supports both web and native (Android) deployments, push notifications, team management, and real-time task tracking.
@@ -15,32 +14,38 @@ This is a full-featured property management web application built with React, Re
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js and Yarn
 - Firebase project (with Firestore and Authentication enabled)
 - (For native features) Android Studio and Capacitor CLI
 
 ### Installation
+
 1. Clone the repository
 2. Run `yarn install` to install dependencies
 3. Copy your Firebase service account key to `serviceAccountKey.json`
 4. Configure your Firebase project in `src/config/firebase.ts`
 
 ### Running the App
+
 - `yarn start` — Start the web app at [http://localhost:3000](http://localhost:3000)
 - `yarn build` — Build for production
 - `yarn test` — Run tests
 
 ### Native App (Android)
+
 - `yarn build && npx cap sync android` — Sync web build to Android
 - `npx cap open android` — Open in Android Studio
 - Build and run the app on your device/emulator
 
 ### Push Notifications
+
 - Native push notifications require the Blaze plan and Firebase Cloud Functions
 - See `functions/sendPushOnNotificationCreate.ts` for the Cloud Function
 - Push tokens are saved to Firestore and used for notification delivery
 
 ### Efficiency Chart
+
 - The dashboard includes a live pie chart (powered by [recharts](https://recharts.org/)) showing the breakdown of tasks by status: Completed, In Progress, and Overdue
 
 ## Scripts
@@ -53,14 +58,35 @@ This is a full-featured property management web application built with React, Re
 - `yarn build:apk` — Build and sync APK
 - `yarn build:signed` — Build signed APK (see `build-signed-apk.sh`)
 
-## Project Structure
+## Database Maintenance Scripts
 
-- `src/` — Main source code
-- `src/Components/` — React components (Dashboard, Tasks, Notifications, etc.)
-- `src/Redux/` — Redux Toolkit slices and API
-- `src/services/` — Service modules (auth, push notifications)
-- `functions/` — Firebase Cloud Functions (for push notifications)
-- `scripts/` — Utility scripts (migrations, seeding, etc.)
+The `scripts/` directory contains utilities for database management and migrations:
+
+### Orphaned Data Cleanup
+
+```bash
+node scripts/migrateRemoveOrphanedData.cjs
+```
+
+**Purpose**: Removes all data not connected to current Firebase Auth users (orphaned data from deleted accounts).
+
+**What it cleans**: User profiles, notifications, contractors, property groups, team data, favorites, tasks, and property-related data.
+
+**When to run**:
+
+- After implementing account deletion features
+- Periodically for database maintenance (monthly/quarterly)
+- Before major deployments
+- When adding new collections
+
+**Safety**: Idempotent and safe to run repeatedly. Now includes the `users` collection that was previously missed!
+
+### Other Migration Scripts
+
+- `migrateAddSubscriptions.cjs` — Add subscription data to existing users
+- `migrateAddUserToMyTeam.cjs` — Add user-to-team relationships
+- `seedFirestore.cjs` — Seed database with sample data
+- `initFirestore.cjs` — Initialize collection structure
 
 ## Notes
 

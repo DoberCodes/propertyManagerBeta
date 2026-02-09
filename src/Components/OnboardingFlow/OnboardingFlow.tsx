@@ -9,6 +9,7 @@ import {
 	useGetPropertiesQuery,
 	useGetTasksQuery,
 } from '../../Redux/API/apiSlice';
+import { on } from 'events';
 
 const OnboardingOverlay = styled.div`
 	position: fixed;
@@ -514,7 +515,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				actionLabel: 'Add Property',
 				action: () => {
 					navigate('/properties');
-					setCurrentStepIndex(2); // Move to waiting step
+					setCurrentStepIndex(currentStepIndex + 1); // Move to waiting step
 				},
 				skipLabel: 'Skip This Step',
 			},
@@ -576,7 +577,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				),
 				actionLabel: 'Sounds Great!',
 				action: () => {
-					setCurrentStepIndex(6); // Move to waiting step
+					setCurrentStepIndex(currentStepIndex + 1); // Move to waiting step
 				},
 			},
 		);
@@ -610,7 +611,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				),
 				actionLabel: 'Understood',
 				action: () => {
-					setCurrentStepIndex(7);
+					setCurrentStepIndex(currentStepIndex + 1);
 				},
 				skipLabel: 'Skip Task Creation',
 			},
@@ -637,6 +638,87 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 		);
 
 		// Add advanced features explanation for property managers
+		steps.push({
+			id: 'advanced_features',
+			type: 'instruction',
+			title: 'Advanced Features',
+			description:
+				'Here are some powerful features to help you manage your properties more effectively.',
+			content: (
+				<div style={{ textAlign: 'left', marginTop: '20px' }}>
+					<div style={{ marginBottom: '20px' }}>
+						<h4
+							style={{
+								color: COLORS.primary,
+								margin: '0 0 8px 0',
+								display: 'flex',
+								alignItems: 'center',
+							}}>
+							<span style={{ marginRight: '8px' }}>🔧</span>
+							Contractor Management
+						</h4>
+						<p
+							style={{
+								margin: '0 0 8px 28px',
+								fontSize: '14px',
+								color: '#64748b',
+							}}>
+							Add trusted contractors to your network. Assign them tasks and
+							track their work for your records and future reference.
+						</p>
+					</div>
+
+					<div style={{ marginBottom: '20px' }}>
+						<h4
+							style={{
+								color: COLORS.primary,
+								margin: '0 0 8px 0',
+								display: 'flex',
+								alignItems: 'center',
+							}}>
+							<span style={{ marginRight: '8px' }}>📤</span>
+							Property Sharing
+						</h4>
+						<p
+							style={{
+								margin: '0 0 8px 28px',
+								fontSize: '14px',
+								color: '#64748b',
+							}}>
+							Share property access with co-owners, property managers, family
+							members, or other users who are helping you with your properties.
+						</p>
+					</div>
+					<div>
+						<h4
+							style={{
+								color: COLORS.primary,
+								margin: '0 0 8px 0',
+								display: 'flex',
+								alignItems: 'center',
+							}}>
+							<span style={{ marginRight: '8px' }}>📊</span>
+							Reports & Analytics
+						</h4>
+						<p
+							style={{
+								margin: '0 0 8px 28px',
+								fontSize: '14px',
+								color: '#64748b',
+							}}>
+							Run reports to get insights on your maintenance history, property
+							details, and more. Use this information to make informed decisions
+							and keep your properties in top shape, or share it with potential
+							buyers to demonstrate the value of your well-maintained property!
+						</p>
+					</div>
+				</div>
+			),
+			actionLabel: 'Good to know!',
+			action: () => {
+				setCurrentStepIndex(currentStepIndex + 1);
+			},
+		});
 		if (isPropertyManager) {
 			steps.push({
 				id: 'advanced_features',
@@ -645,7 +727,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				description:
 					'Here are some powerful features to help you manage your properties more effectively.',
 				content: (
-					<div style={{ textAlign: 'left', marginTop: '20px' }}>
+					<div>
 						<div style={{ marginBottom: '20px' }}>
 							<h4
 								style={{
@@ -654,8 +736,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									display: 'flex',
 									alignItems: 'center',
 								}}>
-								<span style={{ marginRight: '8px' }}>🔧</span>
-								Contractor Management
+								Team management
 							</h4>
 							<p
 								style={{
@@ -663,33 +744,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									fontSize: '14px',
 									color: '#64748b',
 								}}>
-								Add trusted contractors to your network. Assign them tasks and
-								track their work.
+								Invite your team members to collaborate on property management.
+								Assign tasks, share property access, and keep detailed
+								maintenance history.
 							</p>
 						</div>
-
-						<div style={{ marginBottom: '20px' }}>
-							<h4
-								style={{
-									color: COLORS.primary,
-									margin: '0 0 8px 0',
-									display: 'flex',
-									alignItems: 'center',
-								}}>
-								<span style={{ marginRight: '8px' }}>📤</span>
-								Property Sharing
-							</h4>
-							<p
-								style={{
-									margin: '0 0 8px 28px',
-									fontSize: '14px',
-									color: '#64748b',
-								}}>
-								Share property access with co-owners, property managers, or
-								family members.
-							</p>
-						</div>
-
 						<div style={{ marginBottom: '20px' }}>
 							<h4
 								style={{
@@ -699,7 +758,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									alignItems: 'center',
 								}}>
 								<span style={{ marginRight: '8px' }}>👥</span>
-								Tenant Portal
+								Tenant Access
 							</h4>
 							<p
 								style={{
@@ -707,11 +766,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									fontSize: '14px',
 									color: '#64748b',
 								}}>
-								Give tenants direct access to submit maintenance requests and
-								view property information.
+								Invite tenants limited access to submit maintenance requests and
+								view some basic property information. This keeps everyone in the
+								loop and makes communication easier.
 							</p>
 						</div>
-
 						<div>
 							<h4
 								style={{
@@ -720,8 +779,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									display: 'flex',
 									alignItems: 'center',
 								}}>
-								<span style={{ marginRight: '8px' }}>📊</span>
-								Reports & Analytics
+								Unit Specific Management
 							</h4>
 							<p
 								style={{
@@ -729,18 +787,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 									fontSize: '14px',
 									color: '#64748b',
 								}}>
-								Get insights into maintenance costs, task completion rates, and
-								property performance.
+								For multi-family properties, manage each unit separately. Assign
+								tasks, track maintenance, add unit specific devices, and store
+								information specific to each unit for better organization.
 							</p>
 						</div>
 					</div>
 				),
-				actionLabel: 'Explore Dashboard',
-				action: () => {
-					navigate('/dashboard');
-					setTimeout(() => onComplete(), 1000);
-				},
-				skipLabel: 'Finish Tour',
 			});
 		} else {
 			// For homeowners, add completion step

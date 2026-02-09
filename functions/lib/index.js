@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendFeedbackEmail = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
+exports.deleteUserAccount = exports.markTasksAsOverdue = exports.sendFeedbackEmail = exports.createTrialSubscription = exports.stripeWebhook = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
 var sendPushOnNotificationCreate_1 = require("./sendPushOnNotificationCreate");
 Object.defineProperty(exports, "sendPushOnNotificationCreate", { enumerable: true, get: function () { return sendPushOnNotificationCreate_1.sendPushOnNotificationCreate; } });
 var stripeFunctions_1 = require("./stripeFunctions");
@@ -8,5 +8,11 @@ Object.defineProperty(exports, "createCheckoutSession", { enumerable: true, get:
 Object.defineProperty(exports, "verifyCheckoutSession", { enumerable: true, get: function () { return stripeFunctions_1.verifyCheckoutSession; } });
 Object.defineProperty(exports, "cancelSubscription", { enumerable: true, get: function () { return stripeFunctions_1.cancelSubscription; } });
 Object.defineProperty(exports, "getSubscriptionDetails", { enumerable: true, get: function () { return stripeFunctions_1.getSubscriptionDetails; } });
+Object.defineProperty(exports, "stripeWebhook", { enumerable: true, get: function () { return stripeFunctions_1.stripeWebhook; } });
+Object.defineProperty(exports, "createTrialSubscription", { enumerable: true, get: function () { return stripeFunctions_1.createTrialSubscription; } });
 var sendFeedbackEmail_1 = require("./sendFeedbackEmail");
 Object.defineProperty(exports, "sendFeedbackEmail", { enumerable: true, get: function () { return sendFeedbackEmail_1.sendFeedbackEmail; } });
+var markTasksAsOverdue_1 = require("./markTasksAsOverdue");
+Object.defineProperty(exports, "markTasksAsOverdue", { enumerable: true, get: function () { return markTasksAsOverdue_1.markTasksAsOverdue; } });
+var deleteUserAccount_1 = require("./deleteUserAccount");
+Object.defineProperty(exports, "deleteUserAccount", { enumerable: true, get: function () { return deleteUserAccount_1.deleteUserAccount; } });

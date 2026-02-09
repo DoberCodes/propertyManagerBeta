@@ -23,7 +23,10 @@ import { clearUserLocalStorage } from '../utils/localStorageCleanup';
 import { User } from '../Redux/Slices/userSlice';
 import { USER_ROLES } from '../constants/roles';
 import { createTrialSubscription } from '../utils/subscriptionUtils';
-import { SUBSCRIPTION_STATUS } from '../constants/subscriptions';
+import {
+	SUBSCRIPTION_STATUS,
+	TRIAL_DURATION_DAYS,
+} from '../constants/subscriptions';
 
 /**
  * Sign in with email and password
@@ -60,6 +63,18 @@ const findActiveTenantPromoCode = async (promoCode: string) => {
 		(docSnap) => docSnap.data()?.status === 'active',
 	);
 	return match || null;
+};
+
+/**
+ * Create subscription for new user - local trial for all users
+ */
+const createUserSubscription = async (
+	selectedPlan: string,
+	promoCode: string | undefined,
+) => {
+	// Create local trial subscription for all users
+	console.log('Creating local trial subscription for plan:', selectedPlan);
+	return createTrialSubscription(selectedPlan, promoCode);
 };
 
 /**
@@ -120,7 +135,7 @@ export const signUpWithEmail = async (
 							Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60,
 						trialEndsAt: null,
 				  }
-				: createTrialSubscription(selectedPlan, promoCode);
+				: await createUserSubscription(selectedPlan, promoCode);
 
 		await setDoc(doc(db, 'users', userCredential.user.uid), {
 			...userProfile,
@@ -223,6 +238,33 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			'toDate' in rawData.updatedAt
 		) {
 			serializedData.updatedAt = rawData.updatedAt.toDate().toISOString();
+		}
+
+		// Convert subscription timestamps to serializable format
+		if (rawData.subscription) {
+			serializedData.subscription = { ...rawData.subscription };
+
+			// Convert subscription.updatedAt if it exists
+			if (
+				rawData.subscription.updatedAt &&
+				typeof rawData.subscription.updatedAt === 'object' &&
+				'toDate' in rawData.subscription.updatedAt
+			) {
+				serializedData.subscription.updatedAt = rawData.subscription.updatedAt
+					.toDate()
+					.toISOString();
+			}
+
+			// Convert other timestamp fields in subscription if they exist
+			if (
+				rawData.subscription.canceledAt &&
+				typeof rawData.subscription.canceledAt === 'object' &&
+				'toDate' in rawData.subscription.canceledAt
+			) {
+				serializedData.subscription.canceledAt = rawData.subscription.canceledAt
+					.toDate()
+					.toISOString();
+			}
 		}
 
 		return serializedData as User;

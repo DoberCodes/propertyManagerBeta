@@ -15,12 +15,16 @@ import {
 	FormInput,
 } from '../Components/Library';
 import { FeedbackForm } from '../Components/FeedbackForm';
+import { cancelSubscription } from '../services/stripeService';
 import {
 	updatePassword,
 	reauthenticateWithCredential,
 	EmailAuthProvider,
+	signOut,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../config/firebase';
 
 const Container = styled.div`
 	max-width: 100%;
@@ -68,24 +72,24 @@ const PlanStatus = styled.span<{ status: string }>`
 		switch (status) {
 			case 'trial':
 				return `
-					background: #fef3c7;
-					color: #d97706;
-				`;
+						background: #fef3c7;
+						color: #d97706;
+					`;
 			case 'active':
 				return `
-					background: #d1fae5;
-					color: #065f46;
-				`;
+						background: #d1fae5;
+						color: #065f46;
+					`;
 			case 'cancelled':
 				return `
-					background: #fee2e2;
-					color: #dc2626;
-				`;
+						background: #fee2e2;
+						color: #dc2626;
+					`;
 			default:
 				return `
-					background: #e5e7eb;
-					color: #6b7280;
-				`;
+						background: #e5e7eb;
+						color: #6b7280;
+					`;
 		}
 	}}
 `;
@@ -156,6 +160,20 @@ const UpgradeButton = styled(LinkButton)`
 	}
 `;
 
+const ButtonContainer = styled.div`
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-top: 16px;
+`;
+
+const CancelButton = styled(LinkButton)`
+	background: #dc2626;
+	&:hover {
+		background: #b91c1c;
+	}
+`;
+
 const AccountSection = styled.div`
 	border: 1px solid #e5e7eb;
 	border-radius: 8px;
@@ -193,6 +211,13 @@ const AccountButton = styled.button`
 	}
 `;
 
+const DeleteAccountButton = styled(AccountButton)`
+	background: #dc2626;
+	&:hover {
+		background: #b91c1c;
+	}
+`;
+
 const ErrorMessage = styled.div`
 	background-color: #fee2e2;
 	color: #dc2626;
@@ -225,6 +250,7 @@ const SettingsPage: React.FC = () => {
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [showPasswordModal, setShowPasswordModal] = useState(false);
 	const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+	const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: '',
 		newPassword: '',
@@ -233,6 +259,14 @@ const SettingsPage: React.FC = () => {
 	const [passwordError, setPasswordError] = useState('');
 	const [passwordSuccess, setPasswordSuccess] = useState('');
 	const [isChangingPassword, setIsChangingPassword] = useState(false);
+	const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+	const [deleteAccountError, setDeleteAccountError] = useState('');
+	const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] =
+		useState(false);
+	const [isCancellingSubscription, setIsCancellingSubscription] =
+		useState(false);
+	const [cancelSubscriptionError, setCancelSubscriptionError] = useState('');
+	const [subscriptionError, setSubscriptionError] = useState(false);
 
 	if (!currentUser?.subscription) {
 		return (
@@ -318,9 +352,76 @@ const SettingsPage: React.FC = () => {
 		}
 	};
 
+	const handleCancelSubscription = async () => {
+		if (!currentUser?.subscription?.stripeSubscriptionId) return;
+		if (subscriptionError) {
+			setSubscriptionError(false);
+		}
+
+		setIsCancellingSubscription(true);
+		setCancelSubscriptionError('');
+
+		try {
+			await cancelSubscription(currentUser.subscription.stripeSubscriptionId);
+			setShowCancelSubscriptionModal(false);
+			// The webhook will update the user's subscription status
+			window.location.reload(); // Refresh to show updated status
+		} catch (error: any) {
+			console.error('Cancel subscription error:', error);
+			setCancelSubscriptionError(
+				'Failed to cancel subscription. Please try again.',
+			);
+		} finally {
+			setIsCancellingSubscription(false);
+		}
+	};
+
+	const handleDeleteAccount = async () => {
+		if (!currentUser) return;
+		console.info('Attempting to delete account for user:', currentUser);
+
+		setDeleteAccountError('');
+		setIsDeletingAccount(true);
+
+		try {
+			const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
+			const result = await deleteUserAccount({ userId: currentUser.id });
+
+			// Sign out the user
+			await signOut(auth);
+
+			// Redirect to login page
+			navigate('/login');
+		} catch (error: any) {
+			console.error('Delete account error:', error);
+			if (error.code === 'functions/permission-denied') {
+				setDeleteAccountError('You can only delete your own account.');
+			} else if (error.code === 'functions/failed-precondition') {
+				setDeleteAccountError(
+					'You cannot delete your account while you have an active subscription. Please cancel your subscription first.',
+				);
+			} else if (error.code === 'functions/internal') {
+				setDeleteAccountError(
+					'Failed to delete account. Please contact support.',
+				);
+			} else {
+				setDeleteAccountError('An error occurred while deleting your account.');
+			}
+		} finally {
+			setIsDeletingAccount(false);
+		}
+	};
+
+	console.info(subscriptionError);
+
 	return (
 		<Container>
 			<Title>Settings</Title>
+			{subscriptionError && (
+				<ErrorMessage style={{ marginBottom: '16px' }}>
+					You must cancel your active subscription before deleting your account.
+				</ErrorMessage>
+			)}
 
 			<SubscriptionSection>
 				<SubscriptionHeader>
@@ -349,9 +450,18 @@ const SettingsPage: React.FC = () => {
 					</PlanFeatures>
 				</PlanDetails>
 
-				<UpgradeButton onClick={() => navigate('/paywall')}>
-					{subscription.plan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
-				</UpgradeButton>
+				<ButtonContainer>
+					<UpgradeButton onClick={() => navigate('/paywall')}>
+						{subscription.plan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
+					</UpgradeButton>
+					{subscription.status === 'active' &&
+						subscription.stripeSubscriptionId && (
+							<CancelButton
+								onClick={() => setShowCancelSubscriptionModal(true)}>
+								Cancel Subscription
+							</CancelButton>
+						)}
+				</ButtonContainer>
 			</SubscriptionSection>
 
 			<AccountSection>
@@ -363,6 +473,22 @@ const SettingsPage: React.FC = () => {
 					<AccountButton onClick={() => setShowPasswordModal(true)}>
 						Change Password
 					</AccountButton>
+					<DeleteAccountButton
+						onClick={() => {
+							if (
+								subscription.status === 'active' ||
+								subscription.status === 'trial' ||
+								subscription.status === 'past_due'
+							) {
+								setSubscriptionError(
+									subscription.status === 'active' ? true : false,
+								);
+							} else {
+								setShowDeleteAccountModal(true);
+							}
+						}}>
+						Delete Account
+					</DeleteAccountButton>
 				</AccountActions>
 			</AccountSection>
 
@@ -455,13 +581,103 @@ const SettingsPage: React.FC = () => {
 				</PasswordHelp>
 			</GenericModal>
 
-			{/* Feedback Modal */}
 			<GenericModal
 				isOpen={showFeedbackModal}
 				title='Submit Feedback'
 				showActions={false}
 				onClose={() => setShowFeedbackModal(false)}>
 				<FeedbackForm onClose={() => setShowFeedbackModal(false)} />
+			</GenericModal>
+
+			{/* Delete Account Modal */}
+
+			<GenericModal
+				isOpen={showDeleteAccountModal}
+				title='Delete Account'
+				onClose={() => {
+					setShowDeleteAccountModal(false);
+					setDeleteAccountError('');
+				}}
+				primaryButtonLabel={
+					deleteAccountError?.includes('active subscription')
+						? 'Close'
+						: 'Delete Account'
+				}
+				secondaryButtonLabel={
+					deleteAccountError?.includes('active subscription')
+						? undefined
+						: 'Cancel'
+				}
+				isLoading={isDeletingAccount}
+				showActions={true}
+				onSubmit={
+					deleteAccountError?.includes('active subscription')
+						? () => setShowDeleteAccountModal(false)
+						: handleDeleteAccount
+				}>
+				{deleteAccountError && (
+					<ErrorMessage>{deleteAccountError}</ErrorMessage>
+				)}
+
+				{deleteAccountError?.includes('active subscription') ? (
+					<div>
+						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+							To delete your account, you must first cancel your active
+							subscription. This ensures proper billing closure and prevents any
+							unexpected charges.
+						</p>
+						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+							You can cancel your subscription in the{' '}
+							<strong>Subscription Management</strong> section above.
+						</p>
+					</div>
+				) : (
+					<div>
+						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+							<strong>Warning:</strong> This action cannot be undone. If you are
+							the original owner of any properties, all your properties and
+							associated data will be permanently deleted. If you are a co-owner
+							or shared user, you will lose access to shared properties but the
+							properties themselves will remain.
+						</p>
+						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+							Are you sure you want to delete your account?
+						</p>
+					</div>
+				)}
+			</GenericModal>
+
+			{/* Cancel Subscription Modal */}
+			<GenericModal
+				isOpen={showCancelSubscriptionModal}
+				title='Cancel Subscription'
+				onClose={() => {
+					setShowCancelSubscriptionModal(false);
+					setCancelSubscriptionError('');
+				}}
+				primaryButtonLabel='Cancel Subscription'
+				secondaryButtonLabel='Keep Subscription'
+				isLoading={isCancellingSubscription}
+				showActions={true}
+				onSubmit={handleCancelSubscription}>
+				{cancelSubscriptionError && (
+					<ErrorMessage>{cancelSubscriptionError}</ErrorMessage>
+				)}
+
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					<strong>Important:</strong> Your subscription will remain active until
+					the end of your current billing period. You will continue to have
+					access to all features until then.
+				</p>
+
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					After cancellation, you can reactivate your subscription at any time
+					from the paywall page.
+				</p>
+
+				<p style={{ marginBottom: '16px', color: '#dc2626' }}>
+					Are you sure you want to cancel your subscription?
+				</p>
 			</GenericModal>
 		</Container>
 	);

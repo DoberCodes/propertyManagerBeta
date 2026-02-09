@@ -36,7 +36,9 @@ export const markTasksAsOverdue = functions.pubsub
 			const snapshot = await overdueTasksQuery.get();
 
 			if (snapshot.empty) {
-				functionsLogger.info('No tasks found that need to be marked as overdue.');
+				functionsLogger.info(
+					'No tasks found that need to be marked as overdue.',
+				);
 				return null;
 			}
 
@@ -50,7 +52,9 @@ export const markTasksAsOverdue = functions.pubsub
 
 				// Double-check the date comparison in case of timezone issues
 				if (dueDate < todayStart) {
-					functionsLogger.info(`Marking task ${doc.id} as overdue. Due date: ${taskData.dueDate}, Status: ${taskData.status}`);
+					functionsLogger.info(
+						`Marking task ${doc.id} as overdue. Due date: ${taskData.dueDate}, Status: ${taskData.status}`,
+					);
 
 					batch.update(doc.ref, {
 						status: 'Overdue',
@@ -63,7 +67,9 @@ export const markTasksAsOverdue = functions.pubsub
 
 			if (updateCount > 0) {
 				await batch.commit();
-				functionsLogger.info(`Successfully marked ${updateCount} tasks as overdue.`);
+				functionsLogger.info(
+					`Successfully marked ${updateCount} tasks as overdue.`,
+				);
 			} else {
 				functionsLogger.info('No tasks were updated (all were filtered out).');
 			}
@@ -73,5 +79,4 @@ export const markTasksAsOverdue = functions.pubsub
 			functionsLogger.error('Error marking tasks as overdue:', error);
 			throw error;
 		}
-	});</content>
-<parameter name="filePath">c:\Users\austi\Documents\DoberFamilyVentures\Projects\WebApplications\propertyManagerWebApp\functions\markTasksAsOverdue.ts
+	});
