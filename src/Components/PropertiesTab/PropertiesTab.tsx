@@ -30,6 +30,7 @@ import {
 	getRemainingPropertySlots,
 	getSubscriptionPlanDetails,
 	canManageTeam,
+	isTrialExpired,
 } from '../../utils/subscriptionUtils';
 import { filterPropertyGroupsByRole } from '../../utils/dataFilters';
 import { canDeleteProperty } from '../../utils/permissions';
@@ -87,15 +88,18 @@ export const Properties = () => {
 
 	// Check if user can manage properties based on subscription plan
 	// All paid plans allow property management, free plan has limited access
+	// Expired users cannot add new properties
 	const canManage = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
+		? currentUser.subscription.plan !== 'free' &&
+		  !isTrialExpired(currentUser.subscription)
 		: false;
 
 	// Check if user can create/edit/delete groups (basic and above plans only, not homeowner)
+	// Expired users cannot manage groups
 	const canManageGroups = currentUser?.subscription
 		? ['basic', 'professional', 'enterprise'].includes(
 				currentUser.subscription.plan,
-		  )
+		  ) && !isTrialExpired(currentUser.subscription)
 		: false;
 
 	// Combine groups with their properties

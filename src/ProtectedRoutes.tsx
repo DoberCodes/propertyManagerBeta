@@ -12,6 +12,7 @@ interface ProtectedRoutesProps {
 	requiredRoles?: readonly UserRole[];
 	requireSubscription?: boolean;
 	subscriptionFeature?: string; // For future feature-specific checks
+	allowExpiredUsers?: boolean; // Allow users with expired trials to access this route
 }
 
 export const ProtectedRoutes = ({
@@ -19,6 +20,7 @@ export const ProtectedRoutes = ({
 	requiredRoles = [],
 	requireSubscription = false,
 	subscriptionFeature: _subscriptionFeature,
+	allowExpiredUsers = false,
 }: ProtectedRoutesProps) => {
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
@@ -67,10 +69,16 @@ export const ProtectedRoutes = ({
 
 	// Check subscription requirements
 	if (requireSubscription && currentUser) {
-		if (
-			!currentUser.subscription ||
-			!isSubscriptionActive(currentUser.subscription)
-		) {
+		if (!currentUser.subscription) {
+			console.log('No subscription found, redirecting to paywall');
+			return <Navigate to='/paywall' replace />;
+		}
+
+		const isActive = isSubscriptionActive(currentUser.subscription);
+		const isExpired = currentUser.subscription.status === 'expired';
+
+		// Allow access if subscription is active OR if expired users are allowed for this route
+		if (!isActive && !(allowExpiredUsers && isExpired)) {
 			console.log('Subscription check failed, redirecting to paywall');
 			return <Navigate to='/paywall' replace />;
 		}

@@ -30,6 +30,7 @@ import { useDispatch } from 'react-redux';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
+import DocumentViewer from '../DocumentViewer';
 
 // Map user type selection to appropriate role
 const getRoleFromUserType = (userType: string): string => {
@@ -60,8 +61,20 @@ export const RegistrationCard = () => {
 	const [selectedPlan, setSelectedPlan] = useState<string>('homeowner');
 	const [promoCode, setPromoCode] = useState<string>('');
 	const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+	const [selectedDocument, setSelectedDocument] = useState<{
+		name: string;
+		title: string;
+	} | null>(null);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+
+	const handleViewDocument = (filename: string, title: string) => {
+		setSelectedDocument({ name: filename, title });
+	};
+
+	const handleCloseDocumentViewer = () => {
+		setSelectedDocument(null);
+	};
 
 	const validateStep1 = () => {
 		if (!firstName.trim()) {
@@ -383,17 +396,59 @@ export const RegistrationCard = () => {
 							/>
 							<span>
 								I agree to the{' '}
-								<a
-									href='#/legal'
-									target='_blank'
-									rel='noopener noreferrer'
-									style={{ color: '#10b981', textDecoration: 'none' }}
-									onClick={(e) => {
-										e.preventDefault();
-										window.open('#/legal', '_blank');
-									}}>
-									Terms of Service, Privacy Policy, and Maintenance Disclaimer
-								</a>
+								<button
+									type='button'
+									style={{
+										color: '#10b981',
+										textDecoration: 'none',
+										cursor: 'pointer',
+										background: 'none',
+										border: 'none',
+										padding: 0,
+										font: 'inherit',
+									}}
+									onClick={() =>
+										handleViewDocument('terms-of-service', 'Terms of Service')
+									}>
+									Terms of Service
+								</button>
+								,{' '}
+								<button
+									type='button'
+									style={{
+										color: '#10b981',
+										textDecoration: 'none',
+										cursor: 'pointer',
+										background: 'none',
+										border: 'none',
+										padding: 0,
+										font: 'inherit',
+									}}
+									onClick={() =>
+										handleViewDocument('privacy-policy', 'Privacy Policy')
+									}>
+									Privacy Policy
+								</button>
+								, and{' '}
+								<button
+									type='button'
+									style={{
+										color: '#10b981',
+										textDecoration: 'none',
+										cursor: 'pointer',
+										background: 'none',
+										border: 'none',
+										padding: 0,
+										font: 'inherit',
+									}}
+									onClick={() =>
+										handleViewDocument(
+											'maintenance-disclaimer',
+											'Maintenance Disclaimer',
+										)
+									}>
+									Maintenance Disclaimer
+								</button>
 								*
 							</span>
 						</label>
@@ -518,6 +573,13 @@ export const RegistrationCard = () => {
 					Already have an account? <a href='#/login'>Login here</a>
 				</p>
 			</RegisterWrapper>
+
+			<DocumentViewer
+				documentName={selectedDocument?.name || ''}
+				title={selectedDocument?.title || ''}
+				isOpen={!!selectedDocument}
+				onClose={handleCloseDocumentViewer}
+			/>
 		</Wrapper>
 	);
 };

@@ -27,7 +27,11 @@ import { getDefaultTempUnit } from '../../utils/geolocationUtils';
 import { getCurrentLocation } from '../../utils/geolocation';
 import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
 import { TrialWarningBanner } from '../../Components/TrialWarningBanner/TrialWarningBanner';
-import { getTrialDaysRemaining } from '../../utils/subscriptionUtils';
+import { ExpiredTrialBanner } from '../../Components/ExpiredTrialBanner/ExpiredTrialBanner';
+import {
+	getTrialDaysRemaining,
+	isTrialExpired,
+} from '../../utils/subscriptionUtils';
 import { handleCheckoutSuccess } from '../../services/stripeService';
 import { logout } from '../../Redux/Slices/userSlice';
 import {
@@ -385,13 +389,17 @@ export const DashboardTab = () => {
 
 	return (
 		<Wrapper>
-			{/* Trial Warning Banner */}
+			{/* Trial/Expired Warning Banner */}
 			{currentUser?.subscription?.status === 'trial' && (
 				<TrialWarningBanner
 					daysRemaining={getTrialDaysRemaining(currentUser.subscription as any)}
 					onUpgradeClick={() => navigate('/paywall')}
 				/>
 			)}
+			{currentUser?.subscription &&
+				isTrialExpired(currentUser.subscription) && (
+					<ExpiredTrialBanner onUpgradeClick={() => navigate('/paywall')} />
+				)}
 
 			{/* Task Filter Section */}
 			<FilterSection>

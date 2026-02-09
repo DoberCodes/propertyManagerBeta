@@ -34,6 +34,7 @@ import { SubscriptionData } from '../../utils/subscriptionUtils';
 import {
 	getTrialDaysRemaining,
 	isTrialActive,
+	isSubscriptionActive,
 } from '../../utils/subscriptionUtils';
 import {
 	createCheckoutSession,
@@ -92,7 +93,9 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 			return;
 		}
 
-		if (planId === currentPlan) {
+		// Only prevent selecting the current plan if user has an active paid subscription
+		// Expired trial users should be able to upgrade to any plan
+		if (planId === currentPlan && isSubscriptionActive(subscription)) {
 			navigate('/dashboard');
 			return;
 		}
@@ -150,6 +153,7 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 			// Check for valid promo codes
 			const validPromoCodes = [
 				process.env.REACT_APP_UNLIMITED_TRIAL_PROMO_CODE?.toLowerCase(),
+				process.env.REACT_APP_EXPIRED_TRIAL_PROMO_CODE?.toLowerCase(),
 			].filter(Boolean);
 
 			if (validPromoCodes.includes(trimmedPromoCode)) {
@@ -246,10 +250,18 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 				<PricingCardsGrid layout={wide ? 'horizontal' : layout}>
 					{/* Homeowner Plan */}
 					<PricingCard
-						isCurrentPlan={currentPlan === 'homeowner'}
+						isCurrentPlan={
+							currentPlan === 'homeowner' && isSubscriptionActive(subscription)
+						}
 						layout={layout}>
 						<PlanName>{SUBSCRIPTION_PLANS.HOMEOWNER.name}</PlanName>
-						<PlanPrice color={currentPlan === 'homeowner' ? 'white' : 'black'}>
+						<PlanPrice
+							color={
+								currentPlan === 'homeowner' &&
+								isSubscriptionActive(subscription)
+									? 'white'
+									: 'black'
+							}>
 							<div className='price'>
 								${SUBSCRIPTION_PLANS.HOMEOWNER.priceMonthly}
 							</div>
@@ -259,21 +271,34 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 							{SUBSCRIPTION_PLANS.HOMEOWNER.features.map((feature, idx) => (
 								<PlanFeature
 									key={idx}
-									color={currentPlan === 'homeowner' ? 'white' : 'black'}>
+									color={
+										currentPlan === 'homeowner' &&
+										isSubscriptionActive(subscription)
+											? 'white'
+											: 'black'
+									}>
 									{feature}
 								</PlanFeature>
 							))}
 						</PlanFeatures>
-						{currentPlan === 'homeowner' && (
-							<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
-						)}
+						{currentPlan === 'homeowner' &&
+							isSubscriptionActive(subscription) && (
+								<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
+							)}
 						<SelectPlanButton
-							isCurrentPlan={currentPlan === 'homeowner'}
+							isCurrentPlan={
+								currentPlan === 'homeowner' &&
+								isSubscriptionActive(subscription)
+							}
 							disabled={
-								selectionOnly ? loading : currentPlan === 'homeowner' || loading
+								selectionOnly
+									? loading
+									: (currentPlan === 'homeowner' &&
+											isSubscriptionActive(subscription)) ||
+									  loading
 							}
 							onClick={() => handlePlanSelect('homeowner')}>
-							{currentPlan === 'homeowner'
+							{currentPlan === 'homeowner' && isSubscriptionActive(subscription)
 								? selectionOnly
 									? 'Selected'
 									: 'Current Plan'
@@ -285,11 +310,18 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 					{/* Basic Plan */}
 					<PricingCard
 						isPopular
-						isCurrentPlan={currentPlan === 'basic'}
+						isCurrentPlan={
+							currentPlan === 'basic' && isSubscriptionActive(subscription)
+						}
 						layout={layout}>
 						<PopularBadge>Popular</PopularBadge>
 						<PlanName>{SUBSCRIPTION_PLANS.BASIC.name}</PlanName>
-						<PlanPrice color={currentPlan === 'basic' ? 'white' : 'black'}>
+						<PlanPrice
+							color={
+								currentPlan === 'basic' && isSubscriptionActive(subscription)
+									? 'white'
+									: 'black'
+							}>
 							<div className='price'>
 								${SUBSCRIPTION_PLANS.BASIC.priceMonthly}
 							</div>
@@ -299,21 +331,32 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 							{SUBSCRIPTION_PLANS.BASIC.features.map((feature, idx) => (
 								<PlanFeature
 									key={idx}
-									color={currentPlan === 'basic' ? 'white' : 'black'}>
+									color={
+										currentPlan === 'basic' &&
+										isSubscriptionActive(subscription)
+											? 'white'
+											: 'black'
+									}>
 									{feature}
 								</PlanFeature>
 							))}
 						</PlanFeatures>
-						{currentPlan === 'basic' && (
+						{currentPlan === 'basic' && isSubscriptionActive(subscription) && (
 							<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
 						)}
 						<SelectPlanButton
-							isCurrentPlan={currentPlan === 'basic'}
+							isCurrentPlan={
+								currentPlan === 'basic' && isSubscriptionActive(subscription)
+							}
 							disabled={
-								selectionOnly ? loading : currentPlan === 'basic' || loading
+								selectionOnly
+									? loading
+									: (currentPlan === 'basic' &&
+											isSubscriptionActive(subscription)) ||
+									  loading
 							}
 							onClick={() => handlePlanSelect('basic')}>
-							{currentPlan === 'basic'
+							{currentPlan === 'basic' && isSubscriptionActive(subscription)
 								? selectionOnly
 									? 'Selected'
 									: 'Current Plan'
@@ -325,11 +368,19 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 
 					{/* Professional Plan */}
 					<PricingCard
-						isCurrentPlan={currentPlan === 'professional'}
+						isCurrentPlan={
+							currentPlan === 'professional' &&
+							isSubscriptionActive(subscription)
+						}
 						layout={layout}>
 						<PlanName>{SUBSCRIPTION_PLANS.PROFESSIONAL.name}</PlanName>
 						<PlanPrice
-							color={currentPlan === 'professional' ? 'white' : 'black'}>
+							color={
+								currentPlan === 'professional' &&
+								isSubscriptionActive(subscription)
+									? 'white'
+									: 'black'
+							}>
 							<div className='price'>
 								${SUBSCRIPTION_PLANS.PROFESSIONAL.priceMonthly}
 							</div>
@@ -339,23 +390,35 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 							{SUBSCRIPTION_PLANS.PROFESSIONAL.features.map((feature, idx) => (
 								<PlanFeature
 									key={idx}
-									color={currentPlan === 'professional' ? 'white' : 'black'}>
+									color={
+										currentPlan === 'professional' &&
+										isSubscriptionActive(subscription)
+											? 'white'
+											: 'black'
+									}>
 									{feature}
 								</PlanFeature>
 							))}
 						</PlanFeatures>
-						{currentPlan === 'professional' && (
-							<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
-						)}
+						{currentPlan === 'professional' &&
+							isSubscriptionActive(subscription) && (
+								<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
+							)}
 						<SelectPlanButton
-							isCurrentPlan={currentPlan === 'professional'}
+							isCurrentPlan={
+								currentPlan === 'professional' &&
+								isSubscriptionActive(subscription)
+							}
 							disabled={
 								selectionOnly
 									? loading
-									: currentPlan === 'professional' || loading
+									: (currentPlan === 'professional' &&
+											isSubscriptionActive(subscription)) ||
+									  loading
 							}
 							onClick={() => handlePlanSelect('professional')}>
-							{currentPlan === 'professional'
+							{currentPlan === 'professional' &&
+							isSubscriptionActive(subscription)
 								? selectionOnly
 									? 'Selected'
 									: 'Current Plan'

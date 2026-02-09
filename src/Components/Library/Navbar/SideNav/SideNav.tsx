@@ -4,8 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../../Redux/store/store';
 import {
 	canManageTeam,
-	canViewReports,
-	canExportData,
+	canAccessReadOnlyFeatures,
 } from '../../../../utils/subscriptionUtils';
 import { useRecentlyViewed } from '../../../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../../../Hooks/useFavorites';
@@ -38,10 +37,10 @@ export const SideNav = () => {
 		? currentUser.subscription.plan !== 'free'
 		: false;
 	const canViewReportsPermission = currentUser?.subscription
-		? canViewReports(currentUser.subscription)
+		? canAccessReadOnlyFeatures(currentUser.subscription)
 		: false;
 	const canExportDataPermission = currentUser?.subscription
-		? canExportData(currentUser.subscription)
+		? canAccessReadOnlyFeatures(currentUser.subscription)
 		: false;
 	const canViewPages = currentUser?.subscription
 		? currentUser.subscription.plan !== 'free'
@@ -206,10 +205,10 @@ export const MobileNav = () => {
 		? currentUser.subscription.plan !== 'free'
 		: false;
 	const canViewReportsPermission = currentUser?.subscription
-		? canViewReports(currentUser.subscription)
+		? canAccessReadOnlyFeatures(currentUser.subscription)
 		: false;
 	const canExportDataPermission = currentUser?.subscription
-		? canExportData(currentUser.subscription)
+		? canAccessReadOnlyFeatures(currentUser.subscription)
 		: false;
 	const canViewPages = currentUser?.subscription
 		? currentUser.subscription.plan !== 'free'

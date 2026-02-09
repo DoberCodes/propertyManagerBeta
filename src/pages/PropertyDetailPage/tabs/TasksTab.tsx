@@ -22,6 +22,7 @@ import {
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
 import { updateOverdueTasks } from '../../../utils/taskUtils';
+import { isTrialExpired } from '../../../utils/subscriptionUtils';
 import styled from 'styled-components';
 
 const ViewMoreButton = styled.button`
@@ -479,7 +480,20 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 		<SectionContainer>
 			<SectionHeader>Associated Tasks</SectionHeader>
 			<Toolbar>
-				<ToolbarButton onClick={handleCreateTask}>+ Create Task</ToolbarButton>
+				<ToolbarButton
+					onClick={handleCreateTask}
+					disabled={
+						currentUser?.subscription &&
+						isTrialExpired(currentUser.subscription)
+					}
+					title={
+						currentUser?.subscription &&
+						isTrialExpired(currentUser.subscription)
+							? 'Upgrade your subscription to add new tasks'
+							: undefined
+					}>
+					+ Create Task
+				</ToolbarButton>
 				<ToolbarButton
 					disabled={selectedTasks.length === 0}
 					onClick={handleCompleteTask}

@@ -52,6 +52,22 @@ export const isSubscriptionActive = (
 };
 
 /**
+ * Check if user has an expired trial
+ */
+export const isTrialExpired = (subscription: SubscriptionData): boolean => {
+	return subscription.status === SUBSCRIPTION_STATUS.EXPIRED;
+};
+
+/**
+ * Check if user can access read-only features (reports, settings) even with expired trial
+ */
+export const canAccessReadOnlyFeatures = (
+	subscription: SubscriptionData,
+): boolean => {
+	return isSubscriptionActive(subscription) || isTrialExpired(subscription);
+};
+
+/**
  * Get days remaining in trial
  */
 export const getTrialDaysRemaining = (
@@ -82,7 +98,26 @@ export const createTrialSubscription = (
 		envPromoCode &&
 		promoCode.toLowerCase() === envPromoCode.toLowerCase();
 
+	// Check for expired trial promo code (for testing expired trial functionality)
+	const expiredPromoCode = process.env.REACT_APP_EXPIRED_TRIAL_PROMO_CODE;
+	const isExpiredTrial =
+		promoCode &&
+		expiredPromoCode &&
+		promoCode.toLowerCase() === expiredPromoCode.toLowerCase();
+
 	const trialEndsAt = isUnlimitedTrial ? null : calculateTrialEndDate();
+
+	// If it's an expired trial, set status to EXPIRED and trialEndsAt to past date
+	if (isExpiredTrial) {
+		const pastDate = now - 86400; // 1 day ago
+		return {
+			status: SUBSCRIPTION_STATUS.EXPIRED,
+			plan,
+			currentPeriodStart: pastDate,
+			currentPeriodEnd: pastDate,
+			trialEndsAt: pastDate,
+		};
+	}
 
 	return {
 		status: SUBSCRIPTION_STATUS.TRIAL,
