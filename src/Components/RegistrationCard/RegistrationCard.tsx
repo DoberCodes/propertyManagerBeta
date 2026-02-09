@@ -59,6 +59,7 @@ export const RegistrationCard = () => {
 	const [userType, setUserType] = useState<string>('');
 	const [selectedPlan, setSelectedPlan] = useState<string>('homeowner');
 	const [promoCode, setPromoCode] = useState<string>('');
+	const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
@@ -100,6 +101,12 @@ export const RegistrationCard = () => {
 		}
 		if (!confirmed) {
 			setError('Passwords do not match');
+			return false;
+		}
+		if (!agreedToTerms) {
+			setError(
+				'You must agree to the Terms of Service, Privacy Policy, and Maintenance Disclaimer to continue',
+			);
 			return false;
 		}
 		return true;
@@ -157,6 +164,10 @@ export const RegistrationCard = () => {
 				userRole,
 				selectedPlan,
 				promoCode.trim() || undefined,
+				{
+					agreedToTerms: true,
+					agreedVersion: '1.0', // You can update this version when terms change
+				},
 			);
 
 			// Update Redux store
@@ -283,7 +294,7 @@ export const RegistrationCard = () => {
 				</>
 			)}
 
-			{/* Step 2: Account Credentials */}
+			{/* Step 2: Account Credentials & Legal Agreement */}
 			{step === 2 && (
 				<>
 					<SectionLabel>Create your login credentials</SectionLabel>
@@ -351,6 +362,42 @@ export const RegistrationCard = () => {
 							{confirmed ? '✓ Passwords match' : '✗ Passwords do not match'}
 						</PasswordMatchText>
 					)}
+					<div style={{ marginTop: '16px', marginBottom: '16px' }}>
+						<label
+							style={{
+								display: 'flex',
+								alignItems: 'flex-start',
+								gap: '8px',
+								fontSize: '14px',
+								lineHeight: '1.4',
+							}}>
+							<input
+								type='checkbox'
+								checked={agreedToTerms}
+								onChange={(e) => {
+									setAgreedToTerms(e.target.checked);
+									setError('');
+								}}
+								style={{ marginTop: '2px', flexShrink: 0 }}
+								required
+							/>
+							<span>
+								I agree to the{' '}
+								<a
+									href='#/legal'
+									target='_blank'
+									rel='noopener noreferrer'
+									style={{ color: '#10b981', textDecoration: 'none' }}
+									onClick={(e) => {
+										e.preventDefault();
+										window.open('#/legal', '_blank');
+									}}>
+									Terms of Service, Privacy Policy, and Maintenance Disclaimer
+								</a>
+								*
+							</span>
+						</label>
+					</div>
 					<ButtonGroup>
 						<Submit type='button' onClick={handleBack}>
 							Back
@@ -470,24 +517,6 @@ export const RegistrationCard = () => {
 				<p>
 					Already have an account? <a href='#/login'>Login here</a>
 				</p>
-				<div
-					style={{
-						marginTop: '16px',
-						fontSize: '12px',
-						color: '#6b7280',
-						textAlign: 'center',
-					}}>
-					By creating an account, you agree to our{' '}
-					<a
-						href='#/legal'
-						onClick={(e) => {
-							e.preventDefault();
-							window.location.href = '#/legal';
-						}}
-						style={{ color: '#10b981', textDecoration: 'none' }}>
-						Terms of Service, Privacy Policy, and Maintenance Disclaimer
-					</a>
-				</div>
 			</RegisterWrapper>
 		</Wrapper>
 	);

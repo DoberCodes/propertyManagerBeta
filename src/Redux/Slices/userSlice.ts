@@ -27,6 +27,11 @@ export interface User {
 		stripeSubscriptionId?: string;
 		updatedAt?: string;
 	};
+	legalAgreement?: {
+		agreedToTerms: boolean;
+		agreedAt: string; // ISO date string
+		agreedVersion: string; // Version of terms agreed to
+	};
 	onboardingCompleted?: boolean;
 	createdAt?: string;
 	updatedAt?: string;

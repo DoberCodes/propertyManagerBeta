@@ -138,6 +138,10 @@ export const signUpWithEmail = async (
 	role: string = USER_ROLES.ADMIN,
 	selectedPlan: string = 'homeowner',
 	promoCode?: string,
+	legalAgreement?: {
+		agreedToTerms: boolean;
+		agreedVersion: string;
+	},
 ): Promise<User> => {
 	try {
 		let promoDocRef: any = null;
@@ -182,8 +186,20 @@ export const signUpWithEmail = async (
 			email,
 		);
 
+		// Prepare legal agreement data
+		const legalAgreementData = legalAgreement
+			? {
+					legalAgreement: {
+						agreedToTerms: legalAgreement.agreedToTerms,
+						agreedAt: new Date().toISOString(),
+						agreedVersion: legalAgreement.agreedVersion,
+					},
+			  }
+			: {};
+
 		await setDoc(doc(db, 'users', userCredential.user.uid), {
 			...userProfile,
+			...legalAgreementData,
 			createdAt: serverTimestamp(),
 			updatedAt: serverTimestamp(),
 			subscription,
@@ -283,6 +299,21 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			'toDate' in rawData.updatedAt
 		) {
 			serializedData.updatedAt = rawData.updatedAt.toDate().toISOString();
+		}
+
+		// Convert legal agreement timestamp if it exists
+		if (rawData.legalAgreement?.agreedAt) {
+			if (
+				typeof rawData.legalAgreement.agreedAt === 'object' &&
+				'toDate' in rawData.legalAgreement.agreedAt
+			) {
+				serializedData.legalAgreement = {
+					...rawData.legalAgreement,
+					agreedAt: rawData.legalAgreement.agreedAt.toDate().toISOString(),
+				};
+			} else {
+				serializedData.legalAgreement = rawData.legalAgreement;
+			}
 		}
 
 		// Convert subscription timestamps to serializable format
