@@ -10,6 +10,7 @@ import {
 	useGetTasksQuery,
 } from '../../Redux/API/apiSlice';
 import { on } from 'events';
+import TermsAcceptanceStep from './TermsAcceptanceStep';
 
 const OnboardingOverlay = styled.div`
 	position: fixed;
@@ -796,7 +797,16 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				),
 			});
 		} else {
-			// For homeowners, add completion step
+			// For homeowners, add terms acceptance step before completion
+			steps.push({
+				id: 'terms_acceptance',
+				type: 'instruction',
+				title: 'Terms & Agreements',
+				description:
+					'Before you start using Maintley, please review and accept our terms of service, privacy policy, and maintenance disclaimer.',
+				content: <TermsAcceptanceStep onAccept={advanceToNextStep} />,
+			});
+
 			steps.push({
 				id: 'homeowner_complete',
 				type: 'instruction',

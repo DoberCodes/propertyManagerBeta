@@ -471,6 +471,24 @@ export const RegistrationCard = () => {
 				<p>
 					Already have an account? <a href='#/login'>Login here</a>
 				</p>
+				<div
+					style={{
+						marginTop: '16px',
+						fontSize: '12px',
+						color: '#6b7280',
+						textAlign: 'center',
+					}}>
+					By creating an account, you agree to our{' '}
+					<a
+						href='#/legal'
+						onClick={(e) => {
+							e.preventDefault();
+							window.location.href = '#/legal';
+						}}
+						style={{ color: '#10b981', textDecoration: 'none' }}>
+						Terms of Service, Privacy Policy, and Maintenance Disclaimer
+					</a>
+				</div>
 			</RegisterWrapper>
 		</Wrapper>
 	);

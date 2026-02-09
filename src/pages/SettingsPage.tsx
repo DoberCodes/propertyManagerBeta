@@ -503,9 +503,26 @@ const SettingsPage: React.FC = () => {
 				</AccountButton>
 			</AccountSection>
 
-			<LinkButton onClick={() => navigate('/docs')}>
-				View Full Feature Guide
-			</LinkButton>
+			<AccountSection>
+				<SectionTitle>Help & Resources</SectionTitle>
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					Learn about all the features available in Maintley and get help when
+					you need it.
+				</p>
+				<AccountButton onClick={() => navigate('/features')}>
+					View All Features
+				</AccountButton>
+			</AccountSection>
+
+			<AccountSection>
+				<SectionTitle>Legal</SectionTitle>
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					Review our legal documents and terms of service.
+				</p>
+				<AccountButton onClick={() => navigate('/legal')}>
+					View Legal Documents
+				</AccountButton>
+			</AccountSection>
 
 			{/* Password Change Modal */}
 			<GenericModal

@@ -459,6 +459,15 @@ const LandingPageComponent = () => {
 								Features
 							</FooterLink>
 							<FooterLink
+								as='a'
+								href='#/features'
+								onClick={(e) => {
+									e.preventDefault();
+									window.location.href = '#/features';
+								}}>
+								All Features
+							</FooterLink>
+							<FooterLink
 								onClick={() => {
 									document
 										.getElementById('Benefits')
@@ -481,6 +490,15 @@ const LandingPageComponent = () => {
 										?.scrollIntoView({ behavior: 'smooth' });
 								}}>
 								Download
+							</FooterLink>
+							<FooterLink
+								as='a'
+								href='#/legal'
+								onClick={(e) => {
+									e.preventDefault();
+									window.location.href = '#/legal';
+								}}>
+								Legal
 							</FooterLink>
 						</FooterLinks>
 					</FooterContent>

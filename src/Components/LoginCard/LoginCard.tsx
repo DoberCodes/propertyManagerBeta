@@ -164,6 +164,24 @@ export const LoginCard = () => {
 				<p>
 					Don't have an account? <a href='#/registration'>Sign up here</a>
 				</p>
+				<div
+					style={{
+						marginTop: '16px',
+						fontSize: '12px',
+						color: '#6b7280',
+						textAlign: 'center',
+					}}>
+					By signing in, you agree to our{' '}
+					<a
+						href='#/legal'
+						onClick={(e) => {
+							e.preventDefault();
+							window.location.href = '#/legal';
+						}}
+						style={{ color: '#10b981', textDecoration: 'none' }}>
+						Terms of Service and Privacy Policy
+					</a>
+				</div>
 			</RegisterWrapper>
 		</Wrapper>
 	);

@@ -226,6 +226,30 @@ export const TopNav = () => {
 									</button>
 									<button
 										onClick={() => {
+											navigate('/features');
+											setIsProfileDropdownOpen(false);
+										}}
+										style={{
+											width: '100%',
+											padding: '12px 16px',
+											border: 'none',
+											background: 'none',
+											textAlign: 'left',
+											cursor: 'pointer',
+											fontSize: '14px',
+											color: '#1a1a1a',
+											transition: 'background-color 0.2s ease',
+										}}
+										onMouseEnter={(e) =>
+											(e.currentTarget.style.backgroundColor = '#f3f4f6')
+										}
+										onMouseLeave={(e) =>
+											(e.currentTarget.style.backgroundColor = 'transparent')
+										}>
+										📋 Features
+									</button>
+									<button
+										onClick={() => {
 											handleLogout();
 											setIsProfileDropdownOpen(false);
 										}}

@@ -169,6 +169,26 @@ export const SideNav = () => {
 						)}
 					</SectionContent>
 				</Section>
+
+				{/* Features Section */}
+				<Section>
+					<SectionTitle>Help & Resources</SectionTitle>
+					<SectionContent>
+						<div
+							style={{
+								padding: '8px 0',
+								fontSize: '13px',
+								color: '#666666',
+								cursor: 'pointer',
+								transition: 'color 0.2s ease',
+							}}
+							onClick={() => navigate('/features')}
+							onMouseEnter={(e) => (e.currentTarget.style.color = '#6366f1')}
+							onMouseLeave={(e) => (e.currentTarget.style.color = '#666666')}>
+							📋 View All Features
+						</div>
+					</SectionContent>
+				</Section>
 			</BottomSections>
 		</DesktopWrapper>
 	);

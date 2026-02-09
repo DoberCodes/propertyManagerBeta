@@ -14,6 +14,7 @@ import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoutes } from './ProtectedRoutes';
 import SettingsPage from './pages/SettingsPage';
 import { FeatureDocsPage } from './pages/FeatureDocsPage';
+import LegalPage from './pages/LegalPage';
 import { Layout } from './pages/Layout';
 import { DashboardTab } from './pages/DashboardTab';
 import { Properties } from './Components/PropertiesTab';
@@ -77,6 +78,8 @@ export const RouterComponent = () => {
 				{/* Feature Docs - public */}
 				<Route path='docs' element={<FeatureDocsPage />} />
 				<Route path='features' element={<FeatureDocsPage />} />
+				{/* Legal Documents - public */}
+				<Route path='legal' element={<LegalPage />} />
 
 				{/* Protected Routes with Layout - Dashboard accessible to all authenticated users */}
 				<Route
