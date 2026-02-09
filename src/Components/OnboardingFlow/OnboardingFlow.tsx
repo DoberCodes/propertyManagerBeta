@@ -457,6 +457,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 		setWaitingModalMinimized(true);
 	};
 
+	// Handle step advancement
+	const advanceToNextStep = useCallback(() => {
+		setCurrentStepIndex((prev) => prev + 1);
+	}, []);
+
 	// Determine user type and permissions
 	const isPropertyManager = currentUser?.subscription?.plan
 		? ['BASIC', 'PROFESSIONAL'].includes(
@@ -828,11 +833,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 	const steps = getSteps();
 	const currentStep = steps[currentStepIndex];
 
-	// Handle step advancement
-	const advanceToNextStep = useCallback(() => {
-		if (currentStepIndex < steps.length - 1) {
-			setCurrentStepIndex(currentStepIndex + 1);
-		} else {
+	// Check if we've completed all steps
+	useEffect(() => {
+		if (currentStepIndex >= steps.length) {
 			onComplete();
 		}
 	}, [currentStepIndex, steps.length, onComplete]);
@@ -1023,6 +1026,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				</OnboardingOverlay>
 			);
 		}
+	}
+
+	// If we've completed all steps, don't render anything
+	if (!currentStep) {
+		return null;
 	}
 
 	// Main instruction modal

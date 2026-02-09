@@ -382,9 +382,11 @@ const handleSubscriptionUpdate = async (subscription) => {
             const userData = userDoc.data();
             // Update subscription data
             const subscriptionData = {
-                status: subscription.status === 'active' ? 'active' :
-                    subscription.status === 'trialing' ? 'trialing' :
-                        subscription.status,
+                status: subscription.status === 'active'
+                    ? 'active'
+                    : subscription.status === 'trialing'
+                        ? 'trial'
+                        : subscription.status,
                 plan: getPlanFromPriceId(subscription.items.data[0].price.id),
                 currentPeriodStart: subscription.current_period_start,
                 currentPeriodEnd: subscription.current_period_end,
@@ -496,9 +498,11 @@ const handleSubscriptionCreated = async (subscription) => {
             const userData = userDoc.data();
             // Update subscription data
             const subscriptionData = {
-                status: subscription.status === 'active' ? 'active' :
-                    subscription.status === 'trialing' ? 'trialing' :
-                        subscription.status,
+                status: subscription.status === 'active'
+                    ? 'active'
+                    : subscription.status === 'trialing'
+                        ? 'trial'
+                        : subscription.status,
                 plan: getPlanFromPriceId(subscription.items.data[0].price.id),
                 currentPeriodStart: subscription.current_period_start,
                 currentPeriodEnd: subscription.current_period_end,
@@ -729,9 +733,9 @@ function getPlanFromPriceId(priceId) {
  */
 function getPriceIdFromPlan(plan) {
     const planMap = {
-        'homeowner': functions.config().stripe.homeowner_price_id || 'price_homeowner',
-        'basic': functions.config().stripe.basic_price_id || 'price_basic',
-        'professional': functions.config().stripe.professional_price_id || 'price_professional',
+        homeowner: functions.config().stripe.homeowner_price_id || 'price_homeowner',
+        basic: functions.config().stripe.basic_price_id || 'price_basic',
+        professional: functions.config().stripe.professional_price_id || 'price_professional',
     };
     return planMap[plan] || 'price_homeowner'; // Default to homeowner
 }

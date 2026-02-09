@@ -8,7 +8,7 @@ export const STRIPE_PUBLIC_KEY = process.env.REACT_APP_STRIPE_PUBLIC_KEY || '';
 
 // Stripe Plan IDs (from Stripe Dashboard)
 export const STRIPE_PLANS = {
-	FREE: 'price_free', // Free trial - no Stripe plan needed
+	FREE: process.env.REACT_APP_STRIPE_FREE_PLAN_ID || 'price_free',
 	HOMEOWNER:
 		process.env.REACT_APP_STRIPE_HOMEOWNER_PLAN_ID || 'price_homeowner',
 	BASIC: process.env.REACT_APP_STRIPE_BASIC_PLAN_ID || 'price_basic',

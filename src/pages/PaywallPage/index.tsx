@@ -11,11 +11,11 @@ const PaywallPageIndex: React.FC = () => {
 	const user = useSelector((state: any) => state.user.currentUser);
 	const subscription: SubscriptionData = user?.subscription || {
 		status: 'trial',
-		plan: 'free',
+		plan: 'homeowner',
 		currentPeriodStart: Math.floor(Date.now() / 1000),
 		currentPeriodEnd: Math.floor(Date.now() / 1000),
 	};
-	const currentPlan = subscription?.plan || 'free';
+	const currentPlan = subscription?.plan || 'homeowner';
 
 	return (
 		<PaywallPage

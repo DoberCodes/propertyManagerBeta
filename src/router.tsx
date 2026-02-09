@@ -39,9 +39,11 @@ const RootRoute = () => {
 };
 
 export const RouterComponent = () => {
-	const userSubscriptionPlan = useSelector(
-		(state: any) => state.user.currentUser?.subscription?.plan,
-	);
+	const currentUser = useSelector((state: any) => state.user.currentUser);
+	const userSubscriptionPlan = currentUser?.subscription?.plan;
+	const isUserHomeowner = userSubscriptionPlan === 'homeowner';
+	const shouldShowTeamRoute =
+		currentUser && userSubscriptionPlan && !isUserHomeowner;
 	return (
 		<Router>
 			<Routes>
@@ -123,7 +125,7 @@ export const RouterComponent = () => {
 							</ProtectedRoutes>
 						}
 					/>
-					{userSubscriptionPlan !== 'homeowner' && (
+					{shouldShowTeamRoute && (
 						<Route
 							path='team'
 							element={

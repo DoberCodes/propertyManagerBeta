@@ -18,7 +18,8 @@ import {
 	setDoc,
 	serverTimestamp,
 } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../config/firebase';
 import { clearUserLocalStorage } from '../utils/localStorageCleanup';
 import { User } from '../Redux/Slices/userSlice';
 import { USER_ROLES } from '../constants/roles';
@@ -27,6 +28,7 @@ import {
 	SUBSCRIPTION_STATUS,
 	TRIAL_DURATION_DAYS,
 } from '../constants/subscriptions';
+import { STRIPE_PLANS } from '../constants/stripe';
 
 /**
  * Sign in with email and password
@@ -68,13 +70,61 @@ const findActiveTenantPromoCode = async (promoCode: string) => {
 /**
  * Create subscription for new user - local trial for all users
  */
+const getPriceIdForPlan = (planId: string): string => {
+	const priceMap: Record<string, string> = {
+		free: STRIPE_PLANS.FREE,
+		homeowner: STRIPE_PLANS.HOMEOWNER,
+		basic: STRIPE_PLANS.BASIC,
+		professional: STRIPE_PLANS.PROFESSIONAL,
+	};
+	return priceMap[planId] || '';
+};
+
 const createUserSubscription = async (
 	selectedPlan: string,
 	promoCode: string | undefined,
+	userId: string,
+	email: string,
 ) => {
-	// Create local trial subscription for all users
-	console.log('Creating local trial subscription for plan:', selectedPlan);
-	return createTrialSubscription(selectedPlan, promoCode);
+	// Create Stripe trial subscription for all plans
+	console.log('Creating Stripe trial subscription for plan:', selectedPlan);
+	try {
+		const priceId = getPriceIdForPlan(selectedPlan);
+		if (!priceId) {
+			throw new Error(`No price ID found for plan: ${selectedPlan}`);
+		}
+
+		const createTrial = httpsCallable(functions, 'createTrialSubscription');
+		const result = await createTrial({
+			priceId,
+			userId,
+			email,
+			trialDays: TRIAL_DURATION_DAYS,
+		});
+
+		const data = result.data as {
+			subscriptionId: string;
+			customerId: string;
+			status: string;
+			trialEnd: number;
+		};
+
+		// Return subscription data that matches our local format
+		const now = Math.floor(Date.now() / 1000);
+		return {
+			status: SUBSCRIPTION_STATUS.TRIAL,
+			plan: selectedPlan,
+			currentPeriodStart: now,
+			currentPeriodEnd: data.trialEnd,
+			trialEndsAt: data.trialEnd,
+			stripeCustomerId: data.customerId,
+			stripeSubscriptionId: data.subscriptionId,
+		};
+	} catch (error) {
+		console.error('Failed to create Stripe trial subscription:', error);
+		// Fallback to local subscription
+		return createTrialSubscription(selectedPlan, promoCode);
+	}
 };
 
 /**
@@ -86,7 +136,7 @@ export const signUpWithEmail = async (
 	firstName: string,
 	lastName: string,
 	role: string = USER_ROLES.ADMIN,
-	selectedPlan: string = 'free',
+	selectedPlan: string = 'homeowner',
 	promoCode?: string,
 ): Promise<User> => {
 	try {
@@ -125,17 +175,12 @@ export const signUpWithEmail = async (
 			image: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=22c55e&color=fff`,
 		};
 
-		const subscription =
-			role === USER_ROLES.TENANT
-				? {
-						status: SUBSCRIPTION_STATUS.ACTIVE,
-						plan: 'free',
-						currentPeriodStart: Math.floor(Date.now() / 1000),
-						currentPeriodEnd:
-							Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60,
-						trialEndsAt: null,
-				  }
-				: await createUserSubscription(selectedPlan, promoCode);
+		const subscription = await createUserSubscription(
+			selectedPlan,
+			promoCode,
+			userCredential.user.uid,
+			email,
+		);
 
 		await setDoc(doc(db, 'users', userCredential.user.uid), {
 			...userProfile,
@@ -264,6 +309,32 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 				serializedData.subscription.canceledAt = rawData.subscription.canceledAt
 					.toDate()
 					.toISOString();
+			}
+		} else {
+			// Create default subscription for users who don't have one
+			console.warn(
+				`User ${uid} does not have a subscription - creating default free plan`,
+			);
+			const now = Math.floor(Date.now() / 1000);
+			serializedData.subscription = {
+				status: SUBSCRIPTION_STATUS.ACTIVE,
+				plan: 'free',
+				currentPeriodStart: now,
+				currentPeriodEnd: now + 365 * 24 * 60 * 60, // 1 year
+				trialEndsAt: null,
+			};
+
+			// Update the user document with the default subscription
+			try {
+				await updateDoc(doc(db, 'users', uid), {
+					subscription: serializedData.subscription,
+					updatedAt: serverTimestamp(),
+				});
+			} catch (updateError) {
+				console.error(
+					'Failed to update user with default subscription:',
+					updateError,
+				);
 			}
 		}
 

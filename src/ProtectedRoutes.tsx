@@ -71,6 +71,7 @@ export const ProtectedRoutes = ({
 			!currentUser.subscription ||
 			!isSubscriptionActive(currentUser.subscription)
 		) {
+			console.log('Subscription check failed, redirecting to paywall');
 			return <Navigate to='/paywall' replace />;
 		}
 	}

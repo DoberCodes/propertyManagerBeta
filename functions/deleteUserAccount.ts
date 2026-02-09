@@ -1,5 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import Stripe from 'stripe';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 if (!admin.apps.length) {
 	admin.initializeApp();
@@ -7,6 +12,9 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const auth = admin.auth();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+	apiVersion: '2023-10-16',
+});
 
 /**
  * Delete User Account
@@ -50,17 +58,59 @@ export const deleteUserAccount = functions.https.onCall(
 
 		if (userData?.subscription) {
 			const subscription = userData.subscription;
-			// Prevent deletion if user has an active, trial, or past due subscription
+			console.log('User subscription data:', subscription);
+			const now = Math.floor(Date.now() / 1000);
+			console.log('Current timestamp:', now);
+			console.log('Subscription status:', subscription.status);
+			console.log('Trial ends at:', subscription.trialEndsAt);
+
+			// Check if subscription is in trial period
+			const isInTrial =
+				subscription.trialEndsAt && subscription.trialEndsAt > now;
+			console.log('Is in trial period:', isInTrial);
+
+			// Block deletion for active or past_due subscriptions that are NOT in trial
 			if (
-				subscription.status === 'active' ||
-				subscription.status === 'trial' ||
+				(subscription.status === 'active' && !isInTrial) ||
 				subscription.status === 'past_due'
 			) {
+				console.log(
+					'Blocking deletion: subscription is active/past_due and not in trial',
+				);
 				throw new functions.https.HttpsError(
 					'failed-precondition',
 					'You cannot delete your account while you have an active subscription. Please cancel your subscription first.',
 				);
 			}
+
+			console.log(
+				'Allowing deletion: subscription is either in trial or not active/past_due',
+			);
+
+			// If user has a trial subscription, cancel it immediately
+			if (subscription.status === 'trial' || isInTrial) {
+				console.log('Attempting to cancel trial subscription');
+				if (subscription.stripeSubscriptionId) {
+					try {
+						console.log(
+							`Cancelling trial subscription: ${subscription.stripeSubscriptionId}`,
+						);
+						await stripe.subscriptions.cancel(
+							subscription.stripeSubscriptionId,
+						);
+						console.log('Trial subscription cancelled successfully');
+					} catch (cancelError) {
+						console.error('Error cancelling trial subscription:', cancelError);
+						// Continue with account deletion even if cancellation fails
+					}
+				} else {
+					console.log('No stripeSubscriptionId found for trial subscription');
+				}
+			} else {
+				console.log('Not cancelling subscription: not in trial status');
+			}
+		} else {
+			console.log('No subscription data found for user');
 		}
 
 		const batch = db.batch();

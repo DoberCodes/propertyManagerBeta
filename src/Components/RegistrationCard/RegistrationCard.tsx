@@ -57,7 +57,7 @@ export const RegistrationCard = () => {
 	const [showPasswordConfirm, setShowPasswordConfirm] =
 		useState<boolean>(false);
 	const [userType, setUserType] = useState<string>('');
-	const [selectedPlan, setSelectedPlan] = useState<string>('free');
+	const [selectedPlan, setSelectedPlan] = useState<string>('homeowner');
 	const [promoCode, setPromoCode] = useState<string>('');
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
@@ -269,7 +269,6 @@ export const RegistrationCard = () => {
 								checked={userType === 'tenant'}
 								onChange={() => {
 									setUserType('tenant');
-									setSelectedPlan('free');
 									setPromoCode('');
 									setError('');
 								}}
@@ -369,13 +368,13 @@ export const RegistrationCard = () => {
 					<PaywallPage
 						subscription={{
 							status: 'trial',
-							plan: 'free',
+							plan: 'homeowner',
 							currentPeriodStart: Math.floor(Date.now() / 1000),
 							currentPeriodEnd:
 								Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
 							trialEndsAt: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
 						}}
-						currentPlan='free'
+						currentPlan='homeowner'
 						variant='embedded'
 						selectionOnly={true}
 						wide={true}
