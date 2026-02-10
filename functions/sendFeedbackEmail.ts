@@ -126,14 +126,16 @@ export const sendFeedbackEmail = functions.firestore
 					sentAt: admin.firestore.FieldValue.serverTimestamp(),
 					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 				});
-
 			} catch (webhookError) {
 				console.error('Error sending via webhook:', webhookError);
 
 				// Update the feedback document to mark the failure
 				await snap.ref.update({
 					status: 'webhook_failed',
-					webhookError: webhookError instanceof Error ? webhookError.message : String(webhookError),
+					webhookError:
+						webhookError instanceof Error
+							? webhookError.message
+							: String(webhookError),
 					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 				});
 			}

@@ -94,9 +94,7 @@ export const GenericModal: React.FC<GenericModalProps> = ({
 							)}
 						</DialogForm>
 					) : (
-						<>
-							{children}
-						</>
+						<>{children}</>
 					)}
 				</ModalFormContent>
 			</DialogContent>
