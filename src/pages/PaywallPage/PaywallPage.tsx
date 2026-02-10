@@ -5,6 +5,7 @@ import {
 	PaywallContainer,
 	PaywallTitle,
 	PaywallSubtitle,
+	BackButton,
 	TrialBannerWrapper,
 	TrialBannerTitle,
 	TrialBannerText,
@@ -184,9 +185,19 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 			'mailto:sales@propertymanager.com?subject=Custom Pricing Inquiry';
 	};
 
+	const handleBackToSettings = () => {
+		navigate('/settings');
+	};
+
 	return (
 		<PaywallWrapper variant={variant} wide={wide}>
 			<PaywallContainer variant={variant} wide={wide}>
+				{variant === 'full' && (
+					<BackButton variant={variant} onClick={handleBackToSettings}>
+						← Back to Settings
+					</BackButton>
+				)}
+
 				{!isOnTrial && (
 					<TrialBannerWrapper variant={variant}>
 						<TrialBannerTitle variant={variant}>

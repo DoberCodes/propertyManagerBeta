@@ -65,6 +65,34 @@ export const PaywallSubtitle = styled.p<{ variant?: 'full' | 'embedded' }>`
 	}
 `;
 
+export const BackButton = styled.button<{ variant?: 'full' | 'embedded' }>`
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	background: transparent;
+	border: 1px solid ${COLORS.borderLight};
+	border-radius: 8px;
+	color: ${COLORS.textSecondary};
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s;
+	margin-bottom: ${(props) => (props.variant === 'embedded' ? '16px' : '20px')};
+	align-self: flex-start;
+
+	&:hover {
+		background: ${COLORS.bgLight};
+		border-color: ${COLORS.primary};
+		color: ${COLORS.primary};
+	}
+
+	@media (max-width: 768px) {
+		font-size: 13px;
+		padding: 6px 12px;
+	}
+`;
+
 export const TrialBannerWrapper = styled.div<{ variant?: 'full' | 'embedded' }>`
 	background: linear-gradient(135deg, ${COLORS.primary} 0%, #00a86b 100%);
 	color: white;

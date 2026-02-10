@@ -74,24 +74,30 @@ export const GenericModal: React.FC<GenericModalProps> = ({
 					</CloseModalButton>
 				</DialogHeader>
 				<ModalFormContent>
-					<DialogForm onSubmit={handleFormSubmit}>
-						{children}
-						{showActions && (
-							<DialogButtonGroup>
-								<DialogCancelButton
-									type='button'
-									onClick={handleSecondaryAction}
-									disabled={isLoading}>
-									{secondaryButtonLabel}
-								</DialogCancelButton>
-								<DialogSubmitButton
-									type='submit'
-									disabled={primaryButtonDisabled || isLoading}>
-									{primaryButtonLabel}
-								</DialogSubmitButton>
-							</DialogButtonGroup>
-						)}
-					</DialogForm>
+					{onSubmit || showActions ? (
+						<DialogForm onSubmit={handleFormSubmit}>
+							{children}
+							{showActions && (
+								<DialogButtonGroup>
+									<DialogCancelButton
+										type='button'
+										onClick={handleSecondaryAction}
+										disabled={isLoading}>
+										{secondaryButtonLabel}
+									</DialogCancelButton>
+									<DialogSubmitButton
+										type='submit'
+										disabled={primaryButtonDisabled || isLoading}>
+										{primaryButtonLabel}
+									</DialogSubmitButton>
+								</DialogButtonGroup>
+							)}
+						</DialogForm>
+					) : (
+						<>
+							{children}
+						</>
+					)}
 				</ModalFormContent>
 			</DialogContent>
 		</DialogOverlay>

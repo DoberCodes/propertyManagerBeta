@@ -51,7 +51,6 @@ const transporter = nodemailer.createTransport({
 exports.sendFeedbackEmail = functions.firestore
     .document('feedback/{feedbackId}')
     .onCreate(async (snap, context) => {
-    var _a, _b;
     const feedback = snap.data();
     if (!feedback) {
         console.error('No feedback data found');
@@ -97,9 +96,8 @@ exports.sendFeedbackEmail = functions.firestore
       </div>
     `;
     const mailOptions = {
-        from: ((_a = functions.config().email) === null || _a === void 0 ? void 0 : _a.user) || 'noreply@propertymanager.com',
-        to: ((_b = functions.config().email) === null || _b === void 0 ? void 0 : _b.feedback_recipient) ||
-            'feedback@propertymanager.com',
+        from: process.env.EMAIL_USER || 'noreply@propertymanager.com',
+        to: 'doberfamilyventures@gmail.com',
         subject: subject,
         html: html,
     };

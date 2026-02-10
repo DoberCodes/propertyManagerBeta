@@ -7,6 +7,7 @@ import {
 	getSubscriptionPlanDetails,
 	isTrialActive,
 	getTrialDaysRemaining,
+	isTrialExpired,
 } from '../utils/subscriptionUtils';
 import {
 	GenericModal,
@@ -15,6 +16,7 @@ import {
 	FormInput,
 } from '../Components/Library';
 import { FeedbackForm } from '../Components/FeedbackForm';
+import { ExpiredTrialBanner } from '../Components/ExpiredTrialBanner/ExpiredTrialBanner';
 import { cancelSubscription } from '../services/stripeService';
 import {
 	updatePassword,
@@ -195,7 +197,7 @@ const AccountActions = styled.div`
 	flex-wrap: wrap;
 `;
 
-const AccountButton = styled.button`
+const AccountButton = styled.button<{ disabled?: boolean }>`
 	padding: 12px 24px;
 	background: #6366f1;
 	color: #fff;
@@ -209,12 +211,25 @@ const AccountButton = styled.button`
 	&:hover {
 		background: #4f46e5;
 	}
+
+	&:disabled {
+		background: #9ca3af;
+		cursor: not-allowed;
+		opacity: 0.6;
+
+		&:hover {
+			background: #9ca3af;
+		}
+	}
 `;
 
 const DeleteAccountButton = styled(AccountButton)`
 	background: #dc2626;
-	&:hover {
+	&:hover:not(:disabled) {
 		background: #b91c1c;
+	}
+	&:disabled {
+		background: #9ca3af;
 	}
 `;
 
@@ -417,6 +432,9 @@ const SettingsPage: React.FC = () => {
 	return (
 		<Container>
 			<Title>Settings</Title>
+			{isTrialExpired(subscription) && (
+				<ExpiredTrialBanner onUpgradeClick={() => navigate('/paywall')} />
+			)}
 			{subscriptionError && (
 				<ErrorMessage style={{ marginBottom: '16px' }}>
 					You must cancel your active subscription before deleting your account.
@@ -474,16 +492,25 @@ const SettingsPage: React.FC = () => {
 						Change Password
 					</AccountButton>
 					<DeleteAccountButton
+						disabled={
+							subscription.status === 'active' ||
+							subscription.status === 'past_due'
+						}
 						onClick={() => {
+							// Allow deletion for trial and expired users
+							// Require cancellation for active and past_due subscriptions
 							if (
 								subscription.status === 'active' ||
-								subscription.status === 'trial' ||
 								subscription.status === 'past_due'
 							) {
-								setSubscriptionError(
-									subscription.status === 'active' ? true : false,
-								);
+								setSubscriptionError(true);
+							} else if (
+								subscription.status === 'trial' ||
+								subscription.status === 'expired'
+							) {
+								setShowDeleteAccountModal(true);
 							} else {
+								// For other statuses (like cancelled), allow deletion
 								setShowDeleteAccountModal(true);
 							}
 						}}>
