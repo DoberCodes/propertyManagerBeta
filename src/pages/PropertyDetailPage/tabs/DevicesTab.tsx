@@ -49,6 +49,7 @@ interface DevicesTabProps {
 export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const [showDeviceModal, setShowDeviceModal] = useState(false);
 	const [editingDevice, setEditingDevice] = useState<any>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [deviceFormData, setDeviceFormData] = useState<DeviceFormData>({
 		type: '',
 		brand: '',
@@ -123,6 +124,9 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	};
 
 	const handleSubmit = async () => {
+		if (isSubmitting) return;
+
+		setIsSubmitting(true);
 		try {
 			const deviceData = {
 				...deviceFormData,
@@ -141,6 +145,8 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 			handleCloseModal();
 		} catch (error) {
 			console.error('Error saving device:', error);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -255,7 +261,14 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 					title={editingDevice ? 'Edit Device' : 'Add New Device'}
 					showActions={true}
 					onSubmit={handleSubmit}
-					primaryButtonLabel={editingDevice ? 'Update Device' : 'Add Device'}
+					primaryButtonLabel={
+						isSubmitting
+							? 'Saving...'
+							: editingDevice
+							? 'Update Device'
+							: 'Add Device'
+					}
+					primaryButtonDisabled={isSubmitting}
 					secondaryButtonLabel='Cancel'>
 					<div
 						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

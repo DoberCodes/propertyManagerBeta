@@ -64,7 +64,7 @@ interface PropertyFormData {
 interface PropertyDialogProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (data: PropertyFormData) => void;
+	onSave: (data: PropertyFormData) => Promise<void>;
 	initialData?: PropertyFormData;
 	groups: Array<{ id: string; name: string }>;
 	selectedGroupId?: string | null;
@@ -109,7 +109,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 
 	const [unitInput, setUnitInput] = useState('');
 	const [suiteInput, setSuiteInput] = useState('');
-
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [newGroupName, setNewGroupName] = useState('');
 	const [isUploadingImage, setIsUploadingImage] = useState(false);
 	const [imageError, setImageError] = useState<string | null>(null);
@@ -246,8 +246,20 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 		}
 	};
 
-	const handleSave = () => {
-		onSave(formData);
+	const handleSave = async () => {
+		if (isSubmitting) return;
+
+		setIsSubmitting(true);
+		try {
+			await onSave(formData);
+			// Close dialog on successful save
+			onClose();
+		} catch (error) {
+			console.error('Error saving property:', error);
+			// Don't close dialog on error so user can retry
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -776,8 +788,12 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 						)}
 					</div>
 					<div style={{ display: 'flex', gap: '10px' }}>
-						<CancelButton onClick={onClose}>Cancel</CancelButton>
-						<SaveButton onClick={handleSave}>Save Property</SaveButton>
+						<CancelButton onClick={onClose} disabled={isSubmitting}>
+							Cancel
+						</CancelButton>
+						<SaveButton onClick={handleSave} disabled={isSubmitting}>
+							{isSubmitting ? 'Saving...' : 'Save Property'}
+						</SaveButton>
 					</div>
 				</DialogFooter>
 			</DialogContainer>

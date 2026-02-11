@@ -117,7 +117,9 @@ export const App = () => {
 		let startY = 0;
 		let isPulling = false;
 		let triggered = false;
-		const threshold = 80;
+		let holdStartTime = 0;
+		const threshold = 150; // Increased from 80 to 150 pixels
+		const holdDuration = 500; // Require 500ms hold at threshold
 
 		const getScrollTop = () =>
 			window.scrollY || document.documentElement.scrollTop || 0;
@@ -129,6 +131,7 @@ export const App = () => {
 			startY = event.touches[0].clientY;
 			isPulling = true;
 			triggered = false;
+			holdStartTime = 0;
 		};
 
 		const onTouchMove = (event: TouchEvent) => {
@@ -140,13 +143,26 @@ export const App = () => {
 			const delta = currentY - startY;
 
 			if (delta > threshold) {
-				triggered = true;
-				window.location.reload();
+				// Start hold timer if not already started
+				if (holdStartTime === 0) {
+					holdStartTime = Date.now();
+				} else {
+					// Check if held long enough
+					const holdTime = Date.now() - holdStartTime;
+					if (holdTime >= holdDuration) {
+						triggered = true;
+						window.location.reload();
+					}
+				}
+			} else {
+				// Reset hold timer if user pulls back below threshold
+				holdStartTime = 0;
 			}
 		};
 
 		const onTouchEnd = () => {
 			isPulling = false;
+			holdStartTime = 0;
 		};
 
 		window.addEventListener('touchstart', onTouchStart, { passive: true });

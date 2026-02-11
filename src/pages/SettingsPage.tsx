@@ -555,8 +555,8 @@ const SettingsPage: React.FC = () => {
 			<AccountSection>
 				<SectionTitle>Getting Started</SectionTitle>
 				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
-					Need a refresher on Maintley? Restart the guided tour to learn about key
-					features and get the most out of the app.
+					Need a refresher on Maintley? Restart the guided tour to learn about
+					key features and get the most out of the app.
 				</p>
 				<AccountButton
 					disabled={isRestartingOnboarding}

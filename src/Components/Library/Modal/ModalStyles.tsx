@@ -31,8 +31,8 @@ export const ModalOverlay = styled.div`
 
 	@media (max-width: 480px) {
 		padding: 0.5rem;
-		align-items: flex-start;
-		padding-top: 2rem;
+		align-items: center;
+		padding-top: 1rem;
 	}
 `;
 
@@ -72,10 +72,9 @@ export const ModalContainer = styled.div`
 	@media (max-width: 480px) {
 		max-width: 95%;
 		height: auto;
-		max-height: 90vh;
+		max-height: 82vh;
 		min-height: 300px;
 		border-radius: 10px;
-		margin-top: 1rem;
 	}
 `;
 

@@ -33,6 +33,14 @@ const NotificationWrapper = styled.div`
 			opacity: 1;
 		}
 	}
+
+	@media (max-width: 768px) {
+		padding: 1rem;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.5rem;
+	}
 `;
 
 const NotificationCard = styled.div`
@@ -59,7 +67,12 @@ const NotificationCard = styled.div`
 
 	@media (max-width: 768px) {
 		max-width: 95%;
-		max-height: 90vh;
+		max-height: 85vh;
+	}
+
+	@media (max-width: 480px) {
+		max-width: 95%;
+		max-height: 82vh;
 	}
 `;
 

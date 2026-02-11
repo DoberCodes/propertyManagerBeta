@@ -544,6 +544,8 @@ export const Properties = () => {
 				}
 			} catch (error) {
 				console.error('Error updating property:', error);
+				alert('Failed to update property. Please try again.');
+				throw error; // Re-throw to let PropertyDialog know save failed
 			}
 		} else {
 			// Add new property
@@ -558,10 +560,9 @@ export const Properties = () => {
 			// Validate that a group is selected
 			if (!groupId || groupId === '') {
 				alert('Please select a group for this property');
-				return;
+				throw new Error('No group selected');
 			}
 
-			// Build property data, conditionally including optional fields
 			// Firebase doesn't accept undefined values
 			const newPropertyData: any = {
 				userId: currentUser!.id,
@@ -624,18 +625,16 @@ export const Properties = () => {
 				} else if ('error' in result) {
 					console.error('Failed to create property:', result.error);
 					alert('Failed to create property. Please try again.');
-					return;
+					throw new Error('Failed to create property');
 				}
 			} catch (error) {
 				console.error('Error creating property:', error);
 				alert('An error occurred while creating the property.');
-				return;
+				throw error; // Re-throw to let PropertyDialog know save failed
 			}
 		}
 
-		setDialogOpen(false);
-		setSelectedGroupForDialog(null);
-		setSelectedPropertyForEdit(null);
+		// Success - dialog will be closed by PropertyDialog after successful save
 	};
 
 	return (

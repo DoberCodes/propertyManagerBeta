@@ -1004,18 +1004,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 								<PrimaryButton onClick={advanceToNextStep}>
 									Continue
 								</PrimaryButton>
-							) : currentStep.id === 'click_property_instruction' ? (
+							) : currentStep.id === 'click_property_instruction' ||
+							  currentStep.id === 'wait_property_creation' ? (
 								<>
 									<PrimaryButton onClick={minimizeWaitingModal}>
-										Okay meet you there!
+										Let me work - minimize this
 									</PrimaryButton>
-									<SkipButton onClick={skipOnboarding}>Skip Tour</SkipButton>
+									<SkipButton onClick={skipOnboarding}>
+										{currentStep.skipLabel || 'Skip Tour'}
+									</SkipButton>
 								</>
 							) : (
 								<>
-									<SkipButton onClick={minimizeWaitingModal}>
+									<PrimaryButton onClick={minimizeWaitingModal}>
 										Let me work - minimize this
-									</SkipButton>
+									</PrimaryButton>
 									<SkipButton onClick={skipOnboarding}>
 										{currentStep.skipLabel || 'Skip Tour'}
 									</SkipButton>
@@ -1068,7 +1071,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 						</PrimaryButton>
 					)}
 					<SkipButton onClick={skipOnboarding}>
-						{currentStep.skipLabel || 'Skip Tour'}
+						{currentStepIndex === steps.length - 1
+							? 'Finish Tour'
+							: currentStep.skipLabel || 'Skip Tour'}
 					</SkipButton>
 				</ActionButtons>
 			</OnboardingModal>
