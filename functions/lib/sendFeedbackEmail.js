@@ -32,22 +32,22 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendFeedbackEmail = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const nodemailer = __importStar(require("nodemailer"));
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-// Configure nodemailer with your email service
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+// Initialize SendGrid with API key from environment
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+if (sendgridApiKey) {
+    mail_1.default.setApiKey(sendgridApiKey);
+}
 exports.sendFeedbackEmail = functions.firestore
     .document('feedback/{feedbackId}')
     .onCreate(async (snap, context) => {
@@ -95,28 +95,45 @@ exports.sendFeedbackEmail = functions.firestore
         </p>
       </div>
     `;
-    const mailOptions = {
-        from: process.env.EMAIL_USER || 'noreply@propertymanager.com',
-        to: 'doberfamilyventures@gmail.com',
-        subject: subject,
-        html: html,
-    };
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Feedback email sent successfully');
-        // Update the feedback document to mark it as emailed
-        await snap.ref.update({
-            status: 'emailed',
-            emailedAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+    // Send feedback via SendGrid
+    if (sendgridApiKey) {
+        try {
+            const msg = {
+                to: 'doberfamilyventures@gmail.com',
+                from: {
+                    email: 'feedback@maintleyapp.com',
+                    name: 'Property Manager Feedback',
+                },
+                subject: subject,
+                html: html,
+                replyTo: feedback.userEmail || 'noreply@maintleyapp.com',
+            };
+            await mail_1.default.send(msg);
+            console.log('Feedback email sent successfully via SendGrid');
+            // Update the feedback document to mark it as sent
+            await snap.ref.update({
+                status: 'sent_via_sendgrid',
+                sentAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+        catch (sendgridError) {
+            console.error('Error sending via SendGrid:', sendgridError);
+            // Update the feedback document to mark the failure
+            await snap.ref.update({
+                status: 'sendgrid_failed',
+                sendgridError: sendgridError instanceof Error
+                    ? sendgridError.message
+                    : String(sendgridError),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
     }
-    catch (error) {
-        console.error('Error sending feedback email:', error);
-        // Update the feedback document to mark the failure
+    else {
+        console.log('No SendGrid API key configured. Feedback saved but not sent.');
+        // Update the feedback document to mark it as saved only
         await snap.ref.update({
-            status: 'email_failed',
-            emailError: error instanceof Error ? error.message : String(error),
+            status: 'saved_no_sendgrid_key',
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
     }

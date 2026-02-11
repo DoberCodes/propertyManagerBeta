@@ -1,9 +1,16 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as https from 'https';
+import sgMail from '@sendgrid/mail';
 
 if (!admin.apps.length) {
 	admin.initializeApp();
+}
+
+// Initialize SendGrid with API key from environment
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+
+if (sendgridApiKey) {
+	sgMail.setApiKey(sendgridApiKey);
 }
 
 type FeedbackType = 'feedback' | 'feature_request' | 'bug_report';
@@ -81,70 +88,50 @@ export const sendFeedbackEmail = functions.firestore
       </div>
     `;
 
-		// Send feedback via webhook (you can use services like Zapier, Make.com, or IFTTT)
-		const webhookUrl = process.env.FEEDBACK_WEBHOOK_URL;
-
-		if (webhookUrl) {
+		// Send feedback via SendGrid
+		if (sendgridApiKey) {
 			try {
-				const postData = JSON.stringify({
+				const msg = {
+					to: 'doberfamilyventures@gmail.com',
+					from: {
+						email: 'feedback@maintleyapp.com',
+						name: 'Property Manager Feedback',
+					},
 					subject: subject,
 					html: html,
-					to: 'doberfamilyventures@gmail.com',
-					from: 'feedback@maintleyapp.com',
-					feedback: feedback,
-				});
-
-				const url = new URL(webhookUrl);
-				const options = {
-					hostname: url.hostname,
-					port: url.port || (url.protocol === 'https:' ? 443 : 80),
-					path: url.pathname + url.search,
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Content-Length': Buffer.byteLength(postData),
-					},
+					replyTo: feedback.userEmail || 'noreply@maintleyapp.com',
 				};
 
-				const req = https.request(options, (res) => {
-					console.log(`Webhook response status: ${res.statusCode}`);
-					res.on('data', (chunk) => {
-						console.log(`Webhook response: ${chunk}`);
-					});
-				});
-
-				req.on('error', (error) => {
-					console.error('Webhook error:', error);
-				});
-
-				req.write(postData);
-				req.end();
+				await sgMail.send(msg);
+				console.log('Feedback email sent successfully via SendGrid');
 
 				// Update the feedback document to mark it as sent
 				await snap.ref.update({
-					status: 'sent_via_webhook',
+					status: 'sent_via_sendgrid',
 					sentAt: admin.firestore.FieldValue.serverTimestamp(),
 					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 				});
-			} catch (webhookError) {
-				console.error('Error sending via webhook:', webhookError);
+			} catch (sendgridError) {
+				console.error('Error sending via SendGrid:', sendgridError);
 
 				// Update the feedback document to mark the failure
 				await snap.ref.update({
-					status: 'webhook_failed',
-					webhookError:
-						webhookError instanceof Error
-							? webhookError.message
-							: String(webhookError),
+					status: 'sendgrid_failed',
+					sendgridError:
+						sendgridError instanceof Error
+							? sendgridError.message
+							: String(sendgridError),
 					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 				});
 			}
 		} else {
-			console.log('No webhook URL configured. Feedback saved but not sent.');
+			console.log(
+				'No SendGrid API key configured. Feedback saved but not sent.',
+			);
 
 			// Update the feedback document to mark it as saved only
 			await snap.ref.update({
-				status: 'saved_no_webhook',
+				status: 'saved_no_sendgrid_key',
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
 		}

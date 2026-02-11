@@ -97,7 +97,9 @@ const LandingPageComponent = () => {
 					// Get file sizes for both APKs
 					const assets = release.assets || [];
 					const latestApk = assets.find(
-						(asset) => asset.label === 'PropertyManager.apk',
+						(asset) =>
+							asset.label === 'PropertyManager.apk' ||
+							asset.name === 'PropertyManager.apk',
 					);
 
 					// For versioned APK, fetch the previous version release

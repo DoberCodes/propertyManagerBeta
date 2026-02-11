@@ -22,16 +22,17 @@ export interface FeedbackData {
 }
 
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
+	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [formData, setFormData] = useState<FeedbackData>({
 		type: 'feedback',
 		subject: '',
 		message: '',
+		userEmail: currentUser?.email || '',
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [error, setError] = useState('');
 
-	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [submitFeedback] = useSubmitFeedbackMutation();
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +50,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 			await submitFeedback({
 				...formData,
 				userId: currentUser?.id,
-				userEmail: currentUser?.email,
+				userEmail: formData.userEmail || currentUser?.email,
 				userName:
 					currentUser?.firstName && currentUser?.lastName
 						? `${currentUser.firstName} ${currentUser.lastName}`
@@ -116,6 +117,22 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 					placeholder='Brief description of your feedback'
 					required
 				/>
+			</FormGroup>
+
+			<FormGroup>
+				<Label htmlFor='userEmail'>Email Address (Optional)</Label>
+				<Input
+					id='userEmail'
+					type='email'
+					value={formData.userEmail || ''}
+					onChange={(e) =>
+						setFormData({ ...formData, userEmail: e.target.value })
+					}
+					placeholder='your.email@example.com'
+				/>
+				<HelpText>
+					Provide your email if you'd like us to follow up on your feedback
+				</HelpText>
 			</FormGroup>
 
 			<FormGroup>
@@ -317,4 +334,11 @@ const SuccessMessage = styled.p`
 	color: #6b7280;
 	font-size: 0.875rem;
 	line-height: 1.5;
+`;
+
+const HelpText = styled.p`
+	margin: 4px 0 0 0;
+	color: #6b7280;
+	font-size: 0.75rem;
+	line-height: 1.4;
 `;

@@ -181,11 +181,11 @@ export const getAPKDownloadURL = (): string => {
 	if (configuredUrl) {
 		// Ignore legacy GitHub Pages URL to ensure we always check the release asset
 		if (configuredUrl.includes('github.io')) {
-			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
+			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
 		}
 		return configuredUrl;
 	}
-	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
+	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
 };
 
 /**
