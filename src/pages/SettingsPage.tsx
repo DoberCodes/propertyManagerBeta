@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../Redux/store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '../Redux/store/store';
 import {
 	getSubscriptionPlanDetails,
 	isTrialActive,
@@ -27,6 +27,8 @@ import {
 import { auth } from '../config/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../config/firebase';
+import { useUpdateUserMutation } from '../Redux/API/apiSlice';
+import { setCurrentUser } from '../Redux/Slices/userSlice';
 
 const Container = styled.div`
 	max-width: 100%;
@@ -262,10 +264,13 @@ const PasswordHelp = styled.div`
 
 const SettingsPage: React.FC = () => {
 	const navigate = useNavigate();
+	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [showPasswordModal, setShowPasswordModal] = useState(false);
 	const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 	const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+	const [isRestartingOnboarding, setIsRestartingOnboarding] = useState(false);
+	const [updateUser] = useUpdateUserMutation();
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: '',
 		newPassword: '',
@@ -296,6 +301,34 @@ const SettingsPage: React.FC = () => {
 	const planDetails = getSubscriptionPlanDetails(subscription.plan);
 	const isOnTrial = isTrialActive(subscription);
 	const trialDaysRemaining = getTrialDaysRemaining(subscription);
+
+	const handleRestartOnboarding = async () => {
+		if (!currentUser) return;
+
+		setIsRestartingOnboarding(true);
+		try {
+			// Reset onboarding completion flag in Firestore
+			await updateUser({
+				id: currentUser.id,
+				updates: { onboardingCompleted: false },
+			}).unwrap();
+
+			// Update local Redux state immediately
+			dispatch(
+				setCurrentUser({
+					...currentUser,
+					onboardingCompleted: false,
+				}),
+			);
+
+			// Navigate back to dashboard so the onboarding modal shows
+			navigate('/dashboard');
+		} catch (error) {
+			console.error('Failed to restart onboarding:', error);
+		} finally {
+			setIsRestartingOnboarding(false);
+		}
+	};
 
 	const handlePasswordChange = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -517,6 +550,19 @@ const SettingsPage: React.FC = () => {
 						Delete Account
 					</DeleteAccountButton>
 				</AccountActions>
+			</AccountSection>
+
+			<AccountSection>
+				<SectionTitle>Getting Started</SectionTitle>
+				<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+					Need a refresher on Maintley? Restart the guided tour to learn about key
+					features and get the most out of the app.
+				</p>
+				<AccountButton
+					disabled={isRestartingOnboarding}
+					onClick={handleRestartOnboarding}>
+					{isRestartingOnboarding ? 'Starting Tour...' : 'Start Guided Tour'}
+				</AccountButton>
 			</AccountSection>
 
 			<AccountSection>
