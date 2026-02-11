@@ -299,6 +299,13 @@ export const signUpWithEmail = async (
 		return {
 			...userProfile,
 			subscription,
+			...(legalAgreement && {
+				legalAgreement: {
+					agreedToTerms: legalAgreement.agreedToTerms,
+					agreedAt: new Date().toISOString(),
+					agreedVersion: legalAgreement.agreedVersion,
+				},
+			}),
 		};
 	} catch (error: any) {
 		console.error('Sign up error:', error);
