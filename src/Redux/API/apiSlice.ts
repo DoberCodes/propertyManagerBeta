@@ -106,6 +106,7 @@ export interface Notification {
 		| 'team_group_deleted'
 		| 'maintenance_request'
 		| 'maintenance_request_created'
+		| 'legal_update'
 		| 'other'
 		| 'property_shared';
 	title: string;

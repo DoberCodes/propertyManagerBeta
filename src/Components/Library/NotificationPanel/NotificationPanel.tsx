@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -14,8 +14,12 @@ import {
 	useUpdateNotificationMutation,
 	useDeleteNotificationMutation,
 	useAcceptInvitationMutation,
+	useUpdateUserMutation,
 	Notification,
 } from '../../../Redux/API/apiSlice';
+import { setCurrentUser } from '../../../Redux/Slices/userSlice';
+import { GenericModal } from '../Modal/GenericModal';
+import DocumentViewer from '../../DocumentViewer';
 
 interface NotificationPanelProps {
 	userId?: string;
@@ -24,7 +28,19 @@ interface NotificationPanelProps {
 export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const [legalError, setLegalError] = useState('');
+	const [showLegalModal, setShowLegalModal] = useState(false);
+	const [legalNotification, setLegalNotification] =
+		useState<Notification | null>(null);
+	const [acceptedTerms, setAcceptedTerms] = useState(false);
+	const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+	const [acceptedMaintenance, setAcceptedMaintenance] = useState(false);
+	const [selectedDocument, setSelectedDocument] = useState<{
+		name: string;
+		title: string;
+	} | null>(null);
 	const currentUser = useSelector((state: any) => state.user.currentUser);
+	const dispatch = useDispatch();
 	const notificationUserId = currentUser?.id || currentUser?.uid;
 
 	const {
@@ -41,6 +57,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		useDeleteNotificationMutation();
 	const [acceptInvitation, { isLoading: isAccepting }] =
 		useAcceptInvitationMutation();
+	const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation();
 
 	const handleAcceptInvitation = async (notification: Notification) => {
 		setError('');
@@ -96,6 +113,94 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		}
 	};
 
+	const resetLegalState = () => {
+		setLegalError('');
+		setAcceptedTerms(false);
+		setAcceptedPrivacy(false);
+		setAcceptedMaintenance(false);
+		setSelectedDocument(null);
+	};
+
+	const handleOpenLegalModal = (notification: Notification) => {
+		resetLegalState();
+		setLegalNotification(notification);
+		setShowLegalModal(true);
+	};
+
+	const handleCloseLegalModal = () => {
+		const confirmed = window.confirm(
+			'You must accept the updated legal documents to avoid interruption of service.\n\nCancel anyway?',
+		);
+		if (!confirmed) {
+			return;
+		}
+		resetLegalState();
+		setLegalNotification(null);
+		setShowLegalModal(false);
+	};
+
+	const handleViewDocument = (filename: string, title: string) => {
+		setSelectedDocument({ name: filename, title });
+	};
+
+	const handleCloseDocumentViewer = () => {
+		setSelectedDocument(null);
+	};
+
+	const handleAcceptLegal = async () => {
+		setLegalError('');
+		if (!legalNotification || !currentUser) {
+			setLegalError(
+				'Missing legal agreement details. Please refresh and try again.',
+			);
+			return;
+		}
+
+		if (!acceptedTerms || !acceptedPrivacy || !acceptedMaintenance) {
+			setLegalError('Please accept all legal documents to continue.');
+			return;
+		}
+
+		const agreedVersion = String(legalNotification.data?.legalVersion || '1.0');
+		const agreedAt = new Date().toISOString();
+
+		try {
+			await updateUser({
+				id: currentUser.id,
+				updates: {
+					legalAgreement: {
+						agreedToTerms: true,
+						agreedVersion,
+						agreedAt,
+					},
+				},
+			}).unwrap();
+
+			dispatch(
+				setCurrentUser({
+					...currentUser,
+					legalAgreement: {
+						agreedToTerms: true,
+						agreedVersion,
+						agreedAt,
+					},
+				}),
+			);
+
+			await updateNotification({
+				id: legalNotification.id,
+				updates: { status: 'accepted' },
+			}).unwrap();
+
+			setSuccess('Legal documents accepted. Thank you!');
+			resetLegalState();
+			setLegalNotification(null);
+			setShowLegalModal(false);
+		} catch (err: any) {
+			setLegalError(err.message || 'Failed to accept legal documents');
+		}
+	};
+
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		const today = new Date();
@@ -122,6 +227,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		switch (type) {
 			case 'share_invitation':
 				return '👥';
+			case 'legal_update':
+				return '📝';
 			case 'share_invitation_accepted':
 				return '✅';
 			case 'property_added':
@@ -139,6 +246,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		switch (type) {
 			case 'share_invitation':
 				return '#2196f3';
+			case 'legal_update':
+				return '#0ea5e9';
 			case 'share_invitation_accepted':
 				return '#4caf50';
 			case 'property_added':
@@ -246,6 +355,21 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 											</ActionButtons>
 										)}
 
+									{notification.type === 'legal_update' &&
+										(notification.status === 'unread' ||
+											notification.status === 'read') && (
+											<ActionButtons>
+												<ActionButton
+													variant='accept'
+													onClick={() => handleOpenLegalModal(notification)}
+													disabled={isUpdating || isUpdatingUser}
+													title='Review and accept legal documents'>
+													<FontAwesomeIcon icon={faCheckCircle} />
+													Review & Accept
+												</ActionButton>
+											</ActionButtons>
+										)}
+
 									{notification.status === 'accepted' && (
 										<StatusBadge status='accepted'>✓ Accepted</StatusBadge>
 									)}
@@ -266,6 +390,103 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 					))}
 				</NotificationsList>
 			)}
+
+			<GenericModal
+				isOpen={showLegalModal}
+				onClose={handleCloseLegalModal}
+				title='Review Updated Legal Documents'
+				primaryButtonLabel='Accept'
+				secondaryButtonLabel='Cancel'
+				primaryButtonAction={handleAcceptLegal}
+				secondaryButtonAction={handleCloseLegalModal}
+				primaryButtonDisabled={
+					!acceptedTerms || !acceptedPrivacy || !acceptedMaintenance
+				}
+				isLoading={isUpdatingUser || isUpdating}
+				showActions>
+				<LegalNotice>
+					Please review and accept the updated legal documents to avoid any
+					interruption of service.
+				</LegalNotice>
+				{legalError && <LegalError>{legalError}</LegalError>}
+				<LegalSection>
+					<LegalCheckbox
+						type='checkbox'
+						checked={acceptedTerms}
+						onChange={(event) => {
+							setAcceptedTerms(event.target.checked);
+							setLegalError('');
+						}}
+					/>
+					<LegalContent>
+						<LegalTitle>Terms of Service</LegalTitle>
+						<LegalDescription>
+							I agree to the terms of service that govern the use of Maintley.
+						</LegalDescription>
+						<LegalLink
+							onClick={() =>
+								handleViewDocument('terms-of-service', 'Terms of Service')
+							}>
+							View Terms of Service
+						</LegalLink>
+					</LegalContent>
+				</LegalSection>
+				<LegalSection>
+					<LegalCheckbox
+						type='checkbox'
+						checked={acceptedPrivacy}
+						onChange={(event) => {
+							setAcceptedPrivacy(event.target.checked);
+							setLegalError('');
+						}}
+					/>
+					<LegalContent>
+						<LegalTitle>Privacy Policy</LegalTitle>
+						<LegalDescription>
+							I acknowledge the privacy policy regarding how my data is handled.
+						</LegalDescription>
+						<LegalLink
+							onClick={() =>
+								handleViewDocument('privacy-policy', 'Privacy Policy')
+							}>
+							View Privacy Policy
+						</LegalLink>
+					</LegalContent>
+				</LegalSection>
+				<LegalSection>
+					<LegalCheckbox
+						type='checkbox'
+						checked={acceptedMaintenance}
+						onChange={(event) => {
+							setAcceptedMaintenance(event.target.checked);
+							setLegalError('');
+						}}
+					/>
+					<LegalContent>
+						<LegalTitle>Maintenance Disclaimer</LegalTitle>
+						<LegalDescription>
+							I understand Maintley is a tracking tool and not a maintenance
+							service provider.
+						</LegalDescription>
+						<LegalLink
+							onClick={() =>
+								handleViewDocument(
+									'maintenance-disclaimer',
+									'Maintenance Disclaimer',
+								)
+							}>
+							View Maintenance Disclaimer
+						</LegalLink>
+					</LegalContent>
+				</LegalSection>
+			</GenericModal>
+
+			<DocumentViewer
+				documentName={selectedDocument?.name || ''}
+				title={selectedDocument?.title || ''}
+				isOpen={!!selectedDocument}
+				onClose={handleCloseDocumentViewer}
+			/>
 		</Card>
 	);
 };
@@ -440,6 +661,70 @@ const ActionButton = styled.button<{ variant: 'accept' | 'reject' }>`
 	&:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+`;
+
+const LegalNotice = styled.p`
+	margin: 0 0 16px 0;
+	font-size: 14px;
+	color: #475569;
+	line-height: 1.5;
+`;
+
+const LegalError = styled.div`
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: 6px;
+	background: #fee2e2;
+	color: #b91c1c;
+	font-size: 13px;
+`;
+
+const LegalSection = styled.div`
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	background: #f8fafc;
+	margin-bottom: 12px;
+`;
+
+const LegalCheckbox = styled.input`
+	margin-top: 2px;
+	flex-shrink: 0;
+`;
+
+const LegalContent = styled.div`
+	flex: 1;
+`;
+
+const LegalTitle = styled.h4`
+	margin: 0 0 6px 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: #0f172a;
+`;
+
+const LegalDescription = styled.p`
+	margin: 0 0 8px 0;
+	font-size: 13px;
+	color: #64748b;
+	line-height: 1.5;
+`;
+
+const LegalLink = styled.button`
+	background: none;
+	border: none;
+	color: #0ea5e9;
+	text-decoration: underline;
+	cursor: pointer;
+	font-size: 13px;
+	padding: 0;
+
+	&:hover {
+		color: #0284c7;
 	}
 `;
 

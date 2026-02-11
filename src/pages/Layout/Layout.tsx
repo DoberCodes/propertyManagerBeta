@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from '../../Redux/store/store';
 import { SideNav, MobileNav, TopNav } from '../../Components/Library/Navbar';
 import { DataLoader } from '../../Components/DataLoader';
 import { OnboardingFlow } from '../../Components/OnboardingFlow';
+import LegalAgreementNotification from '../../Components/Library/LegalAgreementNotification';
 import { Wrapper, Main, Sidebar, Content } from './Layout.styles';
 import { Outlet } from 'react-router-dom';
 import {
@@ -90,6 +91,7 @@ export const Layout = () => {
 
 	return (
 		<>
+			<LegalAgreementNotification />
 			{showOnboarding && (
 				<OnboardingFlow
 					onComplete={handleOnboardingComplete}
