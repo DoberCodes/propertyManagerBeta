@@ -227,13 +227,13 @@ export const DialogButtonGroup = styled.div`
 	justify-content: flex-end;
 	position: relative;
 	background: white;
-	padding: 1rem 0;
+	padding: 1rem 1.5rem;
 	width: 100%;
 	border-top: 1px solid ${COLORS.gray200};
 
 	@media (max-width: 480px) {
 		flex-direction: column-reverse;
-		padding: 1rem 0;
+		padding: 1rem 1.5rem;
 		gap: 0.5rem;
 		margin-top: 1rem;
 	}
