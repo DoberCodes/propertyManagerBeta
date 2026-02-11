@@ -44,6 +44,7 @@ export interface UserInvitation {
 	status: 'pending' | 'accepted' | 'rejected';
 	createdAt: string;
 	expiresAt: string;
+	isGuestInvitation?: boolean; // New field to indicate this creates a property guest
 }
 
 export interface TenantInvitationCode {
@@ -312,10 +313,13 @@ export interface Unit {
 	isOccupied: boolean;
 	deviceIds?: string[]; // Device IDs for devices in this unit
 	occupants?: Array<{
+		id: string;
 		firstName: string;
 		lastName: string;
 		email: string;
 		phone: string;
+		leaseStart?: string;
+		leaseEnd?: string;
 	}>; // Renamed from occupantName to occupants
 	taskHistory?: Array<{
 		taskId: string;
@@ -2255,7 +2259,9 @@ export const apiSlice = createApi({
 
 		sendInvitation: builder.mutation<
 			UserInvitation,
-			Omit<UserInvitation, 'id' | 'createdAt' | 'expiresAt' | 'status'>
+			Omit<UserInvitation, 'id' | 'createdAt' | 'expiresAt' | 'status'> & {
+				isGuestInvitation?: boolean;
+			}
 		>({
 			async queryFn(invitation) {
 				try {
@@ -2690,12 +2696,53 @@ export const apiSlice = createApi({
 					tenants.push(newTenant);
 					await updateDoc(propertyRef, { tenants });
 
+					// If tenant is assigned to a unit, also add them to the unit's occupants
+					if (tenantData.unit) {
+						console.log(
+							'Adding tenant to unit:',
+							tenantData.unit,
+							'for property:',
+							tenantData.propertyId,
+						);
+						const unitsQuery = query(
+							collection(db, 'units'),
+							where('propertyId', '==', tenantData.propertyId),
+							where('name', '==', tenantData.unit),
+						);
+						const unitsSnapshot = await getDocs(unitsQuery);
+						console.log('Units found:', unitsSnapshot.size);
+
+						if (!unitsSnapshot.empty) {
+							const unitDoc = unitsSnapshot.docs[0];
+							const unitData = unitDoc.data();
+							console.log('Unit data:', unitData);
+							const occupants = unitData.occupants || [];
+
+							// Add tenant to unit's occupants array
+							const tenantOccupant = {
+								id: newTenant.id,
+								firstName: newTenant.firstName,
+								lastName: newTenant.lastName,
+								email: newTenant.email,
+								phone: newTenant.phone,
+								leaseStart: newTenant.leaseStart,
+								leaseEnd: newTenant.leaseEnd,
+							};
+
+							occupants.push(tenantOccupant);
+							await updateDoc(unitDoc.ref, { occupants });
+							console.log('Updated unit occupants:', occupants);
+						} else {
+							console.log('No unit found with name:', tenantData.unit);
+						}
+					}
+
 					return { data: undefined };
 				} catch (error: any) {
 					return { error: error.message };
 				}
 			},
-			invalidatesTags: ['Properties'],
+			invalidatesTags: ['Properties', 'Units'],
 		}),
 
 		updateTenant: builder.mutation<
@@ -2725,7 +2772,11 @@ export const apiSlice = createApi({
 					}
 
 					const property = propertySnap.data();
-					const tenants = (property.tenants || []).map((tenant: any) =>
+					const tenants = property.tenants || [];
+					const existingTenant = tenants.find((t: any) => t.id === tenantId);
+
+					// Update tenant in property
+					const updatedTenants = tenants.map((tenant: any) =>
 						tenant.id === tenantId
 							? {
 									...tenant,
@@ -2735,13 +2786,80 @@ export const apiSlice = createApi({
 							: tenant,
 					);
 
-					await updateDoc(propertyRef, { tenants });
+					await updateDoc(propertyRef, { tenants: updatedTenants });
+
+					// Handle unit occupant updates
+					const oldUnit = existingTenant?.unit;
+					const newUnit = updates.unit;
+					console.log(
+						'Updating tenant unit assignment - old:',
+						oldUnit,
+						'new:',
+						newUnit,
+					);
+
+					// Remove from old unit if unit changed
+					if (oldUnit && oldUnit !== newUnit) {
+						console.log('Removing tenant from old unit:', oldUnit);
+						const oldUnitQuery = query(
+							collection(db, 'units'),
+							where('propertyId', '==', propertyId),
+							where('name', '==', oldUnit),
+						);
+						const oldUnitSnapshot = await getDocs(oldUnitQuery);
+						if (!oldUnitSnapshot.empty) {
+							const oldUnitDoc = oldUnitSnapshot.docs[0];
+							const oldUnitData = oldUnitDoc.data();
+							const occupants = (oldUnitData.occupants || []).filter(
+								(occupant: any) => occupant.id !== tenantId,
+							);
+							await updateDoc(oldUnitDoc.ref, { occupants });
+							console.log('Removed tenant from old unit');
+						}
+					}
+
+					// Add to new unit if assigned
+					if (newUnit && (!oldUnit || oldUnit !== newUnit)) {
+						console.log('Adding tenant to new unit:', newUnit);
+						const newUnitQuery = query(
+							collection(db, 'units'),
+							where('propertyId', '==', propertyId),
+							where('name', '==', newUnit),
+						);
+						const newUnitSnapshot = await getDocs(newUnitQuery);
+						if (!newUnitSnapshot.empty) {
+							const newUnitDoc = newUnitSnapshot.docs[0];
+							const newUnitData = newUnitDoc.data();
+							const occupants = newUnitData.occupants || [];
+
+							// Find updated tenant data
+							const updatedTenant = updatedTenants.find(
+								(t: any) => t.id === tenantId,
+							);
+							const tenantOccupant = {
+								id: updatedTenant.id,
+								firstName: updatedTenant.firstName,
+								lastName: updatedTenant.lastName,
+								email: updatedTenant.email,
+								phone: updatedTenant.phone,
+								leaseStart: updatedTenant.leaseStart,
+								leaseEnd: updatedTenant.leaseEnd,
+							};
+
+							occupants.push(tenantOccupant);
+							await updateDoc(newUnitDoc.ref, { occupants });
+							console.log('Added tenant to new unit');
+						} else {
+							console.log('New unit not found:', newUnit);
+						}
+					}
+
 					return { data: undefined };
 				} catch (error: any) {
 					return { error: error.message };
 				}
 			},
-			invalidatesTags: ['Properties'],
+			invalidatesTags: ['Properties', 'Units'],
 		}),
 
 		createTenantInvitationCode: builder.mutation<
@@ -3052,11 +3170,30 @@ export const apiSlice = createApi({
 					}
 
 					const property = propertySnap.data();
-					const tenants = (property.tenants || []).filter(
-						(t: any) => t.id !== tenantId,
-					);
+					const tenants = property.tenants || [];
+					const tenantToRemove = tenants.find((t: any) => t.id === tenantId);
 
-					await updateDoc(propertyRef, { tenants });
+					// Remove tenant from property
+					const updatedTenants = tenants.filter((t: any) => t.id !== tenantId);
+					await updateDoc(propertyRef, { tenants: updatedTenants });
+
+					// Remove tenant from unit's occupants if they were assigned to a unit
+					if (tenantToRemove?.unit) {
+						const unitQuery = query(
+							collection(db, 'units'),
+							where('propertyId', '==', propertyId),
+							where('name', '==', tenantToRemove.unit),
+						);
+						const unitSnapshot = await getDocs(unitQuery);
+						if (!unitSnapshot.empty) {
+							const unitDoc = unitSnapshot.docs[0];
+							const unitData = unitDoc.data();
+							const occupants = (unitData.occupants || []).filter(
+								(occupant: any) => occupant.id !== tenantId,
+							);
+							await updateDoc(unitDoc.ref, { occupants });
+						}
+					}
 
 					return { data: undefined };
 				} catch (error: any) {

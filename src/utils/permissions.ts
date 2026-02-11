@@ -10,6 +10,11 @@ import {
 	TASK_EDIT_ROLES,
 	PAGE_VIEW_ROLES,
 } from '../constants/roles';
+import {
+	canSubmitMaintenanceRequests,
+	canViewTenantInfo,
+} from './subscriptionUtils';
+import { User } from '../Redux/Slices/userSlice';
 
 /**
  * Check if a user role can approve task completions
@@ -61,6 +66,7 @@ export const getRoleDisplayName = (role: UserRole): string => {
 		[USER_ROLES.MAINTENANCE]: 'Maintenance Technician',
 		[USER_ROLES.CONTRACTOR]: 'Contractor',
 		[USER_ROLES.TENANT]: 'Tenant',
+		[USER_ROLES.PROPERTY_GUEST]: 'Property Guest',
 	};
 	return displayNames[role] || role;
 };
@@ -77,6 +83,7 @@ export const getRoleColor = (role: UserRole): string => {
 		[USER_ROLES.MAINTENANCE]: '#f8c471',
 		[USER_ROLES.CONTRACTOR]: '#95a5a6',
 		[USER_ROLES.TENANT]: '#7f8c8d',
+		[USER_ROLES.PROPERTY_GUEST]: '#bdc3c7',
 	};
 	return colors[role] || '#95a5a6';
 };
@@ -211,6 +218,22 @@ export const canDeleteProperty = (
 	property: { userId?: string },
 ): boolean => {
 	return property.userId === userId;
+};
+
+/**
+ * Check if a user can submit maintenance requests based on their subscription
+ */
+export const canSubmitMaintenanceRequest = (user: User): boolean => {
+	if (!user.subscription) return false;
+	return canSubmitMaintenanceRequests(user.subscription);
+};
+
+/**
+ * Check if a user can view tenant information based on their subscription
+ */
+export const canViewTenantInformation = (user: User): boolean => {
+	if (!user.subscription) return false;
+	return canViewTenantInfo(user.subscription);
 };
 
 /**

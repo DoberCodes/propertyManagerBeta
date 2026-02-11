@@ -1,14 +1,34 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../Redux/store';
 import { useDetailPageData } from '../../Hooks/useDetailPageData';
 import {
 	DetailPageLayout,
 	TabContent,
 	ReusableTable,
+	EditTaskModal,
+	GenericModal,
+	FormGroup,
+	FormLabel,
+	FormInput,
+	FormSelect,
+	FormTextarea,
+	PrimaryButton,
 } from '../../Components/Library';
+import { Toolbar } from '../PropertyDetailPage/PropertyDetailPage.styles';
+import { AddTenantModal } from '../../Components/AddTenantModal';
+import { MaintenanceRequestModal } from '../../Components/MaintenanceRequestModal';
+import {
+	useCreateDeviceMutation,
+	useCreateTaskMutation,
+} from '../../Redux/API/apiSlice';
 import { getDeviceName } from '../../utils/detailPageUtils';
 import { TabConfig } from '../../types/DetailPage.types';
+import { addMaintenanceRequest } from '../../Redux/Slices/maintenanceRequestsSlice';
+import { createMaintenanceRequestUtil } from '../PropertyDetailPage/PropertyDetailPage.utils';
+import { MaintenanceRequest } from '../../types/MaintenanceRequest.types';
 import {
 	InfoGrid,
 	InfoCard,
@@ -53,6 +73,13 @@ export const UnitDetailPage: React.FC = () => {
 		| 'requests'
 	>('info');
 
+	// Modal states
+	const [showAddTenantModal, setShowAddTenantModal] = React.useState(false);
+	const [showAddDeviceModal, setShowAddDeviceModal] = React.useState(false);
+	const [showCreateTaskModal, setShowCreateTaskModal] = React.useState(false);
+	const [showMaintenanceRequestModal, setShowMaintenanceRequestModal] =
+		React.useState(false);
+
 	// Use the generic data hook
 	const {
 		property,
@@ -66,6 +93,23 @@ export const UnitDetailPage: React.FC = () => {
 		entityType: 'unit',
 		propertyType: 'Multi-Family',
 	});
+
+	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const dispatch = useDispatch();
+	const [createDevice] = useCreateDeviceMutation();
+	const [createTask] = useCreateTaskMutation();
+
+	const handleMaintenanceRequestSubmit = (request: MaintenanceRequest) => {
+		if (!property || !currentUser) return;
+
+		const newRequest = createMaintenanceRequestUtil(
+			request,
+			property,
+			currentUser,
+		);
+		dispatch(addMaintenanceRequest(newRequest));
+		setShowMaintenanceRequestModal(false);
+	};
 
 	// Tab configuration
 	const tabsConfig: TabConfig[] = [
@@ -96,11 +140,9 @@ export const UnitDetailPage: React.FC = () => {
 		<DetailPageLayout
 			title={unit.name}
 			subtitle={property.title}
-			breadcrumbs={[
-				{ label: property.title, path: `/property/${property.slug}` },
-				{ label: unit.name },
-			]}
-			badge={`${property.slug} / ${unit.name.replace(/\s+/g, '-').toLowerCase()}`}
+			badge={`${property.slug} / ${unit.name
+				.replace(/\s+/g, '-')
+				.toLowerCase()}`}
 			backPath={`/property/${property.slug}`}
 			tabs={tabsConfig}
 			activeTab={activeTab}
@@ -139,6 +181,11 @@ export const UnitDetailPage: React.FC = () => {
 					<TabContent>
 						<SectionContainer>
 							<SectionHeader>Unit Occupants</SectionHeader>
+							<Toolbar>
+								<PrimaryButton onClick={() => setShowAddTenantModal(true)}>
+									Add Occupant
+								</PrimaryButton>
+							</Toolbar>
 							{unit.occupants && unit.occupants.length > 0 ? (
 								<GridContainer>
 									<GridTable>
@@ -180,6 +227,11 @@ export const UnitDetailPage: React.FC = () => {
 					<TabContent>
 						<SectionContainer>
 							<SectionHeader>Unit Devices</SectionHeader>
+							<Toolbar>
+								<PrimaryButton onClick={() => setShowAddDeviceModal(true)}>
+									Add Device
+								</PrimaryButton>
+							</Toolbar>
 							{unit.deviceIds && unit.deviceIds.length > 0 ? (
 								<GridContainer>
 									<GridTable>
@@ -211,6 +263,11 @@ export const UnitDetailPage: React.FC = () => {
 					<TabContent>
 						<SectionContainer>
 							<SectionHeader>Unit Tasks</SectionHeader>
+							<Toolbar>
+								<PrimaryButton onClick={() => setShowCreateTaskModal(true)}>
+									Add Task
+								</PrimaryButton>
+							</Toolbar>
 							<ReusableTable
 								rowData={unitTasks.map((task) => ({
 									...task,
@@ -264,7 +321,9 @@ export const UnitDetailPage: React.FC = () => {
 										<tbody>
 											{unitMaintenanceHistory.map((record, idx) => (
 												<tr
-													key={`${record.originalTaskId || record.date || idx}`}>
+													key={`${
+														record.originalTaskId || record.date || idx
+													}`}>
 													<td>
 														{record.completionDate ||
 															record.approvedAt ||
@@ -306,6 +365,12 @@ export const UnitDetailPage: React.FC = () => {
 					<TabContent>
 						<SectionContainer>
 							<SectionHeader>Unit Maintenance Requests</SectionHeader>
+							<Toolbar>
+								<PrimaryButton
+									onClick={() => setShowMaintenanceRequestModal(true)}>
+									Add Request
+								</PrimaryButton>
+							</Toolbar>
 							{unitRequests.length > 0 ? (
 								<GridContainer>
 									<GridTable>
@@ -346,6 +411,135 @@ export const UnitDetailPage: React.FC = () => {
 					</TabContent>
 				)}
 			</ContentContainer>
+
+			{/* Modals */}
+			{showAddTenantModal && (
+				<AddTenantModal
+					open={showAddTenantModal}
+					onClose={() => setShowAddTenantModal(false)}
+					propertyId={property?.id || ''}
+				/>
+			)}
+
+			{showAddDeviceModal && (
+				<GenericModal
+					isOpen={showAddDeviceModal}
+					onClose={() => setShowAddDeviceModal(false)}
+					title='Add Device'
+					showActions={true}
+					onSubmit={async (e) => {
+						e.preventDefault();
+						const formData = new FormData(e.target as HTMLFormElement);
+						const data = {
+							name: formData.get('name') as string,
+							type: formData.get('type') as string,
+							userId: currentUser?.id || '',
+							location: {
+								propertyId: property?.id || '',
+								unitId: unit?.id || '',
+							},
+						};
+						try {
+							await createDevice(data).unwrap();
+							setShowAddDeviceModal(false);
+						} catch (error) {
+							console.error('Failed to create device:', error);
+						}
+					}}
+					primaryButtonLabel='Add Device'
+					secondaryButtonLabel='Cancel'>
+					<div
+						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+						<FormGroup>
+							<FormLabel>Device Name *</FormLabel>
+							<FormInput
+								type='text'
+								name='name'
+								placeholder='Enter device name'
+								required
+							/>
+						</FormGroup>
+
+						<FormGroup>
+							<FormLabel>Device Type *</FormLabel>
+							<FormSelect name='type' required>
+								<option value=''>Select device type</option>
+								<option value='thermostat'>Thermostat</option>
+								<option value='lock'>Smart Lock</option>
+								<option value='camera'>Security Camera</option>
+								<option value='sensor'>Sensor</option>
+								<option value='other'>Other</option>
+							</FormSelect>
+						</FormGroup>
+					</div>
+				</GenericModal>
+			)}
+
+			{showCreateTaskModal && (
+				<GenericModal
+					isOpen={showCreateTaskModal}
+					onClose={() => setShowCreateTaskModal(false)}
+					title='Create Task'
+					showActions={true}
+					onSubmit={async (e) => {
+						e.preventDefault();
+						const formData = new FormData(e.target as HTMLFormElement);
+						const taskData = {
+							title: formData.get('title') as string,
+							dueDate: formData.get('dueDate') as string,
+							status: 'Pending' as const,
+							notes: formData.get('notes') as string,
+							userId: currentUser?.id || '',
+							property: property?.title || '',
+							propertyId: property?.id || '',
+							unitId: unit?.id || '',
+						};
+						try {
+							await createTask(taskData).unwrap();
+							setShowCreateTaskModal(false);
+						} catch (error) {
+							console.error('Failed to create task:', error);
+						}
+					}}
+					primaryButtonLabel='Create Task'
+					secondaryButtonLabel='Cancel'>
+					<div
+						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+						<FormGroup>
+							<FormLabel>Task Title *</FormLabel>
+							<FormInput
+								type='text'
+								name='title'
+								placeholder='Enter task title'
+								required
+							/>
+						</FormGroup>
+
+						<FormGroup>
+							<FormLabel>Due Date</FormLabel>
+							<FormInput type='date' name='dueDate' />
+						</FormGroup>
+
+						<FormGroup>
+							<FormLabel>Notes</FormLabel>
+							<FormTextarea
+								name='notes'
+								placeholder='Enter task notes'
+								rows={3}
+							/>
+						</FormGroup>
+					</div>
+				</GenericModal>
+			)}
+
+			{showMaintenanceRequestModal && (
+				<MaintenanceRequestModal
+					isOpen={showMaintenanceRequestModal}
+					onClose={() => setShowMaintenanceRequestModal(false)}
+					onSubmit={handleMaintenanceRequestSubmit}
+					propertyTitle={property.title}
+				/>
+			)}
 		</DetailPageLayout>
 	);
 };

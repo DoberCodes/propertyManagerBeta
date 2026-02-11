@@ -41,7 +41,7 @@ export interface BreadcrumbItem {
 export interface DetailPageLayoutProps {
 	title: string;
 	subtitle?: string;
-	breadcrumbs: BreadcrumbItem[];
+	breadcrumbs?: BreadcrumbItem[];
 	badge?: string;
 	onBack: () => void;
 	tabs: TabConfig[];

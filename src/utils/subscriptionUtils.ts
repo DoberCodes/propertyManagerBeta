@@ -137,12 +137,18 @@ export const getMaxPropertiesForPlan = (planId: string): number => {
 };
 
 /**
- * Check if user can add more properties based on their subscription
+ * Check if user can add more properties based on their subscription and role
  */
 export const canAddProperty = (
 	subscription: SubscriptionData,
 	currentPropertyCount: number,
+	userRole?: string,
 ): boolean => {
+	// Property guests cannot create their own properties
+	if (userRole === 'property_guest') {
+		return false;
+	}
+
 	if (!isSubscriptionActive(subscription)) {
 		return false; // No active subscription
 	}
@@ -220,6 +226,36 @@ export const hasPrioritySupport = (subscription: SubscriptionData): boolean => {
 		(p) => p.id === subscription.plan,
 	);
 	return plan?.permissions.prioritySupport || false;
+};
+
+/**
+ * Check if subscription plan allows submitting maintenance requests
+ */
+export const canSubmitMaintenanceRequests = (
+	subscription: SubscriptionData,
+): boolean => {
+	if (!isSubscriptionActive(subscription)) {
+		return false;
+	}
+
+	const plan = Object.values(SUBSCRIPTION_PLANS).find(
+		(p) => p.id === subscription.plan,
+	);
+	return plan?.permissions.canSubmitMaintenanceRequests || false;
+};
+
+/**
+ * Check if subscription plan allows viewing tenant information
+ */
+export const canViewTenantInfo = (subscription: SubscriptionData): boolean => {
+	if (!isSubscriptionActive(subscription)) {
+		return false;
+	}
+
+	const plan = Object.values(SUBSCRIPTION_PLANS).find(
+		(p) => p.id === subscription.plan,
+	);
+	return plan?.permissions.canViewTenantInfo || false;
 };
 
 /**

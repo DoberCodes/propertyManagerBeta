@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../Redux/store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../Redux/store/store';
 import { SideNav, MobileNav, TopNav } from '../../Components/Library/Navbar';
 import { DataLoader } from '../../Components/DataLoader';
 import { OnboardingFlow } from '../../Components/OnboardingFlow';
@@ -10,9 +10,11 @@ import {
 	useGetPropertiesQuery,
 	useUpdateUserMutation,
 } from '../../Redux/API/apiSlice';
+import { setCurrentUser } from '../../Redux/Slices/userSlice';
 
 export const Layout = () => {
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const dispatch = useDispatch<AppDispatch>();
 	const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 	const [updateUser] = useUpdateUserMutation();
 
@@ -48,6 +50,14 @@ export const Layout = () => {
 					id: currentUser.id,
 					updates: { onboardingCompleted: true },
 				}).unwrap();
+
+				// Update local Redux state immediately
+				dispatch(
+					setCurrentUser({
+						...currentUser,
+						onboardingCompleted: true,
+					}),
+				);
 			} catch (error) {
 				console.error('Failed to update onboarding status in database:', error);
 			}
@@ -63,6 +73,14 @@ export const Layout = () => {
 					id: currentUser.id,
 					updates: { onboardingCompleted: true },
 				}).unwrap();
+
+				// Update local Redux state immediately
+				dispatch(
+					setCurrentUser({
+						...currentUser,
+						onboardingCompleted: true,
+					}),
+				);
 			} catch (error) {
 				console.error('Failed to update onboarding status in database:', error);
 			}

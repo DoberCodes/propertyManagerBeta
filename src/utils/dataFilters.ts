@@ -1,25 +1,38 @@
 import { Property, PropertyGroup } from '../Redux/Slices/propertyDataSlice';
-import { Task } from '../Redux/API/apiSlice';
+import { Task, PropertyShare } from '../Redux/API/apiSlice';
 import { TeamMember, TeamGroup } from '../Redux/Slices/teamSlice';
 import { User } from '../Redux/Slices/userSlice';
 import { hasFullAccess, hasLimitedAccess } from './permissions';
-import { UserRole } from '../constants/roles';
+import { UserRole, USER_ROLES } from '../constants/roles';
 
 /**
  * Filter properties based on user role and assignments
  * Full access roles see all properties
  * Limited access roles only see properties they're assigned to
+ * Property guests only see properties shared with them
  */
 export const filterPropertiesByRole = (
 	properties: Property[],
 	currentUser: User | null,
 	teamMembers?: TeamMember[],
+	propertyShares?: PropertyShare[],
 ): Property[] => {
 	if (!currentUser) return [];
 
 	// Full access roles see everything
 	if (hasFullAccess(currentUser.role as UserRole)) {
 		return properties;
+	}
+
+	// Property guests only see shared properties
+	if (currentUser.role === USER_ROLES.PROPERTY_GUEST && propertyShares) {
+		const sharedPropertyIds = propertyShares
+			.filter((share) => share.sharedWithEmail === currentUser.email)
+			.map((share) => share.propertyId);
+
+		return properties.filter((property) =>
+			sharedPropertyIds.includes(property.id),
+		);
 	}
 
 	// Limited access roles only see assigned properties
@@ -49,12 +62,30 @@ export const filterPropertyGroupsByRole = (
 	groups: PropertyGroup[],
 	currentUser: User | null,
 	teamMembers?: TeamMember[],
+	propertyShares?: PropertyShare[],
 ): PropertyGroup[] => {
 	if (!currentUser) return [];
 
 	// Full access roles see everything
 	if (hasFullAccess(currentUser.role as UserRole)) {
 		return groups;
+	}
+
+	// Property guests only see groups with shared properties
+	if (currentUser.role === USER_ROLES.PROPERTY_GUEST && propertyShares) {
+		const sharedPropertyIds = propertyShares
+			.filter((share) => share.sharedWithEmail === currentUser.email)
+			.map((share) => share.propertyId);
+
+		return groups
+			.map((group) => ({
+				...group,
+				properties:
+					group.properties?.filter((property) =>
+						sharedPropertyIds.includes(property.id),
+					) || [],
+			}))
+			.filter((group) => group.properties && group.properties.length > 0);
 	}
 
 	// Limited access roles only see groups with assigned properties
@@ -86,12 +117,14 @@ export const filterPropertyGroupsByRole = (
  * Filter tasks based on user role and property assignments
  * Full access roles see all tasks
  * Limited access roles only see tasks for their assigned properties
+ * Property guests only see tasks for shared properties
  */
 export const filterTasksByRole = (
 	tasks: Task[],
 	currentUser: User | null,
 	teamMembers?: TeamMember[],
 	allProperties?: Property[],
+	propertyShares?: PropertyShare[],
 ): Task[] => {
 	if (!currentUser) return [];
 
@@ -100,6 +133,23 @@ export const filterTasksByRole = (
 		// Filter out tasks for properties that are hidden from dashboard
 		const hiddenIds = currentUser.hiddenPropertyIds || [];
 		return tasks.filter((task) => !hiddenIds.includes(task.propertyId));
+	}
+
+	// Property guests only see tasks for shared properties
+	if (
+		currentUser.role === USER_ROLES.PROPERTY_GUEST &&
+		propertyShares &&
+		allProperties
+	) {
+		const sharedPropertyIds = propertyShares
+			.filter((share) => share.sharedWithEmail === currentUser.email)
+			.map((share) => share.propertyId);
+
+		const sharedPropertyNames = allProperties
+			.filter((property) => sharedPropertyIds.includes(property.id))
+			.map((property) => property.title);
+
+		return tasks.filter((task) => sharedPropertyNames.includes(task.property));
 	}
 
 	// Limited access roles only see tasks for assigned properties

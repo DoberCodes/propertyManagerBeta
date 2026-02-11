@@ -12,6 +12,7 @@ import { RootState } from '../../Redux/store/store';
 import { User } from '../../Redux/Slices/userSlice';
 import { addTask } from '../../Redux/Slices/propertyDataSlice';
 import { useTaskHandlers } from './useTaskHandlers';
+import { useUnitHandlers } from './useUnitHandlers';
 import { usePropertyEditHandlers } from './usePropertyEditHandlers';
 import { useMaintenanceRequestHandlers } from './useMaintenanceRequestHandlers';
 import { getPropertyFieldValueUtil } from './PropertyDetailPage.utils';
@@ -22,6 +23,7 @@ import {
 	useCreateTaskMutation,
 	useDeleteTaskMutation,
 	useGetPropertiesQuery,
+	useGetUnitsQuery,
 	useUpdatePropertyMutation,
 	useCreateNotificationMutation,
 	useGetPropertySharesQuery,
@@ -55,6 +57,7 @@ import { DeleteConfirmationModal } from '../../Components/Library/Modal/DeleteCo
 import { Tabs, GenericModal } from '../../Components/Library';
 import {
 	EditTaskModal,
+	CreateUnitModal,
 	FormGroup,
 	FormLabel,
 	FormInput,
@@ -326,6 +329,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		onDeleteClick: handleTaskDeleteClick,
 		deleteTaskMutation,
 	});
+	const unitHandlers = useUnitHandlers(property?.id || '');
 	const propertyHandlers = usePropertyEditHandlers();
 	const maintenanceHandlers = useMaintenanceRequestHandlers(
 		property,
@@ -337,6 +341,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		property?.id || '',
 		{ skip: !property?.id },
 	);
+
+	// Fetch units for this property
+	const { data: propertyUnits = [] } = useGetUnitsQuery(property?.id || '', {
+		skip: !property?.id,
+	});
 
 	// Destructure task handlers
 	const {
@@ -365,6 +374,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		handleTaskCompletionSuccess,
 		confirmDeleteTask,
 	} = taskHandlers;
+
+	// Destructure unit handlers
+	const {
+		showUnitDialog,
+		setShowUnitDialog,
+		unitFormData,
+		handleCreateUnit,
+		handleUnitFormChange,
+		handleUnitFormSubmit,
+		handleDeleteUnit,
+	} = unitHandlers;
 
 	useEffect(() => {
 		if (!editingTaskId) return;
@@ -1409,7 +1429,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					)}
 				{/* Units Tab */}
 				{activeTab === 'units' && property?.propertyType === 'Multi-Family' && (
-					<UnitsTab property={property} />
+					<UnitsTab
+						property={property}
+						units={propertyUnits}
+						handleCreateUnit={handleCreateUnit}
+						handleDeleteUnit={handleDeleteUnit}
+					/>
 				)}
 
 				{/* Maintenance Requests Tab */}
@@ -1503,6 +1528,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				]}
 				priorityOptions={['Low', 'Medium', 'High', 'Urgent']}
 				assigneeOptions={assigneeOptions}
+			/>
+
+			{/* Unit Create Dialog */}
+			<CreateUnitModal
+				isOpen={showUnitDialog}
+				formData={unitFormData}
+				onClose={() => setShowUnitDialog(false)}
+				onSubmit={handleUnitFormSubmit}
+				onChange={handleUnitFormChange}
 			/>
 
 			{/* Task Assignment Dialog */}

@@ -5,24 +5,36 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import { EmptyState } from '../PropertyDetailPage.styles';
+import {
+	Toolbar,
+	ToolbarButton,
+	EmptyState,
+} from '../PropertyDetailPage.styles';
 
-export const UnitsTab: React.FC<UnitsTabProps> = ({ property }) => {
+export const UnitsTab: React.FC<UnitsTabProps> = ({
+	property,
+	units,
+	handleCreateUnit,
+	handleDeleteUnit,
+}) => {
 	const navigate = useNavigate();
 
 	return (
 		<SectionContainer>
 			<SectionHeader>Units</SectionHeader>
-			{property?.units && property.units.length > 0 ? (
+			<Toolbar>
+				<ToolbarButton onClick={handleCreateUnit}>+ Create Unit</ToolbarButton>
+			</Toolbar>
+			{units && units.length > 0 ? (
 				<div
 					style={{
 						display: 'grid',
 						gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
 						gap: '16px',
 					}}>
-					{property.units.map((unit: any) => (
+					{units.map((unit: any) => (
 						<div
-							key={unit.name}
+							key={unit.id}
 							style={{
 								padding: '16px',
 								border: '1px solid #e5e7eb',
@@ -30,6 +42,7 @@ export const UnitsTab: React.FC<UnitsTabProps> = ({ property }) => {
 								backgroundColor: '#f9fafb',
 								cursor: 'pointer',
 								transition: 'all 0.2s ease',
+								position: 'relative',
 							}}
 							onClick={() =>
 								navigate(
@@ -48,6 +61,37 @@ export const UnitsTab: React.FC<UnitsTabProps> = ({ property }) => {
 								e.currentTarget.style.backgroundColor = '#f9fafb';
 								e.currentTarget.style.transform = 'translateY(0)';
 							}}>
+							<button
+								onClick={(e) => {
+									e.stopPropagation();
+									handleDeleteUnit(unit.id);
+								}}
+								style={{
+									position: 'absolute',
+									top: '8px',
+									right: '8px',
+									backgroundColor: '#ef4444',
+									color: 'white',
+									border: 'none',
+									borderRadius: '4px',
+									width: '24px',
+									height: '24px',
+									cursor: 'pointer',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									fontSize: '12px',
+									fontWeight: 'bold',
+								}}
+								onMouseEnter={(e) => {
+									e.currentTarget.style.backgroundColor = '#dc2626';
+								}}
+								onMouseLeave={(e) => {
+									e.currentTarget.style.backgroundColor = '#ef4444';
+								}}
+								title='Delete unit'>
+								×
+							</button>
 							<h3
 								style={{
 									margin: '0 0 8px 0',

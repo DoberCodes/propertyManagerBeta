@@ -296,6 +296,19 @@ export const PasswordMatchText = styled.p<{ matched: boolean }>`
 	}
 `;
 
+export const EmailStatusText = styled.p<{ error?: boolean }>`
+	margin: 8px 0;
+	font-size: 13px;
+	color: ${(props) => (props.error ? COLORS.error : COLORS.textSecondary)};
+	text-align: left;
+	font-weight: 500;
+
+	@media (max-width: 480px) {
+		font-size: 12px;
+		margin: 6px 0;
+	}
+`;
+
 export const RegisterWrapper = styled.div`
 	margin: 28px 0 0 0;
 	text-align: center;

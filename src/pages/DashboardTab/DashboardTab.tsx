@@ -200,6 +200,7 @@ export const DashboardTab = () => {
 			currentUser,
 			teamMembers,
 			allProperties,
+			propertyShares,
 		);
 		const activeTasks = filtered.filter((task) => task.status !== 'Completed');
 
@@ -235,7 +236,14 @@ export const DashboardTab = () => {
 
 		console.log('Carousel tasks:', sorted.length, sorted);
 		return sorted;
-	}, [allTasks, currentUser, teamMembers, allProperties, taskDaysFilter]);
+	}, [
+		allTasks,
+		currentUser,
+		teamMembers,
+		allProperties,
+		taskDaysFilter,
+		propertyShares,
+	]);
 
 	const filteredTasks = useMemo(() => {
 		// Enrich carousel tasks with propertyTitle for display in table

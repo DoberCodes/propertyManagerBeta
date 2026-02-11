@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {
 	useAddTenantMutation,
 	useCreateTenantInvitationCodeMutation,
+	useGetUnitsQuery,
 	useRevokeTenantInvitationCodeMutation,
 	useUpdateTenantMutation,
 } from '../../Redux/API/apiSlice';
@@ -44,6 +45,11 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 	const [revokeTenantInvitationCode, { isLoading: isRevoking }] =
 		useRevokeTenantInvitationCodeMutation();
 
+	// Fetch units for this property
+	const { data: units = [] } = useGetUnitsQuery(propertyId, {
+		skip: !propertyId,
+	});
+
 	useEffect(() => {
 		if (mode === 'edit' && tenant) {
 			setFormData({
@@ -74,7 +80,9 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 		return `TENANT-${partA}-${partB}`;
 	};
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+	) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
@@ -120,18 +128,6 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 				return;
 			}
 
-			await addTenant({
-				propertyId,
-				firstName: formData.firstName,
-				lastName: formData.lastName,
-				email: formData.email.toLowerCase(),
-				phone: formData.phone,
-				unit: formData.unit,
-				leaseStart: formData.leaseStart,
-				leaseEnd: formData.leaseEnd,
-			}).unwrap();
-
-			setSuccess('Tenant added successfully!');
 			const normalizedEmail = formData.email.toLowerCase();
 			const promoCodeResult = await createTenantInvitationCode({
 				propertyId,
@@ -151,6 +147,8 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 				leaseEnd: formData.leaseEnd,
 				tenantInvitationCodeId: promoCodeId,
 			}).unwrap();
+
+			setSuccess('Tenant added successfully!');
 			setFormData({
 				firstName: '',
 				lastName: '',
@@ -307,13 +305,25 @@ export const AddTenantModal: React.FC<AddTenantModalProps> = ({
 
 			<FormGroup>
 				<FormLabel>Unit</FormLabel>
-				<FormInput
-					type='text'
+				<select
 					name='unit'
 					value={formData.unit}
 					onChange={handleChange}
-					placeholder='e.g., 101, Unit A'
-				/>
+					style={{
+						width: '100%',
+						padding: '8px 12px',
+						border: '1px solid #d1d5db',
+						borderRadius: '6px',
+						fontSize: '14px',
+						backgroundColor: 'white',
+					}}>
+					<option value=''>Select a unit</option>
+					{units.map((unit: any) => (
+						<option key={unit.id} value={unit.name}>
+							{unit.name}
+						</option>
+					))}
+				</select>
 			</FormGroup>
 
 			<FormGroup>

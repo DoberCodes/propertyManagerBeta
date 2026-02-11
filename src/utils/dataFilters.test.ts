@@ -39,6 +39,15 @@ describe('dataFilters utility functions', () => {
 			},
 		];
 
+		const mockPropertyShares = [
+			{
+				id: 'share1',
+				propertyId: 'prop1',
+				sharedWithEmail: 'guest@example.com',
+				permission: 'viewer',
+			},
+		];
+
 		const mockUser = {
 			id: 'user1',
 			email: 'contractor@example.com',
@@ -73,17 +82,18 @@ describe('dataFilters utility functions', () => {
 			).toBe(true);
 		});
 
-		it('should filter tasks by linkedProperties for tenant role', () => {
-			const tenantUser = {
+		it('should filter tasks by shared properties for property guest role', () => {
+			const guestUser = {
 				...mockUser,
-				role: USER_ROLES.TENANT,
-				email: 'tenant@example.com',
+				role: USER_ROLES.PROPERTY_GUEST,
+				email: 'guest@example.com',
 			};
 			const result = filterTasksByRole(
 				mockTasks as any,
-				tenantUser as any,
+				guestUser as any,
 				mockTeamMembers as any,
 				mockProperties as any,
+				mockPropertyShares as any,
 			);
 			expect(result).toHaveLength(2);
 			expect(

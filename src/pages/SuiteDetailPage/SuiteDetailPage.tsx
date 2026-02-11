@@ -65,11 +65,19 @@ export const SuiteDetailPage: React.FC = () => {
 		{ id: 'info', label: 'Suite Info' },
 		{
 			id: 'occupants',
-			label: `Occupants${(suite?.occupants || []).length ? ` (${(suite?.occupants || []).length})` : ''}`,
+			label: `Occupants${
+				(suite?.occupants || []).length
+					? ` (${(suite?.occupants || []).length})`
+					: ''
+			}`,
 		},
 		{
 			id: 'devices',
-			label: `Devices${(suite?.deviceIds || []).length ? ` (${(suite?.deviceIds || []).length})` : ''}`,
+			label: `Devices${
+				(suite?.deviceIds || []).length
+					? ` (${(suite?.deviceIds || []).length})`
+					: ''
+			}`,
 		},
 		{ id: 'tasks', label: `Tasks (${suiteTasks.length})` },
 		{
@@ -95,10 +103,6 @@ export const SuiteDetailPage: React.FC = () => {
 		<DetailPageLayout
 			title={suite.name}
 			subtitle={property.title}
-			breadcrumbs={[
-				{ label: property.title, path: `/property/${property.slug}` },
-				{ label: suite.name },
-			]}
 			backPath={`/property/${property.slug}`}
 			tabs={tabsConfig}
 			activeTab={activeTab}
@@ -258,7 +262,9 @@ export const SuiteDetailPage: React.FC = () => {
 										<tbody>
 											{suiteMaintenanceHistory.map((record, idx) => (
 												<tr
-													key={`${record.originalTaskId || record.date || idx}`}>
+													key={`${
+														record.originalTaskId || record.date || idx
+													}`}>
 													<td>
 														{record.completionDate ||
 															record.approvedAt ||

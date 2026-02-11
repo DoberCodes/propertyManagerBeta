@@ -7,6 +7,7 @@ export const USER_ROLES = {
 	MAINTENANCE: 'maintenance',
 	CONTRACTOR: 'contractor',
 	TENANT: 'tenant',
+	PROPERTY_GUEST: 'property_guest',
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
@@ -20,6 +21,7 @@ export const ROLE_HIERARCHY = {
 	[USER_ROLES.MAINTENANCE]: 40,
 	[USER_ROLES.CONTRACTOR]: 30,
 	[USER_ROLES.TENANT]: 10,
+	[USER_ROLES.PROPERTY_GUEST]: 5,
 } as const;
 
 // Roles that can approve task completions
@@ -64,6 +66,7 @@ export const LIMITED_ACCESS_ROLES = [
 	USER_ROLES.MAINTENANCE,
 	USER_ROLES.CONTRACTOR,
 	USER_ROLES.TENANT,
+	USER_ROLES.PROPERTY_GUEST,
 ] as const;
 
 // Roles that can edit tasks

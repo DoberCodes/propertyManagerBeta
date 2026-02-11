@@ -6,6 +6,7 @@ import {
 	User as FirebaseUser,
 	updateProfile,
 	sendPasswordResetEmail,
+	fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import {
 	collection,
@@ -16,6 +17,7 @@ import {
 	doc,
 	getDoc,
 	setDoc,
+	addDoc,
 	serverTimestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -51,6 +53,32 @@ export const signInWithEmail = async (
 	}
 };
 
+/**
+ * Check if an email address is already registered
+ */
+export const checkEmailExists = async (email: string): Promise<boolean> => {
+	try {
+		// Check if email exists in Firebase Auth
+		const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+		if (signInMethods.length > 0) {
+			return true;
+		}
+
+		// Also check Firestore users collection as backup
+		const q = query(
+			collection(db, 'users'),
+			where('email', '==', email.toLowerCase().trim()),
+		);
+		const snapshot = await getDocs(q);
+		return !snapshot.empty;
+	} catch (error: any) {
+		// If there's an error (e.g., network issue), assume email doesn't exist
+		// to not block registration unnecessarily
+		console.warn('Error checking email existence:', error);
+		return false;
+	}
+};
+
 const findActiveTenantPromoCode = async (promoCode: string) => {
 	const normalizedCode = promoCode.trim().toLowerCase();
 	const q = query(
@@ -73,6 +101,8 @@ const findActiveTenantPromoCode = async (promoCode: string) => {
 const getPriceIdForPlan = (planId: string): string => {
 	const priceMap: Record<string, string> = {
 		free: STRIPE_PLANS.FREE,
+		guest: STRIPE_PLANS.FREE, // Guests use free plan (no charge)
+		tenant: STRIPE_PLANS.FREE, // Tenants use free plan (no charge)
 		homeowner: STRIPE_PLANS.HOMEOWNER,
 		basic: STRIPE_PLANS.BASIC,
 		professional: STRIPE_PLANS.PROFESSIONAL,
@@ -156,6 +186,16 @@ export const signUpWithEmail = async (
 			promoDocRef = promoDoc.ref;
 		}
 
+		// For property guests, use a special "guest" plan
+		if (role === USER_ROLES.PROPERTY_GUEST) {
+			selectedPlan = 'guest';
+		}
+
+		// For tenants, use a special "tenant" plan
+		if (role === USER_ROLES.TENANT) {
+			selectedPlan = 'tenant';
+		}
+
 		// Create Firebase Auth user
 		const userCredential = await createUserWithEmailAndPassword(
 			auth,
@@ -204,6 +244,14 @@ export const signUpWithEmail = async (
 			updatedAt: serverTimestamp(),
 			subscription,
 		});
+
+		// Auto-accept pending guest invitations for property guests
+		if (role === USER_ROLES.PROPERTY_GUEST) {
+			await autoAcceptGuestInvitations(
+				userCredential.user.uid,
+				email.trim().toLowerCase(),
+			);
+		}
 
 		if (promoDocRef) {
 			await updateDoc(promoDocRef, {
@@ -466,6 +514,53 @@ const getRoleTitleFromRole = (role: string): string => {
 		[USER_ROLES.MAINTENANCE]: 'Maintenance Technician',
 		[USER_ROLES.CONTRACTOR]: 'Contractor',
 		[USER_ROLES.TENANT]: 'Tenant',
+		[USER_ROLES.PROPERTY_GUEST]: 'Property Guest',
 	};
 	return roleTitles[role] || 'User';
+};
+
+/**
+ * Auto-accept pending guest invitations for a newly registered property guest
+ */
+const autoAcceptGuestInvitations = async (
+	userId: string,
+	userEmail: string,
+) => {
+	try {
+		// Find all pending guest invitations for this email
+		const invitationsQuery = query(
+			collection(db, 'userInvitations'),
+			where('toEmail', '==', userEmail.toLowerCase()),
+			where('status', '==', 'pending'),
+			where('isGuestInvitation', '==', true),
+		);
+		const invitationsSnapshot = await getDocs(invitationsQuery);
+
+		for (const invitationDoc of invitationsSnapshot.docs) {
+			const invitation = invitationDoc.data() as any;
+
+			// Create property share
+			const now = new Date().toISOString();
+			const shareData = {
+				propertyId: invitation.propertyId,
+				ownerId: invitation.fromUserId,
+				sharedWithUserId: userId,
+				sharedWithEmail: userEmail,
+				sharedWithFirstName: '', // Will be updated when user profile is fetched
+				sharedWithLastName: '',
+				permission: invitation.permission,
+				createdAt: now,
+				updatedAt: now,
+			};
+			await addDoc(collection(db, 'propertyShares'), shareData);
+
+			// Update invitation status
+			await updateDoc(invitationDoc.ref, { status: 'accepted' });
+
+			// Create notifications (similar to acceptInvitation mutation)
+			// ... notification creation code would go here
+		}
+	} catch (error) {
+		console.error('Error auto-accepting guest invitations:', error);
+	}
 };

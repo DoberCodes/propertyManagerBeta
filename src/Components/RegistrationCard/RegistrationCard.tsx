@@ -20,11 +20,12 @@ import {
 	TenantPlanTitle,
 	TenantPlanPrice,
 	TenantPlanNote,
+	EmailStatusText,
 } from './RegistrationCard.styles';
 import { faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { signUpWithEmail } from '../../services/authService';
+import { signUpWithEmail, checkEmailExists } from '../../services/authService';
 import { USER_ROLES } from '../../constants/roles';
 import { useDispatch } from 'react-redux';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
@@ -38,6 +39,7 @@ const getRoleFromUserType = (userType: string): string => {
 		homeowner: USER_ROLES.ADMIN, // Homeowners are admins of their properties
 		propertyManager: USER_ROLES.PROPERTY_MANAGER,
 		tenant: USER_ROLES.TENANT,
+		propertyGuest: USER_ROLES.PROPERTY_GUEST,
 	};
 	return roleMapping[userType] || USER_ROLES.ADMIN; // Default to admin
 };
@@ -47,6 +49,8 @@ export const RegistrationCard = () => {
 	const [firstName, setFirstName] = useState<string>('');
 	const [lastName, setLastName] = useState<string>('');
 	const [email, setEmail] = useState<string>('');
+	const [emailChecking, setEmailChecking] = useState<boolean>(false);
+	const [emailExists, setEmailExists] = useState<boolean>(false);
 	const [password, setPassword] = useState<string>('');
 	const [passwordConfirm, setPasswordConfirm] = useState<string>('');
 	const [phoneNumber, setPhoneNumber] = useState<string>('');
@@ -76,6 +80,22 @@ export const RegistrationCard = () => {
 		setSelectedDocument(null);
 	};
 
+	const handleEmailBlur = async () => {
+		if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			return;
+		}
+		setEmailChecking(true);
+		setEmailExists(false);
+		try {
+			const exists = await checkEmailExists(email.trim());
+			setEmailExists(exists);
+		} catch (error) {
+			console.error('Error checking email existence:', error);
+		} finally {
+			setEmailChecking(false);
+		}
+	};
+
 	const validateStep1 = () => {
 		if (!firstName.trim()) {
 			setError('Please enter your first name');
@@ -87,11 +107,15 @@ export const RegistrationCard = () => {
 		}
 		if (!userType) {
 			setError(
-				'Please select if you are registering as a homeowner, property manager, or tenant',
+				'Please select if you are registering as a homeowner, property manager, tenant, or property guest',
 			);
 			return false;
 		}
-		if (!['homeowner', 'propertyManager', 'tenant'].includes(userType)) {
+		if (
+			!['homeowner', 'propertyManager', 'tenant', 'propertyGuest'].includes(
+				userType,
+			)
+		) {
 			setError('Invalid user type selected');
 			return false;
 		}
@@ -106,6 +130,12 @@ export const RegistrationCard = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
 			setError('Please enter a valid email address');
+			return false;
+		}
+		if (emailExists) {
+			setError(
+				'This email is already registered. Please use a different email or sign in instead.',
+			);
 			return false;
 		}
 		if (password.length < 8) {
@@ -254,7 +284,8 @@ export const RegistrationCard = () => {
 						required
 					/>
 					<QuestionLabel>
-						Are you registering as a homeowner, property manager, or tenant?
+						Are you registering as a homeowner, property manager, tenant, or
+						property guest?
 					</QuestionLabel>
 					<RadioGrid>
 						<RadioOption>
@@ -300,6 +331,21 @@ export const RegistrationCard = () => {
 							/>
 							Tenant
 						</RadioOption>
+						<RadioOption>
+							<input
+								type='radio'
+								name='userType'
+								value='propertyGuest'
+								checked={userType === 'propertyGuest'}
+								onChange={() => {
+									setUserType('propertyGuest');
+									setPromoCode('');
+									setError('');
+								}}
+								required
+							/>
+							Property Guest
+						</RadioOption>
 					</RadioGrid>
 					<Submit type='button' onClick={handleNext}>
 						Next
@@ -319,9 +365,20 @@ export const RegistrationCard = () => {
 						onChange={(event) => {
 							setEmail(event.target.value);
 							setError('');
+							setEmailExists(false);
 						}}
+						onBlur={handleEmailBlur}
 						required
 					/>
+					{emailChecking && (
+						<EmailStatusText>Checking email availability...</EmailStatusText>
+					)}
+					{!emailChecking && emailExists && email.trim() && (
+						<EmailStatusText error>
+							This email is already registered. Please use a different email or
+							sign in instead.
+						</EmailStatusText>
+					)}
 					<PasswordInputWrapper>
 						<Input
 							placeholder='Password (min 8 characters) *'

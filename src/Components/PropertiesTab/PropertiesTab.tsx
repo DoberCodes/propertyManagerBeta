@@ -22,6 +22,7 @@ import {
 	useCreateNotificationMutation,
 	useUpdateUserMutation,
 	useDeletePropertyShareMutation,
+	useGetAllPropertySharesForUserQuery,
 } from '../../Redux/API/apiSlice';
 import { db } from '../../config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -86,6 +87,8 @@ export const Properties = () => {
 	const [updateUser] = useUpdateUserMutation();
 	const [deletePropertyShare] = useDeletePropertyShareMutation();
 
+	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
+
 	// Check if user can manage properties based on subscription plan
 	// All paid plans allow property management, free plan has limited access
 	// Expired users cannot add new properties
@@ -132,6 +135,7 @@ export const Properties = () => {
 			groupsWithProperties as any[],
 			currentUser,
 			teamMembers?.filter((m): m is TeamMember => m !== undefined),
+			propertyShares,
 		);
 		// Sort groups so "My Properties" appears first
 		return groups.sort((a, b) => {
@@ -141,7 +145,7 @@ export const Properties = () => {
 			if (bName === 'my properties') return 1;
 			return 0;
 		});
-	}, [groupsWithProperties, currentUser, teamMembers]);
+	}, [groupsWithProperties, currentUser, teamMembers, propertyShares]);
 
 	const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -248,7 +252,11 @@ export const Properties = () => {
 	const handleAddPropertyGlobalClick = async () => {
 		// Check subscription limits
 		if (currentUser?.subscription) {
-			const canAdd = canAddProperty(currentUser.subscription, totalProperties);
+			const canAdd = canAddProperty(
+				currentUser.subscription,
+				totalProperties,
+				currentUser.role,
+			);
 			if (!canAdd) {
 				const remainingSlots = getRemainingPropertySlots(
 					currentUser.subscription,

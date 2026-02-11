@@ -14,6 +14,7 @@ import {
 	useCreateDeviceMutation,
 	useUpdateDeviceMutation,
 	useDeleteDeviceMutation,
+	useGetUnitsQuery,
 } from '../../../Redux/API/apiSlice';
 import { GenericModal } from '../../../Components/Library';
 import {
@@ -60,6 +61,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	});
 
 	const { data: devices = [], isLoading } = useGetDevicesQuery(property.id);
+	const { data: units = [] } = useGetUnitsQuery(property.id);
 	const [createDevice] = useCreateDeviceMutation();
 	const [updateDevice] = useUpdateDeviceMutation();
 	const [deleteDevice] = useDeleteDeviceMutation();
@@ -251,6 +253,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 					isOpen={showDeviceModal}
 					onClose={handleCloseModal}
 					title={editingDevice ? 'Edit Device' : 'Add New Device'}
+					showActions={true}
 					onSubmit={handleSubmit}
 					primaryButtonLabel={editingDevice ? 'Update Device' : 'Add Device'}
 					secondaryButtonLabel='Cancel'>
@@ -378,6 +381,36 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 									fontSize: '14px',
 								}}
 							/>
+						</div>
+
+						<div>
+							<label
+								style={{
+									display: 'block',
+									marginBottom: '4px',
+									fontWeight: 'bold',
+								}}>
+								Unit (Optional)
+							</label>
+							<select
+								value={deviceFormData.location.unitId || ''}
+								onChange={(e) =>
+									handleFormChange('location.unitId', e.target.value)
+								}
+								style={{
+									width: '100%',
+									padding: '8px',
+									border: '1px solid #ccc',
+									borderRadius: '4px',
+									fontSize: '14px',
+								}}>
+								<option value=''>Property Level (no specific unit)</option>
+								{units.map((unit: any) => (
+									<option key={unit.id} value={unit.id}>
+										{unit.name}
+									</option>
+								))}
+							</select>
 						</div>
 					</div>
 				</GenericModal>

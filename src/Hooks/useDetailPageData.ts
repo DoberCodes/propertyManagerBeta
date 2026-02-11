@@ -6,7 +6,10 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../Redux/store/store';
-import { useGetMaintenanceHistoryByPropertyQuery } from '../Redux/API/apiSlice';
+import {
+	useGetMaintenanceHistoryByPropertyQuery,
+	useGetUnitsQuery,
+} from '../Redux/API/apiSlice';
 import { Property } from '../types/Property.types';
 import { Task } from '../types/Task.types';
 import { MaintenanceRequestItem } from '../types/MaintenanceRequest.types';
@@ -46,48 +49,61 @@ export const useDetailPageData = ({
 		(state: RootState) => state.maintenanceRequests.requests,
 	);
 
-	// Find the property and entity (unit/suite)
-	const { property, entity } = useMemo(() => {
+	// Find the property first
+	const property = useMemo(() => {
 		for (const group of propertyGroups) {
 			for (const prop of group.properties || []) {
 				if (prop.slug === propertySlug) {
-					// For property detail page
-					if (entityType === 'property') {
-						return { property: prop, entity: prop };
-					}
-
-					// For unit detail page
-					if (
-						entityType === 'unit' &&
-						entityName &&
-						propertyType === 'Multi-Family'
-					) {
-						const foundUnit = (prop.units as any[])?.find(
-							(u) => u.name === decodeURIComponent(entityName),
-						);
-						if (foundUnit) {
-							return { property: prop, entity: foundUnit };
-						}
-					}
-
-					// For suite detail page
-					if (
-						entityType === 'suite' &&
-						entityName &&
-						propertyType === 'Commercial'
-					) {
-						const foundSuite = (prop.suites as any[])?.find(
-							(s) => s.name === decodeURIComponent(entityName),
-						);
-						if (foundSuite) {
-							return { property: prop, entity: foundSuite };
-						}
-					}
+					return prop;
 				}
 			}
 		}
-		return { property: null, entity: null };
-	}, [propertyGroups, propertySlug, entityName, entityType, propertyType]);
+		return null;
+	}, [propertyGroups, propertySlug]);
+
+	// Fetch units if needed
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const { data: units = [] } = useGetUnitsQuery(property?.id || '', {
+		skip: !property?.id || entityType !== 'unit',
+	});
+
+	// Find the entity (unit/suite)
+	const entity = useMemo(() => {
+		if (!property) return null;
+
+		// For property detail page
+		if (entityType === 'property') {
+			return property;
+		}
+
+		// For unit detail page
+		if (
+			entityType === 'unit' &&
+			entityName &&
+			propertyType === 'Multi-Family'
+		) {
+			const foundUnit = units.find(
+				(u) =>
+					u.name.replace(/\s+/g, '-').toLowerCase() ===
+					decodeURIComponent(entityName),
+			);
+			if (foundUnit) {
+				return foundUnit;
+			}
+		}
+
+		// For suite detail page
+		if (entityType === 'suite' && entityName && propertyType === 'Commercial') {
+			const foundSuite = (property.suites as any[])?.find(
+				(s) => s.name === decodeURIComponent(entityName),
+			);
+			if (foundSuite) {
+				return foundSuite;
+			}
+		}
+
+		return null;
+	}, [property, entityName, entityType, propertyType, units]);
 
 	// Filter tasks for this entity
 	const tasks = useMemo(() => {

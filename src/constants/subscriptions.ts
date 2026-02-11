@@ -13,6 +13,53 @@ export const SUBSCRIPTION_PLANS = {
 			canViewReports: false,
 			canExportData: false,
 			prioritySupport: false,
+			canCreateProperties: true, // Can create properties
+			canManageProperties: true, // Can manage properties
+			canSubmitMaintenanceRequests: false, // Cannot submit maintenance requests
+			canViewTenantInfo: false, // Cannot view tenant info
+		},
+	},
+	GUEST: {
+		id: 'guest',
+		name: 'Guest',
+		priceMonthly: 0,
+		maxProperties: 0, // Cannot create properties, only access shared ones
+		features: [
+			'Access to shared properties only',
+			'Cannot create new properties',
+			'Limited to properties shared by others',
+		],
+		permissions: {
+			canManageTeam: false,
+			canViewReports: false,
+			canExportData: false,
+			prioritySupport: false,
+			canCreateProperties: false, // Cannot create properties
+			canManageProperties: false, // Cannot manage properties
+			canSubmitMaintenanceRequests: false, // Cannot submit maintenance requests
+			canViewTenantInfo: false, // Cannot view tenant info
+		},
+	},
+	TENANT: {
+		id: 'tenant',
+		name: 'Tenant',
+		priceMonthly: 0,
+		maxProperties: 0, // Cannot create properties, only access assigned property/unit
+		features: [
+			'Access to assigned property/unit only',
+			'Cannot create or manage properties',
+			'Submit maintenance requests',
+			'View tenant information (read-only)',
+		],
+		permissions: {
+			canManageTeam: false,
+			canViewReports: false,
+			canExportData: false,
+			prioritySupport: false,
+			canCreateProperties: false, // Explicitly cannot create properties
+			canManageProperties: false, // Cannot manage properties
+			canSubmitMaintenanceRequests: true, // Can submit maintenance requests
+			canViewTenantInfo: true, // Can view their own tenant information
 		},
 	},
 	HOMEOWNER: {
@@ -32,6 +79,10 @@ export const SUBSCRIPTION_PLANS = {
 			canViewReports: false,
 			canExportData: false,
 			prioritySupport: false,
+			canCreateProperties: true, // Can create properties
+			canManageProperties: true, // Can manage properties
+			canSubmitMaintenanceRequests: false, // Cannot submit maintenance requests
+			canViewTenantInfo: false, // Cannot view tenant info
 		},
 	},
 	BASIC: {
@@ -52,6 +103,10 @@ export const SUBSCRIPTION_PLANS = {
 			canViewReports: false,
 			canExportData: true,
 			prioritySupport: false,
+			canCreateProperties: true, // Can create properties
+			canManageProperties: true, // Can manage properties
+			canSubmitMaintenanceRequests: false, // Cannot submit maintenance requests
+			canViewTenantInfo: false, // Cannot view tenant info
 		},
 	},
 	PROFESSIONAL: {
@@ -70,6 +125,10 @@ export const SUBSCRIPTION_PLANS = {
 			canViewReports: true,
 			canExportData: true,
 			prioritySupport: true,
+			canCreateProperties: true, // Can create properties
+			canManageProperties: true, // Can manage properties
+			canSubmitMaintenanceRequests: false, // Cannot submit maintenance requests
+			canViewTenantInfo: false, // Cannot view tenant info
 		},
 	},
 };

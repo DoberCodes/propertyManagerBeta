@@ -83,6 +83,9 @@ export interface TenantsTabProps {
 
 export interface UnitsTabProps {
 	property: any;
+	units: any[];
+	handleCreateUnit: () => void;
+	handleDeleteUnit: (unitId: string) => void;
 }
 
 export interface SuitesTabProps {

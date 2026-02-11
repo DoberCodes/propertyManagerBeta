@@ -6,7 +6,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { Breadcrumb } from '../Breadcrumb';
 import {
 	GradientHeader,
 	HeaderContent,
@@ -43,7 +42,7 @@ const ContentContainer = styled.div`
 interface DetailPageLayoutProps {
 	title: string;
 	subtitle?: string;
-	breadcrumbs: BreadcrumbItem[];
+	breadcrumbs?: BreadcrumbItem[];
 	badge?: string;
 	backPath: string;
 	tabs: TabConfig[];
@@ -55,7 +54,6 @@ interface DetailPageLayoutProps {
 export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({
 	title,
 	subtitle,
-	breadcrumbs,
 	badge,
 	backPath,
 	tabs,
@@ -69,7 +67,6 @@ export const DetailPageLayout: React.FC<DetailPageLayoutProps> = ({
 		<Wrapper>
 			<GradientHeader>
 				<HeaderContent>
-					<Breadcrumb items={breadcrumbs} />
 					<HeaderTopRow>
 						{badge && <HeaderBadge>{badge}</HeaderBadge>}
 						<HeaderBackButton onClick={() => navigate(backPath)}>
