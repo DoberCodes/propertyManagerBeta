@@ -8,6 +8,7 @@ describe('navigationSlice', () => {
 	const initialState = {
 		tabSelection: 0,
 		sidebarOpen: true,
+		activeRoute: '/dashboard',
 	};
 
 	describe('reducers', () => {
@@ -118,7 +119,11 @@ describe('navigationSlice', () => {
 			});
 
 			it('should not affect other state properties when updating one', () => {
-				const state = { tabSelection: 5, sidebarOpen: false };
+				const state = {
+					tabSelection: 5,
+					sidebarOpen: false,
+					activeRoute: '/dashboard',
+				};
 
 				const afterTab = navigationReducer(state, setTabSelection(7));
 				expect(afterTab.sidebarOpen).toBe(false);

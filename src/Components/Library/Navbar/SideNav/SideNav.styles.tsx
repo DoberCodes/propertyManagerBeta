@@ -95,20 +95,19 @@ export const MobileBottomNav = styled.div`
 	bottom: 0;
 	left: 0;
 	right: 0;
-	background: linear-gradient(
-		90deg,
-		${COLORS.primary} 0%,
-		${COLORS.primaryDark} 100%
-	);
-	border-top: 1px solid ${COLORS.primaryDark};
+	background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+	border-top: 2px solid rgba(255, 255, 255, 0.25);
 	flex-direction: row;
-	justify-content: space-around;
-	padding: 20px 0;
-	padding-bottom: max(20px, env(safe-area-inset-bottom));
+	justify-content: stretch;
+	align-items: stretch;
+	padding: 0;
+	padding-bottom: max(0, env(safe-area-inset-bottom));
 	padding-left: env(safe-area-inset-left);
 	padding-right: env(safe-area-inset-right);
 	z-index: 100;
-	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+	height: auto;
+	min-height: 64px;
 
 	@media (max-width: 768px) {
 		display: flex;
@@ -125,27 +124,44 @@ export const MobileNavItem = styled(Link)`
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
-	padding: 8px 12px;
+	padding: 14px 0;
+	padding-bottom: max(14px, calc(0px + env(safe-area-inset-bottom)));
 	text-decoration: none;
-	color: ${COLORS.bgWhite};
-	font-size: 12px;
-	font-weight: 600;
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 11px;
+	font-weight: 700;
 	text-align: center;
-	flex: 1;
-	transition: all 0.2s ease;
+	flex: 1 1 0%;
+	transition: all 0.3s ease;
 	cursor: pointer;
 	white-space: nowrap;
+	word-break: break-word;
+	position: relative;
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+	&:last-child {
+		border-right: none;
+	}
 
 	&:hover {
-		color: ${COLORS.bgWhite};
-		background-color: rgba(255, 255, 255, 0.15);
+		color: white;
+		background-color: rgba(255, 255, 255, 0.08);
 	}
 
 	&.active {
-		color: ${COLORS.bgWhite};
-		background-color: rgba(255, 255, 255, 0.25);
-		border-top: 3px solid ${COLORS.bgWhite};
-		padding-top: 5px;
+		color: white;
+		background-color: rgba(255, 255, 255, 0.15);
+		font-weight: 700;
+
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 3px;
+			background-color: white;
+		}
 	}
 `;
 
@@ -187,29 +203,33 @@ export const MenuItem = styled(Link)`
 	text-decoration: none;
 	font-size: ${font_main};
 	font-weight: 500;
-	padding: 8px 12px;
+	padding: 10px 12px;
 	border-radius: 4px;
 	transition: all 0.2s ease;
 	cursor: pointer;
 	white-space: nowrap;
+	position: relative;
+	border-left: 3px solid transparent;
 
 	&:hover {
 		background-color: rgba(34, 197, 94, 0.1);
 	}
 
 	&.active {
-		background-color: #22c55e;
-		color: white;
+		background-color: rgba(34, 197, 94, 0.15);
+		color: #16a34a;
+		font-weight: 600;
+		border-left-color: #22c55e;
 	}
 
 	@media (max-width: 768px) {
 		font-size: 12px;
-		padding: 6px 10px;
+		padding: 8px 10px;
 	}
 
 	@media (max-width: 480px) {
 		font-size: 11px;
-		padding: 4px 8px;
+		padding: 6px 8px;
 	}
 `;
 

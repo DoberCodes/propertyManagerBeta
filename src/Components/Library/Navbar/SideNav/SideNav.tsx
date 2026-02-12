@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../Redux/store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../../../Redux/store/store';
+import { setActiveRoute } from '../../../../Redux/Slices/navigationSlice';
 import {
 	canManageTeam,
 	canAccessReadOnlyFeatures,
@@ -25,9 +26,21 @@ import {
 export const SideNav = () => {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const activeRoute = useSelector(
+		(state: RootState) => state.navigation.activeRoute,
+	);
 	const { recentProperties } = useRecentlyViewed(currentUser!.id);
 	const { favorites } = useFavorites(currentUser!.id);
+
+	// Update Redux when location changes
+	React.useEffect(() => {
+		const hash = location.hash.replace('#', '');
+		// Extract the main route (e.g., '/dashboard' from '/dashboard' or '/property/:slug')
+		const mainRoute = '/' + hash.split('/')[1];
+		dispatch(setActiveRoute(mainRoute));
+	}, [location.hash, dispatch]);
 
 	// Check permissions based on subscription plan
 	const canAccessTeam = currentUser?.subscription
@@ -48,29 +61,29 @@ export const SideNav = () => {
 	const isUserTenant = currentUser ? currentUser.role === 'tenant' : false;
 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
 
-	const isActive = (path: string) => location.hash.includes(path);
+	const isActive = (path: string) => activeRoute === path;
 
 	// Desktop nav items
 	const desktopMenuItems = [
-		{ label: 'Dashboard', path: 'dashboard', visible: !isUserTenant },
+		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
 		{
 			label: 'Properties',
-			path: 'properties',
+			path: '/properties',
 			visible: !isUserTenant && (canAccessProperties || canViewPages),
 		},
 		{
 			label: 'Team',
-			path: 'team',
+			path: '/team',
 			visible: !isUserTenant && !isHomeowner && (canAccessTeam || canViewPages),
 		},
 		{
 			label: 'Report',
-			path: 'report',
+			path: '/report',
 			visible: !isUserTenant && (canAccessProperties || canViewPages),
 		},
 		{
 			label: 'Tenant Profile',
-			path: 'tenant-profile',
+			path: '/tenant-profile',
 			visible:
 				currentUser?.userType === 'tenant' ||
 				currentUser?.userType === 'Tenant' ||
@@ -195,7 +208,19 @@ export const SideNav = () => {
 
 export const MobileNav = () => {
 	const location = useLocation();
+	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const activeRoute = useSelector(
+		(state: RootState) => state.navigation.activeRoute,
+	);
+
+	// Update Redux when location changes
+	React.useEffect(() => {
+		const hash = location.hash.replace('#', '');
+		// Extract the main route (e.g., '/dashboard' from '/dashboard' or '/property/:slug')
+		const mainRoute = '/' + hash.split('/')[1];
+		dispatch(setActiveRoute(mainRoute));
+	}, [location.hash, dispatch]);
 
 	// Check permissions based on subscription plan
 	const canAccessTeam = currentUser?.subscription
@@ -217,25 +242,25 @@ export const MobileNav = () => {
 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
 
 	const menuItems = [
-		{ label: 'Dashboard', path: 'dashboard', visible: !isUserTenant },
+		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
 		{
 			label: 'Properties',
-			path: 'properties',
+			path: '/properties',
 			visible: !isUserTenant && (canAccessProperties || canViewPages),
 		},
 		{
 			label: 'Team',
-			path: 'team',
+			path: '/team',
 			visible: !isUserTenant && !isHomeowner && (canAccessTeam || canViewPages),
 		},
 		{
 			label: 'Report',
-			path: 'report',
+			path: '/report',
 			visible: !isUserTenant && (canAccessProperties || canViewPages),
 		},
 		{
 			label: 'Tenant Profile',
-			path: 'tenant-profile',
+			path: '/tenant-profile',
 			visible:
 				currentUser?.userType === 'tenant' ||
 				currentUser?.userType === 'Tenant' ||
@@ -243,7 +268,7 @@ export const MobileNav = () => {
 		},
 	];
 
-	const isActive = (path: string) => location.hash.includes(path);
+	const isActive = (path: string) => activeRoute === path;
 	const visibleItems = menuItems.filter((item) => item.visible);
 
 	return (

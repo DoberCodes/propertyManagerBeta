@@ -5,18 +5,15 @@ import { COLORS } from '../../../../constants/colors';
 
 export const Wrapper = styled.div`
 	border: none;
-	border-bottom: 2px solid ${COLORS.primaryDark};
+	border-bottom: 2px solid #047857;
 	display: flex;
 	flex-flow: row;
 	align-items: center;
 	justify-content: space-between;
 	height: ${nav_height};
-	background: linear-gradient(
-		90deg,
-		${COLORS.primary} 0%,
-		${COLORS.primaryDark} 100%
-	);
+	background: linear-gradient(90deg, #065f46 0%, #047857 100%);
 	padding: 20px 20px;
+	padding-top: max(20px, env(safe-area-inset-top));
 	padding-left: max(20px, env(safe-area-inset-left));
 	padding-right: max(20px, env(safe-area-inset-right));
 	overflow: visible;

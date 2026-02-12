@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface NavigationState {
 	tabSelection: number;
 	sidebarOpen: boolean;
+	activeRoute: string;
 }
 
 const initialState: NavigationState = {
 	tabSelection: 0,
 	sidebarOpen: true,
+	activeRoute: '/dashboard',
 };
 
 const navigationSlice = createSlice({
@@ -23,10 +25,17 @@ const navigationSlice = createSlice({
 		setSidebarOpen: (state, action: PayloadAction<boolean>) => {
 			state.sidebarOpen = action.payload;
 		},
+		setActiveRoute: (state, action: PayloadAction<string>) => {
+			state.activeRoute = action.payload;
+		},
 	},
 });
 
-export const { setTabSelection, toggleSidebar, setSidebarOpen } =
-	navigationSlice.actions;
+export const {
+	setTabSelection,
+	toggleSidebar,
+	setSidebarOpen,
+	setActiveRoute,
+} = navigationSlice.actions;
 
 export default navigationSlice.reducer;
