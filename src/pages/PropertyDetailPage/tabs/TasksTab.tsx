@@ -682,13 +682,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 										Assign
 									</MobileActionButton>
 									<MobileActionButton
-										onClick={(e) => {
-											e.stopPropagation();
-											handleViewMore(task);
-										}}>
-										Details
-									</MobileActionButton>
-									<MobileActionButton
 										variant='danger'
 										onClick={(e) => {
 											e.stopPropagation();

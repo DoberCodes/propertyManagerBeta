@@ -832,7 +832,6 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 								units={units}
 								tasks={tasks}
 								propertyId={property.id}
-								propertySlug={property.slug}
 								onDelete={onDeleteMaintenanceHistory}
 								onUpdate={onUpdateMaintenanceHistory}
 							/>
@@ -879,8 +878,8 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 														}}>
 														<span style={{ marginRight: '8px' }}>🔄</span>
 														{records[0].title} ({records.length} instances)
-														<a
-															href={groupLink}
+														<button
+															onClick={() => navigate(groupLink)}
 															style={{
 																marginLeft: '12px',
 																fontSize: '12px',
@@ -888,10 +887,11 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 																background: '#3b82f6',
 																padding: '4px 8px',
 																borderRadius: '4px',
-																textDecoration: 'none',
+																border: 'none',
+																cursor: 'pointer',
 															}}>
 															View details
-														</a>
+														</button>
 														<span
 															style={{
 																marginLeft: 'auto',
@@ -1066,7 +1066,6 @@ interface MaintenanceHistoryCardProps {
 	units: any[];
 	tasks: any[];
 	propertyId: string;
-	propertySlug: string;
 	onDelete?: (id: string) => void;
 	onUpdate?: (id: string, updates: Partial<any>) => void;
 	isGroupedView?: boolean;
@@ -1094,6 +1093,7 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 	onDelete,
 	onUpdate,
 }) => {
+	const navigate = useNavigate();
 	const [isExpanded, setIsExpanded] = useState(false);
 	const latestRecord = records[0]; // Records are sorted by date, newest first
 	const groupLink = `/property/${propertySlug}/maintenance-history/${encodeURIComponent(
@@ -1145,41 +1145,44 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 					</p>
 				</div>
 				<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-					<a
-						href={groupLink}
-						onClick={(e) => e.stopPropagation()}
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							navigate(groupLink);
+						}}
 						style={{
 							fontSize: '12px',
 							color: '#3b82f6',
-							textDecoration: 'none',
+							background: 'none',
+							border: 'none',
+							padding: 0,
+							cursor: 'pointer',
 						}}>
 						View details
-					</a>
+					</button>
 					<span style={{ fontSize: '18px', color: '#6b7280' }}>
 						{isExpanded ? '▼' : '▶'}
 					</span>
 				</div>
 			</div>
 
-			{/* Expanded Details */}
-			{isExpanded && (
-				<div>
-					{records.map((record) => (
-						<MaintenanceHistoryCard
-							key={record.id}
-							record={record}
-							units={units}
-							tasks={tasks}
-							propertyId={propertyId}
-							propertySlug={propertySlug}
-							onDelete={onDelete}
-							onUpdate={onUpdate}
-							isGroupedView={true}
-							groupRecords={records}
-						/>
-					))}
-				</div>
-			)}
+				{isExpanded && (
+					<div>
+						{records.map((record) => (
+							<MaintenanceHistoryCard
+								key={record.id}
+								record={record}
+								units={units}
+								tasks={tasks}
+								propertyId={propertyId}
+								onDelete={onDelete}
+								onUpdate={onUpdate}
+								isGroupedView={true}
+								groupRecords={records}
+							/>
+						))}
+					</div>
+				)}
 		</div>
 	);
 };
@@ -1189,7 +1192,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 	units,
 	tasks,
 	propertyId,
-	propertySlug,
 	onDelete,
 	onUpdate,
 	isGroupedView: _isGroupedView = false,
@@ -1201,14 +1203,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 		const unit = units.find((u) => u.id === unitId);
 		return unit ? unit.unitName : '';
 	};
-	const recordGroupId =
-		record.maintenanceGroupId || record.recurringTaskId || record.id;
-	const recordLink =
-		recordGroupId && !record.isLegacy
-			? `/property/${propertySlug}/maintenance-history/${encodeURIComponent(
-					recordGroupId,
-			  )}`
-			: null;
 
 	// Get linked tasks for this record
 	const linkedTasks = React.useMemo(() => {
@@ -1330,24 +1324,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 				{/* Link Task Button */}
 				{onUpdate && (
 					<div style={{ marginTop: '12px', textAlign: 'right' }}>
-						{recordLink && (
-							<button
-								onClick={() => {
-									window.location.href = recordLink;
-								}}
-								style={{
-									padding: '4px 8px',
-									background: '#3b82f6',
-									color: 'white',
-									border: 'none',
-									borderRadius: '4px',
-									cursor: 'pointer',
-									fontSize: '12px',
-									marginRight: '8px',
-								}}>
-								View details
-							</button>
-						)}
 						<button
 							onClick={() => setShowLinkTaskModal(true)}
 							style={{
