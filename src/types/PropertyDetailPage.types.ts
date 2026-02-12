@@ -74,6 +74,7 @@ export interface MaintenanceTabProps {
 	teamMembers?: any[];
 	contractors?: any[];
 	familyMembers?: any[];
+	sharedUsers?: any[];
 	tasks?: any[];
 	onAddMaintenanceHistory?: (data: {
 		title: string;

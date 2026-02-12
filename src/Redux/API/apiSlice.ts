@@ -244,6 +244,7 @@ export interface Task {
 	approvedBy?: string; // Admin/Lead ID who approved
 	approvedAt?: string;
 	rejectionReason?: string;
+	maintenanceGroupId?: string;
 	createdAt?: string;
 	updatedAt?: string;
 }

@@ -83,6 +83,7 @@ export interface Task {
 	approvedBy?: string;
 	approvedAt?: string;
 	rejectionReason?: string;
+	maintenanceGroupId?: string;
 	// Recurring task fields
 	isRecurring?: boolean;
 	recurrenceFrequency?: RecurrenceFrequency;
@@ -119,7 +120,7 @@ export interface TaskFormData {
 	recurrenceCustomUnit?: RecurrenceCustomUnit;
 	enableNotifications?: boolean;
 	notifications?: TaskNotification[];
-	linkedMaintenanceHistoryIds?: string[];
+	maintenanceGroupId?: string;
 }
 
 export interface TaskHandlers {

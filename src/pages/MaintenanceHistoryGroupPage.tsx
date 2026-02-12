@@ -1,6 +1,15 @@
-import React, { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useDetailPageData } from '../Hooks/useDetailPageData';
+import {
+	useDeleteMaintenanceHistoryMutation,
+	useGetContractorsByPropertyQuery,
+	useGetPropertySharesQuery,
+	useGetTeamMembersQuery,
+} from '../Redux/API/apiSlice';
+import { RootState } from '../Redux/store/store';
+import { getFamilyMembers } from '../services/authService';
 import {
 	SectionContainer,
 	SectionHeader,
@@ -13,18 +22,65 @@ import {
 
 export const MaintenanceHistoryGroupPage: React.FC = () => {
 	const { slug, groupId } = useParams<{ slug: string; groupId: string }>();
+	const navigate = useNavigate();
+	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const { property, tasks, maintenanceHistory } = useDetailPageData({
 		propertySlug: slug || '',
 		entityType: 'property',
 	});
+	const [deleteMaintenanceHistory] = useDeleteMaintenanceHistoryMutation();
+	const { data: teamMembers = [] } = useGetTeamMembersQuery();
+	const { data: propertyShares = [] } = useGetPropertySharesQuery(
+		property?.id || '',
+		{ skip: !property?.id },
+	);
+	const { data: propertyContractors = [] } = useGetContractorsByPropertyQuery(
+		property?.id || '',
+		{ skip: !property?.id },
+	);
+	const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+
+	useEffect(() => {
+		const loadFamilyMembers = async () => {
+			if (!currentUser?.accountId) return;
+			try {
+				const members = await getFamilyMembers(currentUser.accountId);
+				setFamilyMembers(members);
+			} catch (error) {
+				console.error('Failed to load family members:', error);
+			}
+		};
+		loadFamilyMembers();
+	}, [currentUser?.accountId]);
 
 	const groupRecords = useMemo(() => {
 		if (!groupId) return [];
+
+		const getMaintenanceGroupId = (record: any): string => {
+			// Priority 1: Use existing group ID
+			if (record.maintenanceGroupId) {
+				return record.maintenanceGroupId;
+			}
+
+			// Priority 2: Use recurring task ID
+			if (record.recurringTaskId) {
+				return record.recurringTaskId;
+			}
+
+			// Priority 3: If linked to same tasks, group by linked task IDs
+			if (record.linkedTaskIds && record.linkedTaskIds.length > 0) {
+				const sortedLinkedIds = [...record.linkedTaskIds].sort();
+				return `linked-${sortedLinkedIds.join(',')}`;
+			}
+
+			return record.id;
+		};
+
 		const records = maintenanceHistory.filter((record: any) => {
-			const recordGroupId =
-				record.maintenanceGroupId || record.recurringTaskId || record.id;
-			return recordGroupId && String(recordGroupId) === String(groupId);
+			const recordGroupId = getMaintenanceGroupId(record);
+			return String(recordGroupId) === String(groupId);
 		});
+
 		return records.sort(
 			(a: any, b: any) =>
 				new Date(b.completionDate).getTime() -
@@ -59,6 +115,70 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 			newest,
 		).toLocaleDateString()}`;
 	}, [groupRecords]);
+
+	const completedByLookup = useMemo(() => {
+		const lookup = new Map<string, string>();
+
+		propertyShares
+			.filter((share: any) => share.sharedWithUserId)
+			.forEach((share: any) => {
+				const fullName =
+					share.sharedWithFirstName && share.sharedWithLastName
+						? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+						: share.sharedWithEmail?.split('@')[0] || 'Shared User';
+				lookup.set(share.sharedWithUserId, fullName);
+			});
+
+		teamMembers.forEach((member: any) => {
+			const name = `${member.firstName || ''} ${member.lastName || ''}`.trim();
+			if (name) {
+				lookup.set(member.id, name);
+			}
+		});
+
+		propertyContractors.forEach((contractor: any) => {
+			const name = contractor.companyName || contractor.name || 'Contractor';
+			lookup.set(contractor.id, name);
+		});
+
+		familyMembers.forEach((member: any) => {
+			const name = `${member.firstName || ''} ${member.lastName || ''}`.trim();
+			if (name) {
+				lookup.set(member.id, name);
+			}
+		});
+
+		return lookup;
+	}, [propertyShares, teamMembers, propertyContractors, familyMembers]);
+
+	const getCompletedByDisplay = (record: any) => {
+		if (record.completedByName) return record.completedByName;
+		if (!record.completedBy) return '-';
+		return completedByLookup.get(record.completedBy) || record.completedBy;
+	};
+
+	const handleDeleteGroup = async () => {
+		const deletableRecords = groupRecords.filter(
+			(record: any) => !record.isLegacy && record.id,
+		);
+		if (!deletableRecords.length) {
+			window.alert(
+				'No deletable maintenance history records found in this group.',
+			);
+			return;
+		}
+
+		const confirmed = window.confirm(
+			`Delete ${deletableRecords.length} maintenance history record(s) in this group? This cannot be undone. Linked tasks will not be deleted.`,
+		);
+		if (!confirmed) return;
+
+		for (const record of deletableRecords) {
+			await deleteMaintenanceHistory(record.id).unwrap();
+		}
+
+		navigate(`/property/${property?.slug || slug}`);
+	};
 
 	if (!property) {
 		return (
@@ -105,11 +225,34 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 							padding: '16px',
 							marginBottom: '16px',
 						}}>
-						<div style={{ fontWeight: '600', marginBottom: '4px' }}>
-							{groupRecords[0].title || 'Maintenance'}
-						</div>
-						<div style={{ fontSize: '12px', color: '#6b7280' }}>
-							Instances: {groupRecords.length} | Date Range: {dateRange}
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								gap: '12px',
+							}}>
+							<div>
+								<div style={{ fontWeight: '600', marginBottom: '4px' }}>
+									{groupRecords[0].title || 'Maintenance'}
+								</div>
+								<div style={{ fontSize: '12px', color: '#6b7280' }}>
+									Instances: {groupRecords.length} | Date Range: {dateRange}
+								</div>
+							</div>
+							<button
+								onClick={handleDeleteGroup}
+								style={{
+									padding: '6px 12px',
+									background: '#ef4444',
+									color: 'white',
+									border: 'none',
+									borderRadius: '4px',
+									cursor: 'pointer',
+									fontSize: '12px',
+								}}>
+								Delete group
+							</button>
 						</div>
 					</div>
 
@@ -131,9 +274,7 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 												? new Date(record.completionDate).toLocaleDateString()
 												: '-'}
 										</td>
-										<td>
-											{record.completedByName || record.completedBy || '-'}
-										</td>
+										<td>{getCompletedByDisplay(record)}</td>
 										<td>{record.completionNotes || record.notes || '-'}</td>
 										<td>
 											{record.completionFile?.url ? (

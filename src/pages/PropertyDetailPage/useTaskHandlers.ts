@@ -30,7 +30,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		dueDate: '',
 		status: 'Pending' as const,
 		notes: '',
-		linkedMaintenanceHistoryIds: [],
+		maintenanceGroupId: undefined,
 	});
 
 	const handleTaskCheckbox = (taskId: string) => {
@@ -50,7 +50,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 			notes: '',
 			enableNotifications: false,
 			notifications: [],
-			linkedMaintenanceHistoryIds: [],
+			maintenanceGroupId: undefined,
 		});
 		setShowTaskDialog(true);
 	};
@@ -218,7 +218,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 				dueDate: '',
 				status: 'Pending',
 				notes: '',
-				linkedMaintenanceHistoryIds: [],
+				maintenanceGroupId: undefined,
 			});
 		} catch (error) {
 			console.error('Error saving task:', error);

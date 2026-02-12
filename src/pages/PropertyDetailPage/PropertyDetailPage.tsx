@@ -577,10 +577,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		const taskToEdit = allTasks.find((t) => t.id === editingTaskId);
 		if (!taskToEdit) return;
 
-		const linkedMaintenanceHistoryIds = maintenanceHistoryRecords
-			.filter((record) => record.linkedTaskIds?.includes(taskToEdit.id))
-			.map((record) => record.id);
-
 		setTaskFormData({
 			title: taskToEdit.title || '',
 			dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.split('T')[0] : '',
@@ -595,7 +591,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			recurrenceCustomUnit: taskToEdit.recurrenceCustomUnit,
 			enableNotifications: (taskToEdit as any).enableNotifications || false,
 			notifications: (taskToEdit as any).notifications || [],
-			linkedMaintenanceHistoryIds,
+			maintenanceGroupId: taskToEdit.maintenanceGroupId,
 		});
 	}, [editingTaskId, allTasks, maintenanceHistoryRecords, setTaskFormData]);
 
@@ -809,8 +805,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const handleTaskFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!property || !taskFormData.title.trim()) return;
-		const linkedMaintenanceHistoryIds =
-			taskFormData.linkedMaintenanceHistoryIds || [];
 
 		try {
 			if (editingTaskId !== null) {
@@ -915,11 +909,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						id: editingTaskId,
 						updates: cleanObjectForFirebase(updates),
 					}).unwrap();
-
-					await syncTaskMaintenanceLinks(
-						editingTaskId,
-						linkedMaintenanceHistoryIds,
-					);
 
 					// Create notification for task update
 					try {
@@ -1091,11 +1080,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					cleanObjectForFirebase(newTask),
 				).unwrap();
 
-				await syncTaskMaintenanceLinks(
-					createdTask.id,
-					linkedMaintenanceHistoryIds,
-				);
-
 				// Add to Redux state immediately for UI update
 				dispatch(addTask(createdTask));
 
@@ -1212,7 +1196,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				status: 'Pending',
 				notes: '',
 				devices: [],
-				linkedMaintenanceHistoryIds: [],
 			});
 		} catch (error) {
 			console.error('Error saving task:', error);

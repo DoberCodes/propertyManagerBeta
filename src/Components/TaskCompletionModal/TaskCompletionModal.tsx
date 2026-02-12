@@ -300,6 +300,7 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 		<GenericModal
 			isOpen={true}
 			onClose={onClose}
+			showActions={true}
 			title='Mark Task as Complete'
 			primaryButtonLabel={
 				isSubmitting ? 'Submitting...' : 'Submit for Approval'

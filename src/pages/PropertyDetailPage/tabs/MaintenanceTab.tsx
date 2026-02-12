@@ -1,7 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MaintenanceTabProps } from '../../../types/PropertyDetailPage.types';
-import { GenericModal } from '../../../Components/Library';
+import {
+	GenericModal,
+	FormGroup,
+	FormLabel,
+	FormSelect,
+} from '../../../Components/Library';
 import {
 	SectionContainer,
 	SectionHeader,
@@ -21,114 +26,6 @@ import {
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
 
-// Link Task Modal Component
-interface LinkTaskModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	onSubmit?: (linkedTaskIds: string[]) => void;
-	tasks: any[];
-	currentLinkedTaskIds?: string[];
-	propertyId: string;
-}
-
-const LinkTaskModal: React.FC<LinkTaskModalProps> = ({
-	isOpen,
-	onClose,
-	onSubmit,
-	tasks,
-	currentLinkedTaskIds = [],
-	propertyId,
-}) => {
-	const [selectedTaskIds, setSelectedTaskIds] =
-		useState<string[]>(currentLinkedTaskIds);
-
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-		onSubmit?.(selectedTaskIds);
-		setSelectedTaskIds([]);
-		onClose();
-	};
-
-	const handleTaskToggle = (taskId: string) => {
-		setSelectedTaskIds((prev) =>
-			prev.includes(taskId)
-				? prev.filter((id) => id !== taskId)
-				: [...prev, taskId],
-		);
-	};
-
-	// Filter tasks to only show those for the current property and not completed (unless already linked)
-	const availableTasks = tasks.filter(
-		(task) =>
-			task.propertyId === propertyId &&
-			(task.status !== 'Completed' || currentLinkedTaskIds.includes(task.id)),
-	);
-
-	return (
-		<GenericModal
-			isOpen={isOpen}
-			title='Link Tasks to Maintenance History'
-			onClose={onClose}
-			showActions={true}
-			primaryButtonLabel='Link Tasks'
-			secondaryButtonLabel='Cancel'
-			onSubmit={handleSubmit}>
-			<div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-				<p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-					Select tasks to link to this maintenance history record. Linked tasks
-					will be associated with this maintenance activity.
-				</p>
-
-				<div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-					{availableTasks.length > 0 ? (
-						availableTasks.map((task) => (
-							<div
-								key={task.id}
-								style={{
-									display: 'flex',
-									alignItems: 'center',
-									padding: '8px',
-									border: '1px solid #e5e7eb',
-									borderRadius: '4px',
-									marginBottom: '8px',
-									backgroundColor: selectedTaskIds.includes(task.id)
-										? '#eff6ff'
-										: 'white',
-								}}>
-								<input
-									type='checkbox'
-									checked={selectedTaskIds.includes(task.id)}
-									onChange={() => handleTaskToggle(task.id)}
-									style={{ marginRight: '8px' }}
-								/>
-								<div style={{ flex: 1 }}>
-									<div style={{ fontWeight: '500', fontSize: '14px' }}>
-										{task.title}
-									</div>
-									<div style={{ fontSize: '12px', color: '#6b7280' }}>
-										Status: {task.status} • Due:{' '}
-										{new Date(task.dueDate).toLocaleDateString()}
-										{task.priority && ` • Priority: ${task.priority}`}
-									</div>
-								</div>
-							</div>
-						))
-					) : (
-						<p
-							style={{
-								textAlign: 'center',
-								color: '#6b7280',
-								fontSize: '14px',
-							}}>
-							No available tasks to link
-						</p>
-					)}
-				</div>
-			</div>
-		</GenericModal>
-	);
-};
-
 // Add Maintenance History Modal Component
 interface AddMaintenanceHistoryModalProps {
 	isOpen: boolean;
@@ -142,14 +39,15 @@ interface AddMaintenanceHistoryModalProps {
 		unitId?: string;
 		completionFile?: File;
 		recurringTaskId?: string;
-		linkedTaskIds?: string[];
+		maintenanceGroupId?: string;
 	}) => void;
 	property: any;
 	units: any[];
 	teamMembers: any[];
 	contractors: any[];
 	familyMembers: any[];
-	tasks: any[];
+	groupOptions: Array<{ value: string; label: string }>;
+	onCreateGroupId: () => string;
 }
 
 const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
@@ -161,7 +59,8 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 	teamMembers,
 	contractors,
 	familyMembers,
-	tasks,
+	groupOptions,
+	onCreateGroupId,
 }) => {
 	const [formData, setFormData] = useState({
 		title: '',
@@ -175,8 +74,7 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 	const [completedByMode, setCompletedByMode] = useState<'dropdown' | 'custom'>(
 		'dropdown',
 	);
-	const [showLinkTaskModal, setShowLinkTaskModal] = useState(false);
-	const [linkedTaskIds, setLinkedTaskIds] = useState<string[]>([]);
+	const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
 	// Generate completed by options from available data sources
 	const completedByOptions = React.useMemo(() => {
@@ -259,12 +157,17 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 		}));
 	};
 
-	const handleLinkTasks = (taskIds: string[]) => {
-		setLinkedTaskIds(taskIds);
+	const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedGroupId(e.target.value);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		const groupId =
+			selectedGroupId === '__new__'
+				? onCreateGroupId()
+				: selectedGroupId || undefined;
 
 		const data = {
 			title: formData.title,
@@ -276,7 +179,7 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 			completionNotes: formData.completionNotes,
 			unitId: formData.unitId,
 			completionFile: formData.completionFile || undefined,
-			linkedTaskIds: linkedTaskIds.length > 0 ? linkedTaskIds : undefined,
+			maintenanceGroupId: groupId,
 		};
 
 		onSubmit?.(data);
@@ -292,8 +195,7 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 			completionFile: null,
 		});
 		setCompletedByMode('dropdown');
-		setLinkedTaskIds([]);
-		setShowLinkTaskModal(false);
+		setSelectedGroupId('');
 		onClose();
 	};
 
@@ -389,6 +291,46 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 						</select>
 					</div>
 				)}
+
+				<div>
+					<label
+						style={{
+							display: 'block',
+							marginBottom: '4px',
+							fontWeight: 'bold',
+						}}>
+						Maintenance Group
+					</label>
+					<select
+						name='maintenanceGroupId'
+						value={selectedGroupId}
+						onChange={handleGroupChange}
+						style={{
+							width: '100%',
+							padding: '8px',
+							border: '1px solid #ccc',
+							borderRadius: '4px',
+							fontSize: '14px',
+						}}>
+						<option value=''>No group</option>
+						<option value='__new__'>Create new group</option>
+						{groupOptions.map((option) => (
+							<option key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+					<small
+						style={{
+							color: '#6b7280',
+							fontSize: '12px',
+							marginTop: '4px',
+							display: 'block',
+						}}>
+						Add this history item to an existing maintenance group or create a
+						new one.
+					</small>
+				</div>
 
 				<div>
 					<label
@@ -538,63 +480,10 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 						</div>
 					)}
 				</div>
-
-				<div>
-					<label
-						style={{
-							display: 'block',
-							marginBottom: '4px',
-							fontWeight: 'bold',
-						}}>
-						Link Tasks (optional)
-					</label>
-					<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-						<button
-							type='button'
-							onClick={() => setShowLinkTaskModal(true)}
-							style={{
-								padding: '8px 16px',
-								background: '#3b82f6',
-								color: 'white',
-								border: 'none',
-								borderRadius: '4px',
-								cursor: 'pointer',
-								fontSize: '14px',
-							}}>
-							🔗 Link Tasks ({linkedTaskIds.length})
-						</button>
-						{linkedTaskIds.length > 0 && (
-							<span style={{ fontSize: '14px', color: '#6b7280' }}>
-								{linkedTaskIds.length} task
-								{linkedTaskIds.length !== 1 ? 's' : ''} linked
-							</span>
-						)}
-					</div>
-					<small
-						style={{
-							color: '#6b7280',
-							fontSize: '12px',
-							marginTop: '4px',
-							display: 'block',
-						}}>
-						Link related tasks to this maintenance history record for better
-						tracking and auditing.
-					</small>
-				</div>
 			</div>
 		</GenericModal>,
 
-		showLinkTaskModal ? (
-			<LinkTaskModal
-				key='link-task-modal'
-				isOpen={showLinkTaskModal}
-				onClose={() => setShowLinkTaskModal(false)}
-				onSubmit={handleLinkTasks}
-				tasks={tasks}
-				currentLinkedTaskIds={linkedTaskIds}
-				propertyId={property.id}
-			/>
-		) : null,
+		null,
 	];
 };
 
@@ -605,7 +494,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 	teamMembers = [],
 	contractors = [],
 	familyMembers = [],
-	tasks = [],
+	sharedUsers = [],
 	onAddMaintenanceHistory,
 	onUpdateMaintenanceHistory,
 	onDeleteMaintenanceHistory,
@@ -615,6 +504,11 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
+	const [selectedRecordIds, setSelectedRecordIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
+	const canBulkEdit = Boolean(onUpdateMaintenanceHistory);
 
 	// Mobile detection
 	useEffect(() => {
@@ -626,6 +520,150 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 		window.addEventListener('resize', checkMobile);
 		return () => window.removeEventListener('resize', checkMobile);
 	}, []);
+
+	// Bulk selection handlers
+	const toggleRecordSelection = (recordId: string) => {
+		setSelectedRecordIds((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(recordId)) {
+				newSet.delete(recordId);
+			} else {
+				newSet.add(recordId);
+			}
+			return newSet;
+		});
+	};
+
+	const toggleGroupSelection = (records: any[]) => {
+		setSelectedRecordIds((prev) => {
+			const newSet = new Set(prev);
+			const recordIds = records
+				.filter((record) => record && record.id)
+				.map((record) => record.id);
+			const isAllSelected = recordIds.every((id) => newSet.has(id));
+			recordIds.forEach((id) => {
+				if (isAllSelected) {
+					newSet.delete(id);
+				} else {
+					newSet.add(id);
+				}
+			});
+			return newSet;
+		});
+	};
+
+	const createMaintenanceGroupId = () => {
+		if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+			return `mg-${crypto.randomUUID()}`;
+		}
+		return `mg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+	};
+
+	const handleBulkGroupRecords = async (selectedGroupId: string) => {
+		const groupId =
+			selectedGroupId === '__new__'
+				? createMaintenanceGroupId()
+				: selectedGroupId;
+		if (!groupId) return;
+
+		try {
+			// Collect all records for updating
+			const allRecords = [
+				...Object.values(groupedRecords.groups).flat(),
+				...groupedRecords.ungrouped,
+			];
+
+			const selectedRecords = Array.from(selectedRecordIds)
+				.map((id) => allRecords.find((r) => r.id === id))
+				.filter((r) => r !== undefined);
+
+			// Update all selected records with the maintenanceGroupId
+			for (const record of selectedRecords) {
+				if (onUpdateMaintenanceHistory) {
+					await onUpdateMaintenanceHistory(record.id, {
+						maintenanceGroupId: groupId,
+					});
+				}
+			}
+
+			setSelectedRecordIds(new Set());
+			setShowBulkGroupModal(false);
+		} catch (error) {
+			console.error('Error grouping maintenance history:', error);
+			// Handle error - could show toast notification
+		}
+	};
+
+	const handleDeleteGroup = async (records: any[]) => {
+		if (!onDeleteMaintenanceHistory) return;
+
+		const deletableRecords = records.filter(
+			(record) => !record.isLegacy && record.id,
+		);
+		if (deletableRecords.length === 0) {
+			window.alert(
+				'No deletable maintenance history records found in this group.',
+			);
+			return;
+		}
+
+		const confirmed = window.confirm(
+			`Delete ${deletableRecords.length} maintenance history record(s) in this group? This cannot be undone.`,
+		);
+		if (!confirmed) return;
+
+		for (const record of deletableRecords) {
+			await onDeleteMaintenanceHistory(record.id);
+		}
+	};
+
+	const completedByLookup = useMemo(() => {
+		const lookup = new Map<string, string>();
+
+		sharedUsers
+			.filter((share: any) => share.sharedWithUserId)
+			.forEach((share: any) => {
+				const fullName =
+					share.sharedWithFirstName && share.sharedWithLastName
+						? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+						: share.sharedWithEmail?.split('@')[0] || 'Shared User';
+				lookup.set(share.sharedWithUserId, fullName);
+			});
+
+		teamMembers.forEach((member: any) => {
+			const name = `${member.firstName || ''} ${member.lastName || ''}`.trim();
+			if (name) {
+				lookup.set(member.id, name);
+			}
+		});
+
+		contractors.forEach((contractor: any) => {
+			const name = contractor.companyName || contractor.name || 'Contractor';
+			lookup.set(contractor.id, name);
+		});
+
+		familyMembers.forEach((member: any) => {
+			const name = `${member.firstName || ''} ${member.lastName || ''}`.trim();
+			if (name) {
+				lookup.set(member.id, name);
+			}
+		});
+
+		return lookup;
+	}, [sharedUsers, teamMembers, contractors, familyMembers]);
+
+	const resolveCompletedByName = useCallback(
+		(record: any) => {
+			const completedById =
+				record.completedBy || record.approvedBy || record.assignee || '';
+			return (
+				record.completedByName ||
+				completedByLookup.get(completedById) ||
+				undefined
+			);
+		},
+		[completedByLookup],
+	);
 
 	// Filter configuration for maintenance history
 	const maintenanceFilters: FilterConfig[] = [
@@ -691,7 +729,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 					record.completionDate || record.approvedAt || record.dueDate,
 				title: record.title || record.taskTitle || 'Task',
 				completedBy: record.completedBy || record.approvedBy || record.assignee,
-				completedByName: record.completedByName,
+				completedByName: resolveCompletedByName(record),
 				notes: record.completionNotes || record.notes,
 				isLegacy: false,
 			})),
@@ -707,7 +745,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 				}),
 			),
 		],
-		[maintenanceHistoryRecords, property],
+		[maintenanceHistoryRecords, property, resolveCompletedByName],
 	);
 
 	// Apply filters to maintenance records
@@ -740,7 +778,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 	}, [allMaintenanceRecords, filters, property?.propertyType]);
 
 	const getMaintenanceGroupId = (record: any): string | undefined => {
-		return record.maintenanceGroupId || record.recurringTaskId;
+		return record.maintenanceGroupId;
 	};
 
 	// Group maintenance records by maintenance group ID
@@ -779,6 +817,17 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 		return { groups, ungrouped };
 	}, [filteredRecords]);
 
+	const maintenanceGroupOptions = useMemo(
+		() =>
+			Object.entries(groupedRecords.groups).map(([groupId, records]) => ({
+				value: groupId,
+				label: `${records[0]?.title || 'Maintenance'} (${
+					records.length
+				} items)`,
+			})),
+		[groupedRecords.groups],
+	);
+
 	return (
 		<SectionContainer>
 			<SectionHeader>Maintenance History</SectionHeader>
@@ -789,6 +838,54 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 					<ToolbarButton onClick={() => setShowAddModal(true)}>
 						+ Add History
 					</ToolbarButton>
+				</Toolbar>
+			)}
+
+			{/* Bulk Action Toolbar */}
+			{canBulkEdit && selectedRecordIds.size > 0 && (
+				<Toolbar
+					style={{ background: '#eff6ff', borderBottom: '2px solid #3b82f6' }}>
+					<div
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: '12px',
+							flex: 1,
+						}}>
+						<span
+							style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>
+							{selectedRecordIds.size} record
+							{selectedRecordIds.size !== 1 ? 's' : ''} selected
+						</span>
+					</div>
+					<div style={{ display: 'flex', gap: '8px' }}>
+						<button
+							onClick={() => setShowBulkGroupModal(true)}
+							style={{
+								padding: '6px 12px',
+								background: '#3b82f6',
+								color: 'white',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: 'pointer',
+								fontSize: '12px',
+							}}>
+							🧩 Group History
+						</button>
+						<button
+							onClick={() => setSelectedRecordIds(new Set())}
+							style={{
+								padding: '6px 12px',
+								background: '#e5e7eb',
+								color: '#374151',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: 'pointer',
+								fontSize: '12px',
+							}}>
+							Clear Selection
+						</button>
+					</div>
 				</Toolbar>
 			)}
 
@@ -803,7 +900,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 					}}>
 					<input
 						type='text'
-						placeholder='Search tasks, notes...'
+						placeholder='Search history, notes...'
 						value={(filters.search as string) || ''}
 						onChange={(e) =>
 							setFilters((prev) => ({
@@ -856,11 +953,15 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 								groupId={groupId}
 								records={records}
 								units={units}
-								tasks={tasks}
-								propertyId={property.id}
 								propertySlug={property.slug}
 								onDelete={onDeleteMaintenanceHistory}
-								onUpdate={onUpdateMaintenanceHistory}
+								selectedRecordIds={selectedRecordIds}
+								onToggleRecordSelection={
+									canBulkEdit ? toggleRecordSelection : undefined
+								}
+								onDeleteGroup={
+									onDeleteMaintenanceHistory ? handleDeleteGroup : undefined
+								}
 							/>
 						))}
 						{/* Display ungrouped records */}
@@ -869,11 +970,12 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 								key={record.id}
 								record={record}
 								units={units}
-								tasks={tasks}
-								propertyId={property.id}
 								propertySlug={property.slug}
 								onDelete={onDeleteMaintenanceHistory}
-								onUpdate={onUpdateMaintenanceHistory}
+								isSelected={selectedRecordIds.has(record.id)}
+								onSelectionChange={
+									canBulkEdit ? toggleRecordSelection : undefined
+								}
 							/>
 						))}
 					</div>
@@ -882,6 +984,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 						<GridTable>
 							<thead>
 								<tr>
+									{canBulkEdit && <th></th>}
 									<th>Date</th>
 									{property?.propertyType === 'Multi-Family' && <th>Unit</th>}
 									<th>Task</th>
@@ -907,7 +1010,9 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 												}}>
 												<td
 													colSpan={
-														property?.propertyType === 'Multi-Family' ? 7 : 6
+														(property?.propertyType === 'Multi-Family'
+															? 7
+															: 6) + (canBulkEdit ? 1 : 0)
 													}
 													style={{ padding: '12px' }}>
 													<div
@@ -916,6 +1021,16 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 															alignItems: 'center',
 															fontWeight: '600',
 														}}>
+														{canBulkEdit && (
+															<input
+																type='checkbox'
+																checked={records.every((record) =>
+																	selectedRecordIds.has(record.id),
+																)}
+																onChange={() => toggleGroupSelection(records)}
+																style={{ marginRight: '8px' }}
+															/>
+														)}
 														<span style={{ marginRight: '8px' }}>🔄</span>
 														{records[0].title} ({records.length} instances)
 														<button
@@ -932,6 +1047,22 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 															}}>
 															View details
 														</button>
+														{onDeleteMaintenanceHistory && (
+															<button
+																onClick={() => handleDeleteGroup(records)}
+																style={{
+																	marginLeft: '8px',
+																	fontSize: '12px',
+																	color: 'white',
+																	background: '#ef4444',
+																	padding: '4px 8px',
+																	borderRadius: '4px',
+																	border: 'none',
+																	cursor: 'pointer',
+																}}>
+																Delete group
+															</button>
+														)}
 														<span
 															style={{
 																marginLeft: 'auto',
@@ -944,9 +1075,9 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 															).toLocaleDateString()}
 														</span>
 													</div>
-													{/* Show all instances in the group */}
+													{/* Show the last two instances in the group */}
 													<div style={{ marginTop: '8px' }}>
-														{records.map((record) => (
+														{records.slice(0, 2).map((record) => (
 															<div
 																key={record.id}
 																style={{
@@ -963,6 +1094,17 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 																</span>
 															</div>
 														))}
+														{records.length > 2 && (
+															<div
+																style={{
+																	marginTop: '6px',
+																	paddingLeft: '24px',
+																	fontSize: '12px',
+																	color: '#6b7280',
+																}}>
+																Showing last 2. View details for full history.
+															</div>
+														)}
 													</div>
 												</td>
 											</tr>
@@ -1000,6 +1142,15 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 													navigate(recordLink);
 												}
 											}}>
+											{canBulkEdit && (
+												<td>
+													<input
+														type='checkbox'
+														checked={selectedRecordIds.has(record.id)}
+														onChange={() => toggleRecordSelection(record.id)}
+													/>
+												</td>
+											)}
 											<td>{record.completionDate || '-'}</td>
 											{property?.propertyType === 'Multi-Family' && (
 												<td>{unitDisplay}</td>
@@ -1093,8 +1244,40 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 					teamMembers={teamMembers}
 					contractors={contractors}
 					familyMembers={familyMembers}
-					tasks={tasks}
+					groupOptions={maintenanceGroupOptions}
+					onCreateGroupId={createMaintenanceGroupId}
 				/>
+			)}
+
+			{showBulkGroupModal && (
+				<GenericModal
+					isOpen={showBulkGroupModal}
+					onClose={() => setShowBulkGroupModal(false)}
+					title='Group Maintenance History'
+					showActions={true}
+					primaryButtonLabel='Apply Group'
+					secondaryButtonLabel='Cancel'
+					onSubmit={(e) => {
+						e.preventDefault();
+						const form = e.target as HTMLFormElement;
+						const selectedGroupId =
+							(form.elements.namedItem('bulkGroupId') as HTMLSelectElement)
+								.value || '';
+						handleBulkGroupRecords(selectedGroupId);
+					}}>
+					<FormGroup>
+						<FormLabel>Maintenance Group</FormLabel>
+						<FormSelect name='bulkGroupId' defaultValue=''>
+							<option value=''>Select a group...</option>
+							<option value='__new__'>Create new group</option>
+							{maintenanceGroupOptions.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</FormSelect>
+					</FormGroup>
+				</GenericModal>
 			)}
 		</SectionContainer>
 	);
@@ -1104,35 +1287,34 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 interface MaintenanceHistoryCardProps {
 	record: any;
 	units: any[];
-	tasks: any[];
-	propertyId: string;
 	propertySlug: string;
 	onDelete?: (id: string) => void;
-	onUpdate?: (id: string, updates: Partial<any>) => void;
 	isGroupedView?: boolean;
 	groupRecords?: any[];
+	isSelected?: boolean;
+	onSelectionChange?: (recordId: string) => void;
 }
 
 interface MaintenanceHistoryGroupProps {
 	groupId: string;
 	records: any[];
 	units: any[];
-	tasks: any[];
-	propertyId: string;
 	propertySlug: string;
 	onDelete?: (historyId: string) => void;
-	onUpdate?: (id: string, updates: Partial<any>) => void;
+	selectedRecordIds?: Set<string>;
+	onToggleRecordSelection?: (recordId: string) => void;
+	onDeleteGroup?: (records: any[]) => void;
 }
 
 const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 	groupId,
 	records,
 	units,
-	tasks,
-	propertyId,
 	propertySlug,
 	onDelete,
-	onUpdate,
+	selectedRecordIds = new Set(),
+	onToggleRecordSelection,
+	onDeleteGroup,
 }) => {
 	const navigate = useNavigate();
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -1186,6 +1368,23 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 					</p>
 				</div>
 				<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+					{onDeleteGroup && (
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								onDeleteGroup(records);
+							}}
+							style={{
+								fontSize: '12px',
+								color: '#ef4444',
+								background: 'none',
+								border: 'none',
+								padding: 0,
+								cursor: 'pointer',
+							}}>
+							Delete group
+						</button>
+					)}
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
@@ -1208,22 +1407,31 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 			</div>
 
 			{isExpanded && (
-				<div>
-					{records.map((record) => (
+				<>
+					{records.slice(0, 2).map((record) => (
 						<MaintenanceHistoryCard
 							key={record.id}
 							record={record}
 							units={units}
-							tasks={tasks}
-							propertyId={propertyId}
 							propertySlug={propertySlug}
 							onDelete={onDelete}
-							onUpdate={onUpdate}
 							isGroupedView={true}
 							groupRecords={records}
+							isSelected={selectedRecordIds.has(record.id)}
+							onSelectionChange={onToggleRecordSelection}
 						/>
 					))}
-				</div>
+					{records.length > 2 && (
+						<div
+							style={{
+								marginTop: '6px',
+								fontSize: '12px',
+								color: '#6b7280',
+							}}>
+							Showing last 2. View details for full history.
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);
@@ -1232,19 +1440,17 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 	record,
 	units,
-	tasks,
-	propertyId,
 	propertySlug,
 	onDelete,
-	onUpdate,
 	isGroupedView: _isGroupedView = false,
 	groupRecords: _groupRecords = [],
+	isSelected = false,
+	onSelectionChange,
 }) => {
 	const navigate = useNavigate();
-	const [showLinkTaskModal, setShowLinkTaskModal] = useState(false);
 
 	const getMaintenanceGroupId = (record: any): string | undefined => {
-		return record.maintenanceGroupId || record.recurringTaskId;
+		return record.maintenanceGroupId;
 	};
 
 	const recordGroupId = getMaintenanceGroupId(record) || record.id;
@@ -1261,50 +1467,55 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 		return unit ? unit.unitName : '';
 	};
 
-	// Get linked tasks for this record
-	const linkedTasks = React.useMemo(() => {
-		if (!record.linkedTaskIds || !tasks.length) return [];
-		return tasks.filter((task) => record.linkedTaskIds.includes(task.id));
-	}, [record.linkedTaskIds, tasks]);
-
-	// Handle linking tasks
-	const handleLinkTasks = (linkedTaskIds: string[]) => {
-		if (onUpdate) {
-			const currentLinkedTaskIds = record.linkedTaskIds || [];
-			const updatedLinkedTaskIds = [
-				...new Set([...currentLinkedTaskIds, ...linkedTaskIds]),
-			];
-			onUpdate(record.id, { linkedTaskIds: updatedLinkedTaskIds });
-		}
-	};
 	return (
 		<>
 			<div
 				style={{
-					background: 'white',
+					background: isSelected ? '#eff6ff' : 'white',
 					borderRadius: '8px',
 					padding: '16px',
 					boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-					border: '1px solid #e5e7eb',
+					border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
 				}}>
 				{/* Header */}
-				<div style={{ marginBottom: '12px' }}>
-					<h3
-						style={{
-							margin: '0 0 4px 0',
-							fontSize: '16px',
-							fontWeight: '600',
-						}}>
-						{record.title}
-					</h3>
-					<p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-						{new Date(record.completionDate).toLocaleDateString()}
-						{record.unitId && (
-							<span style={{ marginLeft: '8px', fontWeight: '500' }}>
-								• {getUnitName(record.unitId)}
-							</span>
-						)}
-					</p>
+				<div
+					style={{
+						marginBottom: '12px',
+						display: 'flex',
+						alignItems: 'flex-start',
+						gap: '12px',
+					}}>
+					{onSelectionChange && (
+						<input
+							type='checkbox'
+							checked={isSelected}
+							onChange={() => onSelectionChange(record.id)}
+							style={{
+								marginTop: '2px',
+								cursor: 'pointer',
+								width: '18px',
+								height: '18px',
+							}}
+						/>
+					)}
+					<div style={{ flex: 1 }}>
+						<h3
+							style={{
+								margin: '0 0 4px 0',
+								fontSize: '16px',
+								fontWeight: '600',
+							}}>
+							{record.title}
+						</h3>
+						<p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
+							{new Date(record.completionDate).toLocaleDateString()}
+							{record.unitId && (
+								<span style={{ marginLeft: '8px', fontWeight: '500' }}>
+									• {getUnitName(record.unitId)}
+								</span>
+							)}
+						</p>
+					</div>
 				</div>
 
 				{/* Completed By */}
@@ -1356,28 +1567,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 					</div>
 				)}
 
-				{/* Linked Tasks */}
-				{linkedTasks.length > 0 && (
-					<div style={{ marginBottom: '8px' }}>
-						<span style={{ fontSize: '14px', fontWeight: '500' }}>
-							Linked Tasks:
-						</span>
-						<div style={{ marginTop: '4px' }}>
-							{linkedTasks.map((task) => (
-								<div
-									key={task.id}
-									style={{
-										fontSize: '12px',
-										color: '#6b7280',
-										marginBottom: '2px',
-									}}>
-									• {task.title} ({task.status})
-								</div>
-							))}
-						</div>
-					</div>
-				)}
-
 				{/* Action Buttons */}
 				<div style={{ marginTop: '12px', textAlign: 'right' }}>
 					{recordLink && (
@@ -1398,22 +1587,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 							View details
 						</button>
 					)}
-					{onUpdate && (
-						<button
-							onClick={() => setShowLinkTaskModal(true)}
-							style={{
-								padding: '4px 8px',
-								background: '#3b82f6',
-								color: 'white',
-								border: 'none',
-								borderRadius: '4px',
-								cursor: 'pointer',
-								fontSize: '12px',
-								marginRight: '8px',
-							}}>
-							🔗 Link Task
-						</button>
-					)}
 					{onDelete && (
 						<button
 							onClick={() => onDelete!(record.id)}
@@ -1431,18 +1604,6 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 					)}
 				</div>
 			</div>
-
-			{/* Link Task Modal */}
-			{showLinkTaskModal && (
-				<LinkTaskModal
-					isOpen={showLinkTaskModal}
-					onClose={() => setShowLinkTaskModal(false)}
-					onSubmit={handleLinkTasks}
-					tasks={tasks}
-					currentLinkedTaskIds={record.linkedTaskIds || []}
-					propertyId={propertyId}
-				/>
-			)}
 		</>
 	);
 };
