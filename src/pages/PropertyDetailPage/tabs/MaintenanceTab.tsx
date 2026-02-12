@@ -20,6 +20,7 @@ import { applyFilters } from '../../../utils/tableFilters';
 export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 	property,
 	maintenanceHistoryRecords = [],
+	units = [],
 }) => {
 	const [filters, setFilters] = useState<FilterValues>({});
 
@@ -28,13 +29,30 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 		{
 			key: 'search',
 			label: 'Search',
-			type: 'text',
+			type: 'text' as const,
 			placeholder: 'Search tasks, notes...',
 		},
+		// Only show unit filter for Multi-Family properties
+		...(property?.propertyType === 'Multi-Family'
+			? [
+					{
+						key: 'unit',
+						label: 'Unit',
+						type: 'select' as const,
+						options: [
+							{ value: 'all', label: 'All Units' },
+							...units.map((unit) => ({
+								value: unit.id,
+								label: unit.unitNumber || unit.address || `Unit ${unit.id}`,
+							})),
+						],
+					},
+			  ]
+			: []),
 		{
 			key: 'completedBy',
 			label: 'Completed By',
-			type: 'select',
+			type: 'select' as const,
 			options: [
 				{ value: 'unassigned', label: 'Unassigned' },
 				// Dynamically populate with users from existing records
@@ -63,7 +81,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 		{
 			key: 'completionDate',
 			label: 'Completion Date',
-			type: 'daterange',
+			type: 'daterange' as const,
 		},
 	];
 
@@ -92,19 +110,37 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 				}),
 			),
 		],
-		[maintenanceHistoryRecords, property.maintenanceHistory, property],
+		[maintenanceHistoryRecords, property],
 	);
 
 	// Apply filters to maintenance records
 	const filteredRecords = useMemo(() => {
-		return applyFilters(allMaintenanceRecords, filters, {
+		let records = applyFilters(allMaintenanceRecords, filters, {
 			textFields: ['title', 'notes'],
 			selectFields: [{ field: 'completedBy', filterKey: 'completedBy' }],
 			dateRangeFields: [
 				{ field: 'completionDate', filterKey: 'completionDate' },
 			],
 		});
-	}, [allMaintenanceRecords, filters]);
+
+		// Apply unit filter separately (only for Multi-Family properties)
+		if (
+			property?.propertyType === 'Multi-Family' &&
+			filters.unit &&
+			filters.unit !== 'all'
+		) {
+			records = records.filter((record: any) => {
+				// For unit-level maintenance, check if the record's unitId matches
+				if (record.unitId) {
+					return record.unitId === filters.unit;
+				}
+				// For property-level maintenance, only show if no unit filter is applied
+				return false;
+			});
+		}
+
+		return records;
+	}, [allMaintenanceRecords, filters, property?.propertyType]);
 
 	return (
 		<SectionContainer>
@@ -118,6 +154,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 						<thead>
 							<tr>
 								<th>Date</th>
+								{property?.propertyType === 'Multi-Family' && <th>Unit</th>}
 								<th>Task</th>
 								<th>Completed By</th>
 								<th>Notes</th>
@@ -126,35 +163,53 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 						</thead>
 						<tbody>
 							{/* Display filtered maintenance records */}
-							{filteredRecords.map((record: any) => (
-								<tr key={record.id || `record-${Math.random()}`}>
-									<td>{record.completionDate || '-'}</td>
-									<td>
-										<strong>{record.title || 'Task'}</strong>
-										{record.notes && record.notes !== '-' && (
-											<>
-												<br />
-												<small style={{ color: '#666' }}>{record.notes}</small>
-											</>
+							{filteredRecords.map((record: any) => {
+								// Find the unit name for this record (only for Multi-Family properties)
+								const unitForRecord =
+									property?.propertyType === 'Multi-Family' && record.unitId
+										? units.find((unit: any) => unit.id === record.unitId)
+										: null;
+								const unitDisplay = unitForRecord
+									? unitForRecord.unitNumber || unitForRecord.address || 'Unit'
+									: 'Property';
+
+								return (
+									<tr key={record.id || `record-${Math.random()}`}>
+										<td>{record.completionDate || '-'}</td>
+										{property?.propertyType === 'Multi-Family' && (
+											<td>{unitDisplay}</td>
 										)}
-									</td>
-									<td>{record.completedByName || record.completedBy || '-'}</td>
-									<td>{record.completionNotes || record.notes || '-'}</td>
-									<td>
-										{record.completionFile && !record.isLegacy ? (
-											<a
-												href={record.completionFile.url}
-												target='_blank'
-												rel='noopener noreferrer'
-												style={{ color: '#22c55e' }}>
-												📎 {record.completionFile.name}
-											</a>
-										) : (
-											'-'
-										)}
-									</td>
-								</tr>
-							))}
+										<td>
+											<strong>{record.title || 'Task'}</strong>
+											{record.notes && record.notes !== '-' && (
+												<>
+													<br />
+													<small style={{ color: '#666' }}>
+														{record.notes}
+													</small>
+												</>
+											)}
+										</td>
+										<td>
+											{record.completedByName || record.completedBy || '-'}
+										</td>
+										<td>{record.completionNotes || record.notes || '-'}</td>
+										<td>
+											{record.completionFile && !record.isLegacy ? (
+												<a
+													href={record.completionFile.url}
+													target='_blank'
+													rel='noopener noreferrer'
+													style={{ color: '#22c55e' }}>
+													📎 {record.completionFile.name}
+												</a>
+											) : (
+												'-'
+											)}
+										</td>
+									</tr>
+								);
+							})}
 						</tbody>
 					</GridTable>
 				</GridContainer>

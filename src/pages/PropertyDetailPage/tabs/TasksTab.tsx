@@ -713,7 +713,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 					isOpen={!!selectedTaskForModal}
 					title='Task Details'
 					onClose={handleCloseModal}
-					showActions={false}>
+					showActions={true}>
 					<div>
 						<TaskDetailRow>
 							<TaskDetailLabel>Task Name:</TaskDetailLabel>

@@ -5,7 +5,6 @@ import Tabs from './Tabs';
 
 const makeProps = (overrides: any = {}) => ({
 	property: overrides.property || {},
-	hasCommercialSuites: overrides.hasCommercialSuites || false,
 	currentUser: overrides.currentUser || {
 		subscription: { plan: 'basic' },
 		role: 'manager',
@@ -24,16 +23,15 @@ describe('Tabs component', () => {
 		expect(screen.getByText('Units')).toBeInTheDocument();
 	});
 
-	test('shows Suites for Commercial properties when suites are enabled', () => {
+	test('does not show Suites for Commercial properties (temporarily hidden)', () => {
 		render(
 			<Tabs
 				{...makeProps({
 					property: { propertyType: 'Commercial' },
-					hasCommercialSuites: true,
 				})}
 			/>,
 		);
-		expect(screen.getByText('Suites')).toBeInTheDocument();
+		expect(screen.queryByText('Suites')).not.toBeInTheDocument();
 	});
 
 	test('shows Tenants and Requests for rental properties for non-homeowner users', () => {

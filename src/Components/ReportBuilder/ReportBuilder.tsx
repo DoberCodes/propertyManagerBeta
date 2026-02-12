@@ -10,6 +10,10 @@ import {
 	useGetPublicTenantProfilesQuery,
 	useGetAllPropertySharesForUserQuery,
 	useGetContractorsQuery,
+	useGetUnitsQuery,
+	useGetDevicesQuery,
+	useGetAllUnitsQuery,
+	useGetAllDevicesQuery,
 } from '../../Redux/API/apiSlice';
 import {
 	FormGroup as LibraryFormGroup,
@@ -124,7 +128,12 @@ export const ReportBuilder: React.FC = () => {
 	const { data: contractors = [], isLoading: contractorsLoading } =
 		useGetContractorsQuery();
 
-	// For property-specific data, we'll aggregate across all properties
+	// Get all units and devices across all properties
+	const { data: allUnits = [], isLoading: unitsLoading } =
+		useGetAllUnitsQuery();
+
+	const { data: allDevices = [], isLoading: devicesLoading } =
+		useGetAllDevicesQuery();
 	const suitesData = useMemo(() => {
 		const allSuites: any[] = [];
 		properties.forEach((property: any) => {
@@ -142,46 +151,28 @@ export const ReportBuilder: React.FC = () => {
 	}, [properties]);
 
 	const unitsData = useMemo(() => {
-		const allUnits: any[] = [];
-		properties.forEach((property: any) => {
-			if (property.units) {
-				property.units.forEach((unit: any) => {
-					allUnits.push({
-						...unit,
-						propertyTitle: property.title,
-						propertyId: property.id,
-					});
-				});
-			}
+		return allUnits.map((unit: any) => {
+			const property = properties.find((p: any) => p.id === unit.propertyId);
+			return {
+				...unit,
+				propertyTitle: property?.title || 'Unknown Property',
+				propertyId: unit.propertyId,
+			};
 		});
-		return allUnits;
-	}, [properties]);
+	}, [allUnits, properties]);
 
 	const devicesData = useMemo(() => {
-		const allDevices: any[] = [];
-		properties.forEach((property: any) => {
-			if (property.deviceIds && property.deviceIds.length > 0) {
-				// For now, we'll create device entries from the deviceIds
-				// In a real implementation, you'd fetch actual device data
-				property.deviceIds.forEach((deviceId: string) => {
-					allDevices.push({
-						id: deviceId,
-						type: 'Device',
-						brand: 'Unknown',
-						model: 'Unknown',
-						serialNumber: 'Unknown',
-						installationDate: 'Unknown',
-						status: 'Active',
-						location: `Property: ${property.title}`,
-						notes: 'Device details available in property management',
-						propertyTitle: property.title,
-						propertyId: property.id,
-					});
-				});
-			}
+		return allDevices.map((device: any) => {
+			const property = properties.find(
+				(p: any) => p.id === device.location?.propertyId,
+			);
+			return {
+				...device,
+				propertyTitle: property?.title || 'Unknown Property',
+				propertyId: device.location?.propertyId,
+			};
 		});
-		return allDevices;
-	}, [properties]);
+	}, [allDevices, properties]);
 
 	const contractorsData = useMemo(() => {
 		return contractors.map((contractor: any) => {

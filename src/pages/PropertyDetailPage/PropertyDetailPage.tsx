@@ -1356,7 +1356,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			<TabControlsContainer>
 				<Tabs
 					property={property}
-					hasCommercialSuites={hasCommercialSuites}
 					currentUser={currentUser}
 					propertyMaintenanceRequests={propertyMaintenanceRequests}
 					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
@@ -1384,7 +1383,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 				{/* Suites Tab */}
 				{activeTab === 'suites' &&
-					property?.propertyType === 'Commercial' &&
+					property?.propertyType !== 'Commercial' &&
 					property?.hasSuites && <SuitesTab property={property} />}
 
 				{/* Tasks Tab */}
@@ -1411,6 +1410,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					<MaintenanceTab
 						property={property}
 						maintenanceHistoryRecords={maintenanceHistoryRecords}
+						units={propertyUnits}
 					/>
 				)}
 
@@ -1541,163 +1541,166 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 			{/* Task Assignment Dialog */}
 			{showTaskAssignDialog && (
-				<GenericModal
-					isOpen={showTaskAssignDialog}
-					onClose={() => setShowTaskAssignDialog(false)}
-					title='Assign Task to Team Member'
+				<form
 					onSubmit={(e) => {
 						e.preventDefault();
 						handleConfirmAssignment();
-					}}
-					primaryButtonLabel='Assign'
-					primaryButtonDisabled={!selectedAssignee}
-					secondaryButtonLabel='Cancel'>
-					<FormGroup>
-						<FormLabel>Assign To</FormLabel>
-						<FormSelect
-							value={selectedAssignee ? selectedAssignee.id : ''}
-							onChange={(e) => {
-								const selectedId = e.target.value;
-								const filteredTeamMembers = teamMembers.filter(
-									(m): m is TeamMember => m !== undefined,
-								);
-
-								// Check team members
-								let found:
-									| TeamMember
-									| User
-									| {
-											id: string;
-											firstName: string;
-											lastName: string;
-											email: string;
-									  }
-									| null =
-									filteredTeamMembers.find((m) => m.id === selectedId) || null;
-
-								// Check current user (property owner)
-								if (!found && currentUser && currentUser.id === selectedId) {
-									found = currentUser;
-								}
-
-								// Check shared users
-								if (!found) {
-									const sharedUser = currentPropertyShares.find(
-										(share) =>
-											(share.sharedWithUserId || share.sharedWithEmail) ===
-											selectedId,
+					}}>
+					<GenericModal
+						isOpen={showTaskAssignDialog}
+						onClose={() => setShowTaskAssignDialog(false)}
+						title='Assign Task to Team Member'
+						primaryButtonLabel='Assign'
+						primaryButtonDisabled={!selectedAssignee}
+						secondaryButtonLabel='Cancel'>
+						<FormGroup>
+							<FormLabel>Assign To</FormLabel>
+							<FormSelect
+								value={selectedAssignee ? selectedAssignee.id : ''}
+								onChange={(e) => {
+									const selectedId = e.target.value;
+									const filteredTeamMembers = teamMembers.filter(
+										(m): m is TeamMember => m !== undefined,
 									);
-									if (sharedUser) {
-										const fullName =
-											sharedUser.sharedWithFirstName &&
-											sharedUser.sharedWithLastName
-												? `${sharedUser.sharedWithFirstName} ${sharedUser.sharedWithLastName}`
-												: sharedUser.sharedWithEmail?.split('@')[0] ||
-												  'Shared User';
-										const nameParts = fullName.split(' ');
-										found = {
-											id:
-												sharedUser.sharedWithUserId ||
-												sharedUser.sharedWithEmail,
-											firstName: nameParts[0] || fullName,
-											lastName: nameParts.slice(1).join(' ') || '',
-											email: sharedUser.sharedWithEmail,
-										};
-									}
-								}
 
-								// Check contractors
-								if (!found) {
-									const contractor = propertyContractors.find(
-										(c) => c.id === selectedId,
-									);
-									if (contractor) {
-										found = {
-											id: contractor.id,
-											firstName: contractor.name,
-											lastName: `(${contractor.category})`,
-											email: contractor.email || '',
-										};
-									}
-								}
+									// Check team members
+									let found:
+										| TeamMember
+										| User
+										| {
+												id: string;
+												firstName: string;
+												lastName: string;
+												email: string;
+										  }
+										| null =
+										filteredTeamMembers.find((m) => m.id === selectedId) ||
+										null;
 
-								if (found) {
-									// Safely construct the name property
-									let name = '';
-									if (
-										'firstName' in found &&
-										'lastName' in found &&
-										found.firstName &&
-										found.lastName
-									) {
-										name = `${found.firstName} ${found.lastName}`;
-									} else if ('firstName' in found && found.firstName) {
-										name = found.firstName;
-									} else if (
-										'name' in found &&
-										typeof found.name === 'string' &&
-										found.name
-									) {
-										name = found.name;
-									} else if ('email' in found && found.email) {
-										name = found.email;
+									// Check current user (property owner)
+									if (!found && currentUser && currentUser.id === selectedId) {
+										found = currentUser;
+									}
+
+									// Check shared users
+									if (!found) {
+										const sharedUser = currentPropertyShares.find(
+											(share) =>
+												(share.sharedWithUserId || share.sharedWithEmail) ===
+												selectedId,
+										);
+										if (sharedUser) {
+											const fullName =
+												sharedUser.sharedWithFirstName &&
+												sharedUser.sharedWithLastName
+													? `${sharedUser.sharedWithFirstName} ${sharedUser.sharedWithLastName}`
+													: sharedUser.sharedWithEmail?.split('@')[0] ||
+													  'Shared User';
+											const nameParts = fullName.split(' ');
+											found = {
+												id:
+													sharedUser.sharedWithUserId ||
+													sharedUser.sharedWithEmail,
+												firstName: nameParts[0] || fullName,
+												lastName: nameParts.slice(1).join(' ') || '',
+												email: sharedUser.sharedWithEmail,
+											};
+										}
+									}
+
+									// Check contractors
+									if (!found) {
+										const contractor = propertyContractors.find(
+											(c) => c.id === selectedId,
+										);
+										if (contractor) {
+											found = {
+												id: contractor.id,
+												firstName: contractor.name,
+												lastName: `(${contractor.category})`,
+												email: contractor.email || '',
+											};
+										}
+									}
+
+									if (found) {
+										// Safely construct the name property
+										let name = '';
+										if (
+											'firstName' in found &&
+											'lastName' in found &&
+											found.firstName &&
+											found.lastName
+										) {
+											name = `${found.firstName} ${found.lastName}`;
+										} else if ('firstName' in found && found.firstName) {
+											name = found.firstName;
+										} else if (
+											'name' in found &&
+											typeof found.name === 'string' &&
+											found.name
+										) {
+											name = found.name;
+										} else if ('email' in found && found.email) {
+											name = found.email;
+										} else {
+											name = found.id;
+										}
+										const assignedTo = {
+											id: found.id,
+											name,
+											email: found.email || '',
+										};
+										setSelectedAssignee(assignedTo);
 									} else {
-										name = found.id;
+										setSelectedAssignee(null);
 									}
-									const assignedTo = {
-										id: found.id,
-										name,
-										email: found.email || '',
-									};
-									setSelectedAssignee(assignedTo);
-								} else {
-									setSelectedAssignee(null);
-								}
-							}}>
-							<option value=''>Select a user...</option>
-							{/* Property owner */}
-							{(() => {
-								const ownerName =
-									property?.owner ||
-									`${currentUser?.firstName} ${currentUser?.lastName}`;
-								const ownerId = currentUser?.id || '';
-								return ownerName ? (
-									<option key={ownerId} value={ownerId}>
-										{ownerName} (Owner)
-									</option>
-								) : null;
-							})()}
-							{/* Shared users */}
-							{currentPropertyShares.map((share) => {
-								const fullName =
-									share.sharedWithFirstName && share.sharedWithLastName
-										? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
-										: share.sharedWithEmail?.split('@')[0] || 'Shared User';
-								return (
-									<option
-										key={share.sharedWithUserId || share.sharedWithEmail}
-										value={share.sharedWithUserId || share.sharedWithEmail}>
-										{fullName} (Shared User)
-									</option>
-								);
-							})}
-							{/* Team members */}
-							{teamMembers
-								.filter((m): m is TeamMember => m !== undefined)
-								.map((member) => (
-									<option key={member.id} value={member.id}>
-										{member.firstName} {member.lastName} ({member.title})
+								}}>
+								<option value=''>Select a user...</option>
+								{/* Property owner */}
+								{(() => {
+									const ownerName =
+										property?.owner ||
+										`${currentUser?.firstName} ${currentUser?.lastName}`;
+									const ownerId = currentUser?.id || '';
+									return ownerName ? (
+										<option key={ownerId} value={ownerId}>
+											{ownerName} (Owner)
+										</option>
+									) : null;
+								})()}
+								{/* Shared users */}
+								{currentPropertyShares.map((share) => {
+									const fullName =
+										share.sharedWithFirstName && share.sharedWithLastName
+											? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+											: share.sharedWithEmail?.split('@')[0] || 'Shared User';
+									return (
+										<option
+											key={share.sharedWithUserId || share.sharedWithEmail}
+											value={share.sharedWithUserId || share.sharedWithEmail}>
+											{fullName} (Shared User)
+										</option>
+									);
+								})}
+								{/* Team members */}
+								{teamMembers
+									.filter((m): m is TeamMember => m !== undefined)
+									.map((member) => (
+										<option key={member.id} value={member.id}>
+											{member.firstName} {member.lastName} ({member.title})
+										</option>
+									))}
+								{/* Contractors */}
+								{propertyContractors.map((contractor) => (
+									<option key={contractor.id} value={contractor.id}>
+										{contractor.name} ({contractor.category})
 									</option>
 								))}
-							{/* Contractors */}
-							{propertyContractors.map((contractor) => (
-								<option key={contractor.id} value={contractor.id}>
-									{contractor.name} ({contractor.category})
-								</option>
-							))}
-						</FormSelect>
-					</FormGroup>
-				</GenericModal>
+							</FormSelect>
+						</FormGroup>
+					</GenericModal>
+				</form>
 			)}
 
 			{/* Convert Request to Task Modal */}

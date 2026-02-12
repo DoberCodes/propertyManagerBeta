@@ -3,7 +3,6 @@ import { FormSelect } from '../Modal/ModalStyles';
 
 export interface TabsContextProps {
 	property: any;
-	hasCommercialSuites: boolean;
 	currentUser: any;
 	propertyMaintenanceRequests: any[];
 	canApproveMaintenanceRequest: (role: any) => boolean;
@@ -22,7 +21,6 @@ interface tab {
 
 const Tabs: React.FC<TabsProps> = ({
 	property,
-	hasCommercialSuites,
 	currentUser,
 	propertyMaintenanceRequests,
 	canApproveMaintenanceRequest,
@@ -52,10 +50,10 @@ const Tabs: React.FC<TabsProps> = ({
 
 	const tabsForProperty: tab[] = [...baseTabs];
 
-	// Suites for commercial properties with suites enabled
-	if (property?.propertyType === 'Commercial' && hasCommercialSuites) {
-		tabsForProperty.push({ label: 'Suites', value: 'suites' });
-	}
+	// Suites for commercial properties with suites enabled - temporarily hidden for commercial
+	// if (property?.propertyType === 'Commercial' && hasCommercialSuites) {
+	//     tabsForProperty.push({ label: 'Suites', value: 'suites' });
+	// }
 
 	// Units for multi-family properties
 	if (property?.propertyType === 'Multi-Family') {

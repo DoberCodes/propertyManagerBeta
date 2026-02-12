@@ -23,6 +23,7 @@ import { MaintenanceRequestModal } from '../../Components/MaintenanceRequestModa
 import {
 	useCreateDeviceMutation,
 	useCreateTaskMutation,
+	useGetUnitDevicesQuery,
 } from '../../Redux/API/apiSlice';
 import { getDeviceName } from '../../utils/detailPageUtils';
 import { TabConfig } from '../../types/DetailPage.types';
@@ -98,6 +99,8 @@ export const UnitDetailPage: React.FC = () => {
 	const dispatch = useDispatch();
 	const [createDevice] = useCreateDeviceMutation();
 	const [createTask] = useCreateTaskMutation();
+	const { data: unitDevices = [], isLoading: devicesLoading } =
+		useGetUnitDevicesQuery(unit?.id || '', { skip: !unit?.id });
 
 	const handleMaintenanceRequestSubmit = (request: MaintenanceRequest) => {
 		if (!property || !currentUser) return;
@@ -115,7 +118,7 @@ export const UnitDetailPage: React.FC = () => {
 	const tabsConfig: TabConfig[] = [
 		{ id: 'info', label: 'Unit Info' },
 		{ id: 'occupants', label: `Occupants (${(unit?.occupants || []).length})` },
-		{ id: 'devices', label: `Devices (${(unit?.deviceIds || []).length})` },
+		{ id: 'devices', label: `Devices (${unitDevices.length})` },
 		{ id: 'tasks', label: `Tasks (${unitTasks.length})` },
 		{
 			id: 'history',
@@ -232,18 +235,49 @@ export const UnitDetailPage: React.FC = () => {
 									Add Device
 								</PrimaryButton>
 							</Toolbar>
-							{unit.deviceIds && unit.deviceIds.length > 0 ? (
+							{devicesLoading ? (
+								<div>Loading devices...</div>
+							) : unitDevices.length > 0 ? (
 								<GridContainer>
 									<GridTable>
 										<thead>
 											<tr>
-												<th>Device ID</th>
+												<th>Type</th>
+												<th>Brand</th>
+												<th>Model</th>
+												<th>Status</th>
+												<th>Installation Date</th>
 											</tr>
 										</thead>
 										<tbody>
-											{unit.deviceIds.map((deviceId: string) => (
-												<tr key={deviceId}>
-													<td>{deviceId}</td>
+											{unitDevices.map((device) => (
+												<tr key={device.id}>
+													<td>{device.type}</td>
+													<td>{device.brand}</td>
+													<td>{device.model}</td>
+													<td>
+														<span
+															style={{
+																color:
+																	device.status === 'Active'
+																		? '#22c55e'
+																		: device.status === 'Maintenance'
+																		? '#f59e0b'
+																		: device.status === 'Broken'
+																		? '#ef4444'
+																		: '#6b7280',
+																fontWeight: 'bold',
+															}}>
+															{device.status || 'Active'}
+														</span>
+													</td>
+													<td>
+														{device.installationDate
+															? new Date(
+																	device.installationDate,
+															  ).toLocaleDateString()
+															: 'N/A'}
+													</td>
 												</tr>
 											))}
 										</tbody>

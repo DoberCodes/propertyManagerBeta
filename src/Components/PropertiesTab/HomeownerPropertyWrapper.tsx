@@ -7,6 +7,7 @@ import { PropertyDialog } from './PropertyDialog';
 import {
 	useCreatePropertyMutation,
 	useCreatePropertyGroupMutation,
+	useCreateUnitMutation,
 } from '../../Redux/API/apiSlice';
 
 /**
@@ -23,6 +24,7 @@ const HomeownerPropertyWrapper: React.FC = () => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [createProperty] = useCreatePropertyMutation();
 	const [createPropertyGroup] = useCreatePropertyGroupMutation();
+	const [createUnit] = useCreateUnitMutation();
 
 	// Find all properties for this user
 	const allProperties = propertyGroups.flatMap(
@@ -57,11 +59,38 @@ const HomeownerPropertyWrapper: React.FC = () => {
 			}
 
 			// Create the property
-			await createProperty({
+			const propertyResult = await createProperty({
 				...formData,
 				groupId,
 				userId: currentUser!.id,
 			});
+
+			// Create units for Multi-Family properties
+			if (
+				formData.propertyType === 'Multi-Family' &&
+				formData.units &&
+				formData.units.length > 0
+			) {
+				if ('data' in propertyResult && propertyResult.data) {
+					try {
+						for (const unitName of formData.units) {
+							await createUnit({
+								userId: currentUser!.id,
+								propertyId: propertyResult.data.id,
+								name: unitName,
+								floor: 1, // Default floor
+								area: 1000, // Default area
+								isOccupied: false,
+								deviceIds: [],
+								occupants: [],
+							}).unwrap();
+						}
+					} catch (unitError) {
+						console.error('Failed to create units:', unitError);
+						// Don't fail property creation if unit creation fails
+					}
+				}
+			}
 
 			setDialogOpen(false);
 		} catch (error) {

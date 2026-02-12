@@ -1810,6 +1810,21 @@ export const apiSlice = createApi({
 			invalidatesTags: ['Units'],
 		}),
 
+		// Get all units across all properties (for reports)
+		getAllUnits: builder.query<Unit[], void>({
+			async queryFn() {
+				try {
+					const q = query(collection(db, 'units'));
+					const querySnapshot = await getDocs(q);
+					const units = querySnapshot.docs.map(docToData);
+					return { data: units };
+				} catch (error) {
+					return { error: (error as Error).message };
+				}
+			},
+			providesTags: ['Units'],
+		}),
+
 		// Device endpoints
 		getDevices: builder.query<Device[], string>({
 			async queryFn(propertyId: string) {
@@ -1817,6 +1832,25 @@ export const apiSlice = createApi({
 					const q = query(
 						collection(db, 'devices'),
 						where('location.propertyId', '==', propertyId),
+					);
+					const querySnapshot = await getDocs(q);
+					const devices = querySnapshot.docs
+						.map((doc) => docToData(doc) as Device)
+						.filter(Boolean) as Device[];
+					return { data: devices };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['Devices'],
+		}),
+
+		getUnitDevices: builder.query<Device[], string>({
+			async queryFn(unitId: string) {
+				try {
+					const q = query(
+						collection(db, 'devices'),
+						where('location.unitId', '==', unitId),
 					);
 					const querySnapshot = await getDocs(q);
 					const devices = querySnapshot.docs
@@ -1889,6 +1923,23 @@ export const apiSlice = createApi({
 				}
 			},
 			invalidatesTags: ['Devices'],
+		}),
+
+		// Get all devices across all properties (for reports)
+		getAllDevices: builder.query<Device[], void>({
+			async queryFn() {
+				try {
+					const q = query(collection(db, 'devices'));
+					const querySnapshot = await getDocs(q);
+					const devices = querySnapshot.docs
+						.map((doc) => docToData(doc) as Device)
+						.filter(Boolean) as Device[];
+					return { data: devices };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['Devices'],
 		}),
 
 		// Favorites endpoints
@@ -3510,12 +3561,15 @@ export const {
 	useDeleteSuiteMutation,
 	// Units
 	useGetUnitsQuery,
+	useGetAllUnitsQuery,
 	useGetUnitQuery,
 	useCreateUnitMutation,
 	useUpdateUnitMutation,
 	useDeleteUnitMutation,
 	// Devices
 	useGetDevicesQuery,
+	useGetAllDevicesQuery,
+	useGetUnitDevicesQuery,
 	useGetDeviceQuery,
 	useCreateDeviceMutation,
 	useUpdateDeviceMutation,

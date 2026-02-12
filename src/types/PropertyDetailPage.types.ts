@@ -70,6 +70,7 @@ export interface TasksTabProps {
 export interface MaintenanceTabProps {
 	property: any;
 	maintenanceHistoryRecords?: any[];
+	units?: any[];
 }
 
 export interface TenantsTabProps {

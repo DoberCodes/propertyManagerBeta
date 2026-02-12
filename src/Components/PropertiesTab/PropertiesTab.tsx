@@ -20,6 +20,7 @@ import {
 	useUpdatePropertyGroupMutation,
 	useDeletePropertyGroupMutation,
 	useCreateNotificationMutation,
+	useCreateUnitMutation,
 	useUpdateUserMutation,
 	useDeletePropertyShareMutation,
 	useGetAllPropertySharesForUserQuery,
@@ -84,6 +85,7 @@ export const Properties = () => {
 	const [updatePropertyGroup] = useUpdatePropertyGroupMutation();
 	const [deletePropertyGroup] = useDeletePropertyGroupMutation();
 	const [createNotification] = useCreateNotificationMutation();
+	const [createUnit] = useCreateUnitMutation();
 	const [updateUser] = useUpdateUserMutation();
 	const [deletePropertyShare] = useDeletePropertyShareMutation();
 
@@ -523,6 +525,31 @@ export const Properties = () => {
 					updates: sanitizedUpdates,
 				}).unwrap();
 
+				// Create units for Multi-Family properties if units were added
+				if (
+					formData.propertyType === 'Multi-Family' &&
+					unitsData &&
+					unitsData.length > 0
+				) {
+					try {
+						for (const unit of unitsData) {
+							await createUnit({
+								userId: currentUser!.id,
+								propertyId: selectedPropertyForEdit.id,
+								name: unit.name,
+								floor: 1, // Default floor
+								area: 1000, // Default area
+								isOccupied: false,
+								deviceIds: [],
+								occupants: unit.occupants || [],
+							}).unwrap();
+						}
+					} catch (unitError) {
+						console.error('Failed to create units:', unitError);
+						// Don't fail property update if unit creation fails
+					}
+				}
+
 				// Create notification for property update
 				try {
 					await createNotification({
@@ -595,6 +622,31 @@ export const Properties = () => {
 				const result = await createProperty(newPropertyData);
 
 				if ('data' in result) {
+					// Create units for Multi-Family properties
+					if (
+						formData.propertyType === 'Multi-Family' &&
+						unitsData &&
+						unitsData.length > 0
+					) {
+						try {
+							for (const unit of unitsData) {
+								await createUnit({
+									userId: currentUser!.id,
+									propertyId: result.data.id,
+									name: unit.name,
+									floor: 1, // Default floor
+									area: 1000, // Default area
+									isOccupied: false,
+									deviceIds: [],
+									occupants: unit.occupants || [],
+								}).unwrap();
+							}
+						} catch (unitError) {
+							console.error('Failed to create units:', unitError);
+							// Don't fail property creation if unit creation fails
+						}
+					}
+
 					addRecentlyViewed({
 						id: result.data.id as any, // Firebase uses string IDs
 						title: result.data.title,
