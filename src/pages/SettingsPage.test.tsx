@@ -271,7 +271,9 @@ describe('SettingsPage Family Members', () => {
 
 			await waitFor(() => {
 				expect(
-					screen.getByText('Family accounts are limited to 2 members.'),
+					screen.getByText(
+						'Family accounts are limited to 2 family members (plus the account owner).',
+					),
 				).toBeInTheDocument();
 			});
 			expect(screen.queryByText('Add Family Member')).not.toBeInTheDocument();

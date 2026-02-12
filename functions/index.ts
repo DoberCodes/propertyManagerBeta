@@ -10,6 +10,7 @@ export {
 export { sendFeedbackEmail } from './sendFeedbackEmail';
 export { markTasksAsOverdue } from './markTasksAsOverdue';
 export { deleteUserAccount } from './deleteUserAccount';
+export { deleteFamilyMemberAccount } from './deleteFamilyMemberAccount';
 export { addFamilyMember } from './addFamilyMember';
 export {
 	scheduledTaskNotifications,

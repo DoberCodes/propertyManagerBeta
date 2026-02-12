@@ -580,26 +580,13 @@ export const removeFamilyMember = async (
 			updatedAt: serverTimestamp(),
 		});
 
-		// Update user's accountId to null (they become independent)
-		await updateDoc(doc(db, 'users', memberId), {
-			accountId: null,
-			isAccountOwner: true, // They become their own account owner
-			updatedAt: serverTimestamp(),
-		});
-
-		// Create a new family account for the removed member
-		const memberDoc = await getDoc(doc(db, 'users', memberId));
-		if (memberDoc.exists()) {
-			const memberData = memberDoc.data();
-			await setDoc(doc(db, 'familyAccounts', memberId), {
-				id: memberId,
-				ownerId: memberId,
-				memberIds: [memberId],
-				subscription: accountData.subscription, // They keep the shared subscription
-				createdAt: serverTimestamp(),
-				updatedAt: serverTimestamp(),
-			});
-		}
+		// Call Cloud Function to delete the family member's account
+		// This preserves their tasks and history
+		const deleteFamilyMember = httpsCallable(
+			functions,
+			'deleteFamilyMemberAccount',
+		);
+		await deleteFamilyMember({ memberId, accountId });
 	} catch (error: any) {
 		console.error('Failed to remove family member:', error);
 		throw error;

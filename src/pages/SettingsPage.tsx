@@ -391,9 +391,14 @@ const SettingsPage: React.FC = () => {
 			return;
 		}
 
+		// Find the member being removed to get their name
+		const memberToRemove = familyMembers.find((m) => m.id === memberId);
+		const memberName =
+			memberToRemove?.displayName || memberToRemove?.email || 'Family Member';
+
 		if (
 			!window.confirm(
-				'Are you sure you want to remove this family member? They will lose access to the shared subscription.',
+				`⚠️ WARNING: You are about to remove "${memberName}" from the family account.\n\nThis will:\n• Delete their account\n• Remove their access to the shared subscription\n\nTheir name will be preserved on all tasks and history.\n\nAre you sure you want to proceed?`,
 			)
 		) {
 			return;
@@ -699,7 +704,8 @@ const SettingsPage: React.FC = () => {
 									fontSize: '14px',
 									marginTop: '8px',
 								}}>
-								Family accounts are limited to 2 members.
+								Family accounts are limited to 2 family members (plus the
+								account owner).
 							</p>
 						)}
 					</AccountSection>

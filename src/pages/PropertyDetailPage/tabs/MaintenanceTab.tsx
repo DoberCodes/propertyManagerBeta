@@ -871,6 +871,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 								units={units}
 								tasks={tasks}
 								propertyId={property.id}
+								propertySlug={property.slug}
 								onDelete={onDeleteMaintenanceHistory}
 								onUpdate={onUpdateMaintenanceHistory}
 							/>
@@ -1105,6 +1106,7 @@ interface MaintenanceHistoryCardProps {
 	units: any[];
 	tasks: any[];
 	propertyId: string;
+	propertySlug: string;
 	onDelete?: (id: string) => void;
 	onUpdate?: (id: string, updates: Partial<any>) => void;
 	isGroupedView?: boolean;
@@ -1214,6 +1216,7 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 							units={units}
 							tasks={tasks}
 							propertyId={propertyId}
+							propertySlug={propertySlug}
 							onDelete={onDelete}
 							onUpdate={onUpdate}
 							isGroupedView={true}
@@ -1231,12 +1234,27 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 	units,
 	tasks,
 	propertyId,
+	propertySlug,
 	onDelete,
 	onUpdate,
 	isGroupedView: _isGroupedView = false,
 	groupRecords: _groupRecords = [],
 }) => {
+	const navigate = useNavigate();
 	const [showLinkTaskModal, setShowLinkTaskModal] = useState(false);
+
+	const getMaintenanceGroupId = (record: any): string | undefined => {
+		return record.maintenanceGroupId || record.recurringTaskId;
+	};
+
+	const recordGroupId = getMaintenanceGroupId(record) || record.id;
+	const recordLink =
+		recordGroupId && !record.isLegacy
+			? `/property/${propertySlug}/maintenance-history/${encodeURIComponent(
+					recordGroupId,
+			  )}`
+			: null;
+
 	const getUnitName = (unitId?: string) => {
 		if (!unitId) return '';
 		const unit = units.find((u) => u.id === unitId);
@@ -1360,9 +1378,27 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 					</div>
 				)}
 
-				{/* Link Task Button */}
-				{onUpdate && (
-					<div style={{ marginTop: '12px', textAlign: 'right' }}>
+				{/* Action Buttons */}
+				<div style={{ marginTop: '12px', textAlign: 'right' }}>
+					{recordLink && (
+						<button
+							onClick={() => {
+								navigate(recordLink);
+							}}
+							style={{
+								padding: '4px 8px',
+								background: '#3b82f6',
+								color: 'white',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: 'pointer',
+								fontSize: '12px',
+								marginRight: '6px',
+							}}>
+							View details
+						</button>
+					)}
+					{onUpdate && (
 						<button
 							onClick={() => setShowLinkTaskModal(true)}
 							style={{
@@ -1377,23 +1413,23 @@ const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
 							}}>
 							🔗 Link Task
 						</button>
-						{onDelete && (
-							<button
-								onClick={() => onDelete!(record.id)}
-								style={{
-									padding: '6px 12px',
-									background: '#ef4444',
-									color: 'white',
-									border: 'none',
-									borderRadius: '4px',
-									cursor: 'pointer',
-									fontSize: '12px',
-								}}>
-								Delete
-							</button>
-						)}
-					</div>
-				)}
+					)}
+					{onDelete && (
+						<button
+							onClick={() => onDelete!(record.id)}
+							style={{
+								padding: '6px 12px',
+								background: '#ef4444',
+								color: 'white',
+								border: 'none',
+								borderRadius: '4px',
+								cursor: 'pointer',
+								fontSize: '12px',
+							}}>
+							Delete
+						</button>
+					)}
+				</div>
 			</div>
 
 			{/* Link Task Modal */}

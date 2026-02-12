@@ -84,10 +84,10 @@ export const addFamilyMember = functions.https.onCall(async (data, context) => {
 			);
 		}
 
-		if (accountData?.memberIds?.length >= 2) {
+		if (accountData?.memberIds?.length >= 3) {
 			throw new functions.https.HttpsError(
 				'resource-exhausted',
-				'Family accounts are limited to 2 members',
+				'Family accounts are limited to 2 family members (plus the account owner)',
 			);
 		}
 

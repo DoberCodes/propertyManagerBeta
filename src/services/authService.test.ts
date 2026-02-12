@@ -121,13 +121,17 @@ describe('Family Account Functionality', () => {
 			const mockCallableFunction = jest
 				.fn()
 				.mockRejectedValue(
-					new Error('Family accounts are limited to 2 members'),
+					new Error(
+						'Family accounts are limited to 2 family members (plus the account owner)',
+					),
 				);
 			mockHttpsCallable.mockReturnValue(mockCallableFunction);
 
 			await expect(
 				addFamilyMember(mockAccountId, 'new@example.com', 'Test', 'User'),
-			).rejects.toThrow('Family accounts are limited to 2 members');
+			).rejects.toThrow(
+				'Family accounts are limited to 2 family members (plus the account owner)',
+			);
 		});
 	});
 
