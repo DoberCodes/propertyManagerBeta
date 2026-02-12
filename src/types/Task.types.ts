@@ -64,6 +64,11 @@ export interface Task {
 	assigneeEmail?: string;
 	assigneeFirstName?: string;
 	assigneeLastName?: string;
+	assignedTo?: {
+		id: string;
+		name: string;
+		email?: string;
+	}; // New assignee object format
 	submittedBy?: string;
 	submittedByEmail?: string;
 	notes?: string;
@@ -114,6 +119,7 @@ export interface TaskFormData {
 	recurrenceCustomUnit?: RecurrenceCustomUnit;
 	enableNotifications?: boolean;
 	notifications?: TaskNotification[];
+	linkedMaintenanceHistoryIds?: string[];
 }
 
 export interface TaskHandlers {

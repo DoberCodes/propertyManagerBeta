@@ -71,6 +71,23 @@ export interface MaintenanceTabProps {
 	property: any;
 	maintenanceHistoryRecords?: any[];
 	units?: any[];
+	teamMembers?: any[];
+	contractors?: any[];
+	familyMembers?: any[];
+	tasks?: any[];
+	onAddMaintenanceHistory?: (data: {
+		title: string;
+		completionDate: string;
+		completedBy?: string;
+		completedByName?: string;
+		completionNotes?: string;
+		unitId?: string;
+		completionFile?: File;
+		recurringTaskId?: string;
+		linkedTaskIds?: string[];
+	}) => void;
+	onUpdateMaintenanceHistory?: (id: string, updates: Partial<any>) => void;
+	onDeleteMaintenanceHistory?: (historyId: string) => void;
 }
 
 export interface TenantsTabProps {

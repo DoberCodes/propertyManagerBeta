@@ -41,13 +41,10 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 	ownerEmail,
 }) => {
 	const [email, setEmail] = useState('');
-	const [permission, setPermission] = useState<'co-owner' | 'admin' | 'viewer'>(
-		'viewer',
-	);
+	const [permission, setPermission] = useState<'admin' | 'viewer'>('viewer');
 	const [editingShareId, setEditingShareId] = useState<string | null>(null);
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const [isGuestInvitation, setIsGuestInvitation] = useState(false);
 
 	const { data: shares = [], isLoading } =
 		useGetPropertySharesQuery(propertyId);
@@ -102,7 +99,6 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 				fromUserEmail: ownerEmail,
 				toEmail: email.toLowerCase(),
 				permission,
-				isGuestInvitation,
 			}).unwrap();
 
 			setSuccess(`Invitation sent to ${email}`);
@@ -159,7 +155,7 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 			<GenericModal
 				isOpen={open}
 				onClose={onClose}
-				title='Share Property'
+				title='Share Property with Users'
 				showActions={true}
 				secondaryButtonLabel='Close'
 				secondaryButtonAction={onClose}>
@@ -183,7 +179,11 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 
 				{/* Invite New User */}
 				<Section>
-					<SectionTitle>Invite User</SectionTitle>
+					<SectionTitle>Share with Existing User</SectionTitle>
+					<SectionDescription>
+						Enter the email address of an existing user to share this property
+						with them.
+					</SectionDescription>
 					<InviteForm>
 						<Input
 							type='email'
@@ -194,11 +194,8 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 						<Select
 							value={permission}
 							onChange={(e) =>
-								setPermission(e.target.value as 'co-owner' | 'admin' | 'viewer')
+								setPermission(e.target.value as 'admin' | 'viewer')
 							}>
-							<option value={SHARE_PERMISSIONS.CO_OWNER}>
-								{getSharePermissionLabel(SHARE_PERMISSIONS.CO_OWNER)}
-							</option>
 							<option value={SHARE_PERMISSIONS.ADMIN}>
 								{getSharePermissionLabel(SHARE_PERMISSIONS.ADMIN)}
 							</option>
@@ -206,17 +203,6 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 								{getSharePermissionLabel(SHARE_PERMISSIONS.VIEWER)}
 							</option>
 						</Select>
-						<GuestCheckboxContainer>
-							<GuestCheckbox
-								type='checkbox'
-								id='guestInvitation'
-								checked={isGuestInvitation}
-								onChange={(e) => setIsGuestInvitation(e.target.checked)}
-							/>
-							<GuestLabel htmlFor='guestInvitation'>
-								Invite as Property Guest
-							</GuestLabel>
-						</GuestCheckboxContainer>
 						<Button
 							onClick={handleSendInvitation}
 							disabled={isSending || !email}>
@@ -224,21 +210,15 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 								<FontAwesomeIcon icon={faSpinner} spin />
 							) : (
 								<>
-									<FontAwesomeIcon icon={faUserPlus} /> Invite
+									<FontAwesomeIcon icon={faUserPlus} /> Share
 								</>
 							)}
 						</Button>
 					</InviteForm>
 					<HelperText>
-						<strong>Co-Owner:</strong> Full ownership rights, can edit and
-						manage property
-						<br />
 						<strong>Admin:</strong> Can view and edit property details
 						<br />
 						<strong>Viewer:</strong> Can only view property details
-						<br />
-						<strong>Property Guest:</strong> User cannot create their own
-						properties, only access shared ones
 					</HelperText>
 				</Section>
 
@@ -439,6 +419,13 @@ const SectionTitle = styled.h3`
 	color: #333;
 `;
 
+const SectionDescription = styled.p`
+	margin: 0 0 16px;
+	font-size: 14px;
+	color: #666;
+	line-height: 1.4;
+`;
+
 const InviteForm = styled.div`
 	display: flex;
 	gap: 12px;
@@ -626,23 +613,6 @@ const IconButton = styled.button<{ color?: 'danger' }>`
 		opacity: 0.3;
 		cursor: not-allowed;
 	}
-`;
-
-const GuestCheckboxContainer = styled.div`
-	display: flex;
-	align-items: center;
-	margin-top: 8px;
-	margin-bottom: 12px;
-`;
-
-const GuestCheckbox = styled.input`
-	margin-right: 8px;
-`;
-
-const GuestLabel = styled.label`
-	font-size: 14px;
-	color: #666;
-	cursor: pointer;
 `;
 
 const SharePropertyModalWrapper = styled.div`

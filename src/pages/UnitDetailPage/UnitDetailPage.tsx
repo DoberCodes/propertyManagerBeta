@@ -8,7 +8,6 @@ import {
 	DetailPageLayout,
 	TabContent,
 	ReusableTable,
-	EditTaskModal,
 	GenericModal,
 	FormGroup,
 	FormLabel,
@@ -24,6 +23,7 @@ import {
 	useCreateDeviceMutation,
 	useCreateTaskMutation,
 	useGetUnitDevicesQuery,
+	useUpdateMaintenanceHistoryMutation,
 } from '../../Redux/API/apiSlice';
 import { getDeviceName } from '../../utils/detailPageUtils';
 import { TabConfig } from '../../types/DetailPage.types';
@@ -78,6 +78,11 @@ export const UnitDetailPage: React.FC = () => {
 	const [showAddTenantModal, setShowAddTenantModal] = React.useState(false);
 	const [showAddDeviceModal, setShowAddDeviceModal] = React.useState(false);
 	const [showCreateTaskModal, setShowCreateTaskModal] = React.useState(false);
+	const [showLinkHistoryModal, setShowLinkHistoryModal] = React.useState(false);
+	const [linkedHistoryIds, setLinkedHistoryIds] = React.useState<string[]>([]);
+	const [pendingLinkedHistoryIds, setPendingLinkedHistoryIds] = React.useState<
+		string[]
+	>([]);
 	const [showMaintenanceRequestModal, setShowMaintenanceRequestModal] =
 		React.useState(false);
 
@@ -99,8 +104,42 @@ export const UnitDetailPage: React.FC = () => {
 	const dispatch = useDispatch();
 	const [createDevice] = useCreateDeviceMutation();
 	const [createTask] = useCreateTaskMutation();
+	const [updateMaintenanceHistory] = useUpdateMaintenanceHistoryMutation();
 	const { data: unitDevices = [], isLoading: devicesLoading } =
 		useGetUnitDevicesQuery(unit?.id || '', { skip: !unit?.id });
+
+	const maintenanceHistoryOptions = React.useMemo(() => {
+		return unitMaintenanceHistory.map((record: any) => {
+			const dateLabel = record.completionDate
+				? new Date(record.completionDate).toLocaleDateString()
+				: 'No date';
+			return {
+				label: `${
+					record.title || record.taskTitle || 'Maintenance'
+				} - ${dateLabel}`,
+				value: record.id,
+			};
+		});
+	}, [unitMaintenanceHistory]);
+
+	const handleOpenLinkHistoryModal = () => {
+		setPendingLinkedHistoryIds(linkedHistoryIds);
+		setShowLinkHistoryModal(true);
+	};
+
+	const handleToggleHistory = (historyId: string) => {
+		setPendingLinkedHistoryIds((prev) =>
+			prev.includes(historyId)
+				? prev.filter((id) => id !== historyId)
+				: [...prev, historyId],
+		);
+	};
+
+	const handleSaveLinkedHistory = (e: React.FormEvent) => {
+		e.preventDefault();
+		setLinkedHistoryIds(pendingLinkedHistoryIds);
+		setShowLinkHistoryModal(false);
+	};
 
 	const handleMaintenanceRequestSubmit = (request: MaintenanceRequest) => {
 		if (!property || !currentUser) return;
@@ -112,6 +151,26 @@ export const UnitDetailPage: React.FC = () => {
 		);
 		dispatch(addMaintenanceRequest(newRequest));
 		setShowMaintenanceRequestModal(false);
+	};
+
+	const syncTaskMaintenanceLinks = async (
+		taskId: string,
+		selectedHistoryIds: string[],
+	) => {
+		for (const historyId of selectedHistoryIds) {
+			const record = unitMaintenanceHistory.find(
+				(history: any) => history.id === historyId,
+			);
+			if (!record) continue;
+			const linkedTaskIds = record.linkedTaskIds || [];
+			const updatedLinkedTaskIds = Array.from(
+				new Set([...linkedTaskIds, taskId]),
+			);
+			await updateMaintenanceHistory({
+				id: historyId,
+				updates: { linkedTaskIds: updatedLinkedTaskIds },
+			}).unwrap();
+		}
 	};
 
 	// Tab configuration
@@ -529,8 +588,15 @@ export const UnitDetailPage: React.FC = () => {
 							unitId: unit?.id || '',
 						};
 						try {
-							await createTask(taskData).unwrap();
+							const createdTask = await createTask(taskData).unwrap();
+							if (linkedHistoryIds.length > 0) {
+								await syncTaskMaintenanceLinks(
+									createdTask.id,
+									linkedHistoryIds,
+								);
+							}
 							setShowCreateTaskModal(false);
+							setLinkedHistoryIds([]);
 						} catch (error) {
 							console.error('Failed to create task:', error);
 						}
@@ -562,6 +628,71 @@ export const UnitDetailPage: React.FC = () => {
 								rows={3}
 							/>
 						</FormGroup>
+
+						{maintenanceHistoryOptions.length > 0 && (
+							<FormGroup>
+								<FormLabel>Maintenance History</FormLabel>
+								<div
+									style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+									<button
+										type='button'
+										onClick={handleOpenLinkHistoryModal}
+										style={{
+											padding: '8px 12px',
+											background: '#3b82f6',
+											color: 'white',
+											border: 'none',
+											borderRadius: '4px',
+											cursor: 'pointer',
+											fontSize: '14px',
+										}}>
+										🔗 Link Maintenance History ({linkedHistoryIds.length})
+									</button>
+									{linkedHistoryIds.length > 0 && (
+										<span style={{ fontSize: '12px', color: '#6b7280' }}>
+											{linkedHistoryIds.length} linked
+										</span>
+									)}
+								</div>
+							</FormGroup>
+						)}
+					</div>
+				</GenericModal>
+			)}
+
+			{showLinkHistoryModal && (
+				<GenericModal
+					isOpen={showLinkHistoryModal}
+					onClose={() => setShowLinkHistoryModal(false)}
+					onSubmit={handleSaveLinkedHistory}
+					title='Link Maintenance History'
+					showActions={true}
+					primaryButtonLabel='Link History'
+					secondaryButtonLabel='Cancel'>
+					<div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+						{maintenanceHistoryOptions.length > 0 ? (
+							maintenanceHistoryOptions.map((option) => (
+								<label
+									key={option.value}
+									style={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: '8px',
+										padding: '6px 0',
+									}}>
+									<input
+										type='checkbox'
+										checked={pendingLinkedHistoryIds.includes(option.value)}
+										onChange={() => handleToggleHistory(option.value)}
+									/>
+									<span>{option.label}</span>
+								</label>
+							))
+						) : (
+							<p style={{ margin: 0, color: '#6b7280' }}>
+								No maintenance history available for this unit.
+							</p>
+						)}
 					</div>
 				</GenericModal>
 			)}

@@ -28,6 +28,9 @@ import {
 	useCreateNotificationMutation,
 	useGetPropertySharesQuery,
 	useGetMaintenanceHistoryByPropertyQuery,
+	useAddMaintenanceHistoryMutation,
+	useUpdateMaintenanceHistoryMutation,
+	useDeleteMaintenanceHistoryMutation,
 	useGetDevicesQuery,
 	useGetContractorsByPropertyQuery,
 	useRemoveTenantMutation,
@@ -48,6 +51,7 @@ import {
 	uploadPropertyImage,
 	isValidPropertyImageFile,
 } from '../../utils/propertyImageUpload';
+import { getFamilyMembers } from '../../services/authService';
 import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
 import { MaintenanceRequestModal } from '../../Components/MaintenanceRequestModal';
 import { ConvertRequestToTaskModal } from '../../Components/ConvertRequestToTaskModal';
@@ -142,6 +146,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const teamMembers =
 		firebaseTeamMembers.length > 0 ? firebaseTeamMembers : reduxTeamMembers;
 
+	// Family members state
+	const [familyMembers, setFamilyMembers] = useState<User[]>([]);
+
 	// Fetch tasks from Firebase
 	const { data: allTasks = [] } = useGetTasksQuery();
 
@@ -151,6 +158,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [deleteTaskMutation] = useDeleteTaskMutation();
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
 	const [createNotification] = useCreateNotificationMutation();
+	const [addMaintenanceHistory] = useAddMaintenanceHistoryMutation();
+	const [updateMaintenanceHistory] = useUpdateMaintenanceHistoryMutation();
+	const [deleteMaintenanceHistory] = useDeleteMaintenanceHistoryMutation();
 	const [removeTenant] = useRemoveTenantMutation();
 	const [revokeTenantInvitationCode] = useRevokeTenantInvitationCodeMutation();
 	const [getTenantInvitationCode] = useLazyGetTenantInvitationCodeQuery();
@@ -404,27 +414,60 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		handleDeleteUnit,
 	} = unitHandlers;
 
-	useEffect(() => {
-		if (!editingTaskId) return;
-		const taskToEdit = allTasks.find((t) => t.id === editingTaskId);
-		if (!taskToEdit) return;
+	// Maintenance history handlers
+	const handleAddMaintenanceHistory = async (data: {
+		title: string;
+		completionDate: string;
+		completedBy?: string;
+		completedByName?: string;
+		completionNotes?: string;
+		unitId?: string;
+		completionFile?: File;
+		recurringTaskId?: string;
+		linkedTaskIds?: string[];
+	}) => {
+		if (!property?.id) return;
 
-		setTaskFormData({
-			title: taskToEdit.title || '',
-			dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.split('T')[0] : '',
-			status: taskToEdit.status || 'Pending',
-			notes: taskToEdit.notes || '',
-			priority: taskToEdit.priority,
-			assignedTo: taskToEdit.assignedTo?.id || taskToEdit.assignee || '',
-			devices: taskToEdit.devices || [],
-			isRecurring: taskToEdit.isRecurring || false,
-			recurrenceFrequency: taskToEdit.recurrenceFrequency,
-			recurrenceInterval: taskToEdit.recurrenceInterval,
-			recurrenceCustomUnit: taskToEdit.recurrenceCustomUnit,
-			enableNotifications: (taskToEdit as any).enableNotifications || false,
-			notifications: (taskToEdit as any).notifications || [],
-		});
-	}, [editingTaskId, allTasks, setTaskFormData]);
+		try {
+			await addMaintenanceHistory({
+				propertyId: property.id,
+				propertyTitle: property.title,
+				...data,
+			}).unwrap();
+		} catch (error) {
+			console.error('Failed to add maintenance history:', error);
+			alert('Failed to add maintenance history. Please try again.');
+		}
+	};
+
+	const handleUpdateMaintenanceHistory = async (
+		id: string,
+		updates: Partial<any>,
+	) => {
+		try {
+			await updateMaintenanceHistory({ id, updates }).unwrap();
+		} catch (error) {
+			console.error('Failed to update maintenance history:', error);
+			alert('Failed to update maintenance history. Please try again.');
+		}
+	};
+
+	const handleDeleteMaintenanceHistory = async (historyId: string) => {
+		if (
+			!window.confirm(
+				'Are you sure you want to delete this maintenance history record?',
+			)
+		) {
+			return;
+		}
+
+		try {
+			await deleteMaintenanceHistory(historyId).unwrap();
+		} catch (error) {
+			console.error('Failed to delete maintenance history:', error);
+			alert('Failed to delete maintenance history. Please try again.');
+		}
+	};
 
 	// Destructure property edit handlers
 	const {
@@ -517,25 +560,69 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			skip: !property?.id,
 		});
 
+	const maintenanceHistoryOptions = useMemo(() => {
+		return maintenanceHistoryRecords.map((record) => {
+			const dateLabel = record.completionDate
+				? new Date(record.completionDate).toLocaleDateString()
+				: 'No date';
+			return {
+				label: `${record.title || 'Maintenance'} - ${dateLabel}`,
+				value: record.id,
+			};
+		});
+	}, [maintenanceHistoryRecords]);
+
+	useEffect(() => {
+		if (!editingTaskId) return;
+		const taskToEdit = allTasks.find((t) => t.id === editingTaskId);
+		if (!taskToEdit) return;
+
+		const linkedMaintenanceHistoryIds = maintenanceHistoryRecords
+			.filter((record) => record.linkedTaskIds?.includes(taskToEdit.id))
+			.map((record) => record.id);
+
+		setTaskFormData({
+			title: taskToEdit.title || '',
+			dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.split('T')[0] : '',
+			status: taskToEdit.status || 'Pending',
+			notes: taskToEdit.notes || '',
+			priority: taskToEdit.priority,
+			assignedTo: taskToEdit.assignedTo?.id || taskToEdit.assignee || '',
+			devices: taskToEdit.devices || [],
+			isRecurring: taskToEdit.isRecurring || false,
+			recurrenceFrequency: taskToEdit.recurrenceFrequency,
+			recurrenceInterval: taskToEdit.recurrenceInterval,
+			recurrenceCustomUnit: taskToEdit.recurrenceCustomUnit,
+			enableNotifications: (taskToEdit as any).enableNotifications || false,
+			notifications: (taskToEdit as any).notifications || [],
+			linkedMaintenanceHistoryIds,
+		});
+	}, [editingTaskId, allTasks, maintenanceHistoryRecords, setTaskFormData]);
+
 	// Get property shares for assignee options
 	const { data: currentPropertyShares = [] } = useGetPropertySharesQuery(
 		property?.id || '',
 		{ skip: !property?.id },
 	);
 
+	// Load family members if user has an account
+	useEffect(() => {
+		const loadFamilyMembers = async () => {
+			if (currentUser?.accountId) {
+				try {
+					const members = await getFamilyMembers(currentUser.accountId);
+					setFamilyMembers(members);
+				} catch (error) {
+					console.error('Failed to load family members:', error);
+				}
+			}
+		};
+		loadFamilyMembers();
+	}, [currentUser?.accountId]);
+
 	// Generate assignee options for task editing
 	const assigneeOptions = useMemo(() => {
 		const assignees: Array<{ label: string; value: string }> = [];
-
-		// Add property owner
-		const ownerName =
-			property?.owner || `${currentUser?.firstName} ${currentUser?.lastName}`;
-		if (ownerName) {
-			assignees.push({
-				label: ownerName,
-				value: currentUser?.id || '',
-			});
-		}
 
 		// Add shared users (only those with user accounts for notifications)
 		currentPropertyShares
@@ -571,6 +658,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			});
 		});
 
+		// Add family members
+		familyMembers.forEach((member) => {
+			assignees.push({
+				label: `${member.firstName} ${member.lastName}`,
+				value: member.id,
+			});
+		});
+
 		// Remove duplicates based on value
 		const uniqueAssignees = assignees.filter(
 			(assignee, index, self) =>
@@ -584,6 +679,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		currentPropertyShares,
 		teamMembers,
 		propertyContractors,
+		familyMembers,
 	]);
 
 	// Generate device options for task connection
@@ -663,10 +759,58 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		}
 	};
 
+	const syncTaskMaintenanceLinks = async (
+		taskId: string,
+		selectedHistoryIds: string[],
+	) => {
+		if (!selectedHistoryIds.length && !maintenanceHistoryRecords.length) return;
+
+		const currentLinkedIds = maintenanceHistoryRecords
+			.filter((record) => record.linkedTaskIds?.includes(taskId))
+			.map((record) => record.id);
+		const toAdd = selectedHistoryIds.filter(
+			(id) => !currentLinkedIds.includes(id),
+		);
+		const toRemove = currentLinkedIds.filter(
+			(id) => !selectedHistoryIds.includes(id),
+		);
+
+		for (const historyId of toAdd) {
+			const record = maintenanceHistoryRecords.find(
+				(history) => history.id === historyId,
+			);
+			if (!record) continue;
+			const linkedTaskIds = record.linkedTaskIds || [];
+			const updatedLinkedTaskIds = Array.from(
+				new Set([...linkedTaskIds, taskId]),
+			);
+			await updateMaintenanceHistory({
+				id: historyId,
+				updates: { linkedTaskIds: updatedLinkedTaskIds },
+			}).unwrap();
+		}
+
+		for (const historyId of toRemove) {
+			const record = maintenanceHistoryRecords.find(
+				(history) => history.id === historyId,
+			);
+			if (!record) continue;
+			const linkedTaskIds = (record.linkedTaskIds || []).filter(
+				(id) => id !== taskId,
+			);
+			await updateMaintenanceHistory({
+				id: historyId,
+				updates: { linkedTaskIds },
+			}).unwrap();
+		}
+	};
+
 	// Task form submit handler
 	const handleTaskFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!property || !taskFormData.title.trim()) return;
+		const linkedMaintenanceHistoryIds =
+			taskFormData.linkedMaintenanceHistoryIds || [];
 
 		try {
 			if (editingTaskId !== null) {
@@ -771,6 +915,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						id: editingTaskId,
 						updates: cleanObjectForFirebase(updates),
 					}).unwrap();
+
+					await syncTaskMaintenanceLinks(
+						editingTaskId,
+						linkedMaintenanceHistoryIds,
+					);
 
 					// Create notification for task update
 					try {
@@ -942,6 +1091,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					cleanObjectForFirebase(newTask),
 				).unwrap();
 
+				await syncTaskMaintenanceLinks(
+					createdTask.id,
+					linkedMaintenanceHistoryIds,
+				);
+
 				// Add to Redux state immediately for UI update
 				dispatch(addTask(createdTask));
 
@@ -1058,6 +1212,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				status: 'Pending',
 				notes: '',
 				devices: [],
+				linkedMaintenanceHistoryIds: [],
 			});
 		} catch (error) {
 			console.error('Error saving task:', error);
@@ -1451,6 +1606,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						property={property}
 						maintenanceHistoryRecords={maintenanceHistoryRecords}
 						units={propertyUnits}
+						teamMembers={teamMembers}
+						contractors={propertyContractors}
+						familyMembers={familyMembers}
+						tasks={allTasks}
+						onAddMaintenanceHistory={handleAddMaintenanceHistory}
+						onUpdateMaintenanceHistory={handleUpdateMaintenanceHistory}
+						onDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
 					/>
 				)}
 
@@ -1568,6 +1730,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				]}
 				priorityOptions={['Low', 'Medium', 'High', 'Urgent']}
 				assigneeOptions={assigneeOptions}
+				maintenanceHistoryOptions={maintenanceHistoryOptions}
+				currentUser={currentUser}
 			/>
 
 			{/* Unit Create Dialog */}
@@ -1698,18 +1862,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 									}
 								}}>
 								<option value=''>Select a user...</option>
-								{/* Property owner */}
-								{(() => {
-									const ownerName =
-										property?.owner ||
-										`${currentUser?.firstName} ${currentUser?.lastName}`;
-									const ownerId = currentUser?.id || '';
-									return ownerName ? (
-										<option key={ownerId} value={ownerId}>
-											{ownerName} (Owner)
-										</option>
-									) : null;
-								})()}
 								{/* Shared users */}
 								{currentPropertyShares.map((share) => {
 									const fullName =
@@ -1736,6 +1888,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 								{propertyContractors.map((contractor) => (
 									<option key={contractor.id} value={contractor.id}>
 										{contractor.name} ({contractor.category})
+									</option>
+								))}
+								{/* Family members */}
+								{familyMembers.map((member) => (
+									<option key={member.id} value={member.id}>
+										{member.firstName} {member.lastName} (Family)
 									</option>
 								))}
 							</FormSelect>

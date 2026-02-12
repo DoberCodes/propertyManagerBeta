@@ -257,6 +257,18 @@ export const DashboardTab = () => {
 		});
 	}, [carouselTasks, allProperties]);
 
+	// Count of active tasks (before timeframe filtering)
+	const activeTasksCount = useMemo(() => {
+		const filtered = filterTasksByRole(
+			allTasks,
+			currentUser,
+			teamMembers,
+			allProperties,
+			propertyShares,
+		);
+		return filtered.filter((task) => task.status !== 'Completed').length;
+	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
+
 	// Task statuses based on Task.types.ts
 	const TASK_STATUSES = useMemo(
 		() => [
@@ -360,8 +372,6 @@ export const DashboardTab = () => {
 			{
 				header: 'Assigned To',
 				accessor: 'assignedToNames',
-				type: 'dropdown' as const,
-				options: getAssigneeOptions,
 			},
 			{
 				header: 'Due Date',
@@ -431,8 +441,20 @@ export const DashboardTab = () => {
 			<TaskGridSection>
 				{filteredTasks.length === 0 ? (
 					<ZeroState
-						title='No tasks yet'
-						description='No data available'
+						title={
+							allTasks.length === 0
+								? 'No tasks yet'
+								: activeTasksCount === 0
+								? 'No active tasks'
+								: 'No upcoming tasks in selected timeframe'
+						}
+						description={
+							allTasks.length === 0
+								? 'Create your first task to get started'
+								: activeTasksCount === 0
+								? 'All your tasks are completed'
+								: `Try adjusting the time filter above or check tasks in other timeframes`
+						}
 						icon='📊'></ZeroState>
 				) : (
 					<ReusableTable
@@ -463,16 +485,7 @@ export const DashboardTab = () => {
 								updates.priority = updatedRow.priority;
 							}
 
-							// Update assignedTo if changed
-							if (
-								updatedRow.assignedToNames &&
-								updatedRow.assignedToNames !== updatedRow.assignedTo?.name
-							) {
-								updates.assignedTo = {
-									name: updatedRow.assignedToNames,
-									id: updatedRow.id, // Keep the task ID for reference
-								};
-							}
+							// Note: AssignedTo editing is disabled in table view
 
 							// Handle logic for updated row, e.g., marking a task as completed
 							if (updatedRow.status === 'Completed') {

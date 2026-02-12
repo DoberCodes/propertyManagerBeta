@@ -11,6 +11,7 @@ export { Breadcrumb } from './Breadcrumb';
 export { TasksTable } from './TasksTable';
 export { ReusableTable } from './ReusableTable';
 export { MobileTaskCarousel } from './MobileTaskCarousel/MobileTaskCarousel';
+export { MobileCarousel } from './MobileCarousel/MobileCarousel';
 export { GridContainer, GridTable, EmptyState } from './DataGrid';
 export {
 	InfoGrid,

@@ -1082,6 +1082,10 @@ export const apiSlice = createApi({
 						ownerId: taskData.userId,
 						propertyId: taskData.propertyId,
 						propertyTitle: taskData.propertyTitle || taskData.property,
+						// Link recurring tasks together
+						recurringTaskId: taskData.isRecurring
+							? taskData.parentTaskId || taskId
+							: undefined,
 						updatedAt: new Date().toISOString(),
 					};
 
@@ -1136,6 +1140,10 @@ export const apiSlice = createApi({
 						...taskData,
 						...updates,
 						originalTaskId: taskId,
+						// Link recurring tasks together
+						recurringTaskId: taskData.isRecurring
+							? taskData.parentTaskId || taskId
+							: undefined,
 					};
 
 					// Remove any undefined fields (Firebase doesn't allow them)
@@ -1198,6 +1206,117 @@ export const apiSlice = createApi({
 				}
 			},
 			providesTags: ['MaintenanceHistory'],
+		}),
+
+		addMaintenanceHistory: builder.mutation<
+			any,
+			{
+				propertyId: string;
+				propertyTitle?: string;
+				title: string;
+				completionDate: string;
+				completedBy?: string;
+				completedByName?: string;
+				completionNotes?: string;
+				unitId?: string;
+				completionFile?: File;
+				recurringTaskId?: string; // ID of the recurring task this belongs to
+				linkedTaskIds?: string[]; // Additional task IDs linked to this history record
+			}
+		>({
+			async queryFn({
+				propertyId,
+				propertyTitle,
+				title,
+				completionDate,
+				completedBy,
+				completedByName,
+				completionNotes,
+				unitId,
+				completionFile,
+				recurringTaskId,
+				linkedTaskIds,
+			}) {
+				try {
+					let completionFileData:
+						| { url: string; name: string; size: number; type: string }
+						| undefined = undefined;
+
+					// Upload file if provided
+					if (completionFile) {
+						const { uploadMaintenanceFile } = await import(
+							'../../utils/maintenanceFileUpload'
+						);
+						completionFileData = await uploadMaintenanceFile(
+							completionFile,
+							propertyId,
+						);
+					}
+
+					const historyData = {
+						propertyId,
+						propertyTitle,
+						title,
+						completionDate,
+						completedBy,
+						completedByName,
+						completionNotes,
+						unitId,
+						completionFile: completionFileData,
+						recurringTaskId,
+						linkedTaskIds,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					};
+
+					// Remove any undefined fields (Firebase doesn't allow them)
+					Object.keys(historyData).forEach((key) => {
+						if (historyData[key] === undefined) {
+							delete historyData[key];
+						}
+					});
+
+					const docRef = await addDoc(
+						collection(db, 'maintenanceHistory'),
+						historyData,
+					);
+					return { data: { id: docRef.id, ...historyData } };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['MaintenanceHistory'],
+		}),
+
+		deleteMaintenanceHistory: builder.mutation<void, string>({
+			async queryFn(historyId) {
+				try {
+					await deleteDoc(doc(db, 'maintenanceHistory', historyId));
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['MaintenanceHistory'],
+		}),
+
+		updateMaintenanceHistory: builder.mutation<
+			any,
+			{ id: string; updates: Partial<any> }
+		>({
+			async queryFn({ id, updates }) {
+				try {
+					const docRef = doc(db, 'maintenanceHistory', id);
+					await updateDoc(docRef, {
+						...updates,
+						updatedAt: new Date().toISOString(),
+					});
+					return { data: { id, ...updates } };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['MaintenanceHistory'],
 		}),
 
 		rejectTask: builder.mutation<
@@ -3537,6 +3656,9 @@ export const {
 	useRejectTaskMutation,
 	// Maintenance History
 	useGetMaintenanceHistoryByPropertyQuery,
+	useAddMaintenanceHistoryMutation,
+	useUpdateMaintenanceHistoryMutation,
+	useDeleteMaintenanceHistoryMutation,
 	// Contractors
 	useGetContractorsByPropertyQuery,
 	useGetContractorsQuery,

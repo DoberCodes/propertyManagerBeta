@@ -30,6 +30,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		dueDate: '',
 		status: 'Pending' as const,
 		notes: '',
+		linkedMaintenanceHistoryIds: [],
 	});
 
 	const handleTaskCheckbox = (taskId: string) => {
@@ -49,6 +50,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 			notes: '',
 			enableNotifications: false,
 			notifications: [],
+			linkedMaintenanceHistoryIds: [],
 		});
 		setShowTaskDialog(true);
 	};
@@ -150,9 +152,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 			status: taskFormData.status,
 			notes: taskFormData.notes,
 			priority: taskFormData.priority,
-			assignedTo: taskFormData.assignedTo
-				? { id: taskFormData.assignedTo }
-				: undefined,
+			assignedTo: undefined, // Cannot create proper assignedTo object without assignee data
 			devices: taskFormData.devices || [],
 			isRecurring: taskFormData.isRecurring,
 			recurrenceFrequency: taskFormData.recurrenceFrequency,
@@ -170,9 +170,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 					status: taskFormData.status,
 					notes: taskFormData.notes,
 					priority: taskFormData.priority,
-					assignedTo: taskFormData.assignedTo
-						? { id: taskFormData.assignedTo }
-						: undefined,
+					assignedTo: undefined, // Cannot create proper assignedTo object without assignee data
 					devices: taskFormData.devices || [],
 					isRecurring: taskFormData.isRecurring,
 					recurrenceFrequency: taskFormData.recurrenceFrequency,
@@ -220,6 +218,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 				dueDate: '',
 				status: 'Pending',
 				notes: '',
+				linkedMaintenanceHistoryIds: [],
 			});
 		} catch (error) {
 			console.error('Error saving task:', error);

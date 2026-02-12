@@ -21,6 +21,7 @@ import { Properties } from './Components/PropertiesTab';
 import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { UnitDetailPage } from './pages/UnitDetailPage';
 import { SuiteDetailPage } from './pages/SuiteDetailPage/SuiteDetailPage';
+import { MaintenanceHistoryGroupPage } from './pages/MaintenanceHistoryGroupPage';
 import TeamPage from './pages/TeamPage';
 import { ReportPage } from './pages/ReportPage';
 import { UserProfile } from './pages/UserProfile';
@@ -122,6 +123,14 @@ export const RouterComponent = () => {
 						element={
 							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
 								<SuiteDetailPage />
+							</ProtectedRoutes>
+						}
+					/>
+					<Route
+						path='property/:slug/maintenance-history/:groupId'
+						element={
+							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
+								<MaintenanceHistoryGroupPage />
 							</ProtectedRoutes>
 						}
 					/>
