@@ -15,42 +15,41 @@ import {
 	FilterValues,
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
-import { ToolbarButton } from '../PropertyDetailPage.styles';
+import { SmallButton } from '../../../Components/Library/Buttons/ButtonStyles';
+import { ToolbarButton, Toolbar } from '../PropertyDetailPage.styles';
+import {
+	SectionContainer,
+	SectionHeader,
+} from '../../../Components/Library/InfoCards/InfoCardStyles';
 import styled from 'styled-components';
 
 interface ContractorsTabProps {
 	propertyId: string;
 }
 
-const ContainerStyled = styled.div`
-	padding: 1.5rem;
-`;
-
 const HeaderContainer = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 1.5rem;
+	gap: 1rem;
 
 	h2 {
 		margin: 0;
 		font-size: 1.5rem;
 		color: #333;
 	}
-`;
 
-const AddButton = styled.button`
-	background-color: #27ae60;
-	color: white;
-	border: none;
-	padding: 0.5rem 1rem;
-	border-radius: 4px;
-	cursor: pointer;
-	font-weight: 500;
-	font-size: 0.9rem;
+	@media (max-width: 480px) {
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.75rem;
 
-	&:hover {
-		background-color: #229954;
+		h2 {
+			font-size: 1.25rem;
+			flex-basis: 100%;
+			text-align: center;
+		}
 	}
 `;
 
@@ -247,6 +246,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState(0);
 	const [filters, setFilters] = useState<FilterValues>({});
+	const [showFilters, setShowFilters] = useState(false);
 
 	const {
 		data: contractors = [],
@@ -264,12 +264,6 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 
 	// Filter configuration for contractors
 	const contractorFilters: FilterConfig[] = [
-		{
-			key: 'search',
-			label: 'Search',
-			type: 'text',
-			placeholder: 'Search company, name, email...',
-		},
 		{
 			key: 'category',
 			label: 'Category',
@@ -371,29 +365,64 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	}
 
 	return (
-		<ContainerStyled>
-			<DeleteConfirmationModal
-				isOpen={isDeleteModalOpen}
-				itemName={
-					contractorToDelete
-						? `${contractorToDelete.company} - ${contractorToDelete.name}`
-						: 'this contractor'
-				}
-				itemType='contractor'
-				onConfirm={handleDeleteConfirm}
-				onCancel={handleDeleteCancel}
-				isLoading={isDeleting}
-			/>
-			<HeaderContainer>
-				<h2>Contractors & Vendors</h2>
-				<AddButton onClick={handleAddNew}>+ Add Contractor</AddButton>
-			</HeaderContainer>
+		<SectionContainer>
+			<SectionHeader>Contractors & Vendors</SectionHeader>
+			<Toolbar>
+				<ToolbarButton onClick={handleAddNew}>+ Add Contractor</ToolbarButton>
+			</Toolbar>
 
-			<FilterBar
-				filters={contractorFilters}
-				onFiltersChange={setFilters}
-				hideOnMobile={true}
-			/>
+			{/* Collapsable Filter Section */}
+			<div style={{ marginBottom: '16px' }}>
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						gap: '8px',
+						marginBottom: showFilters ? '12px' : '0',
+					}}>
+					<input
+						type='text'
+						placeholder='Search contractors...'
+						value={(filters.search as string) || ''}
+						onChange={(e) =>
+							setFilters((prev) => ({
+								...prev,
+								search: e.target.value,
+							}))
+						}
+						style={{
+							flex: 1,
+							padding: '8px 12px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							fontSize: '14px',
+						}}
+					/>
+					<button
+						onClick={() => setShowFilters(!showFilters)}
+						style={{
+							padding: '8px 10px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							background: '#f9fafb',
+							cursor: 'pointer',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							whiteSpace: 'nowrap',
+						}}
+						title={showFilters ? 'Hide filters' : 'Show filters'}>
+						{showFilters ? '▲ Hide Filters' : '▼ Filters'}
+					</button>
+				</div>
+				{showFilters && (
+					<FilterBar
+						filters={contractorFilters}
+						onFiltersChange={setFilters}
+						hideOnMobile={true}
+					/>
+				)}
+			</div>
 
 			{isFormOpen && (
 				<ContractorForm
@@ -549,6 +578,6 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 					</MobileCarouselContainer>
 				</>
 			)}
-		</ContainerStyled>
+		</SectionContainer>
 	);
 };

@@ -10,6 +10,8 @@ import {
 	GridContainer,
 	GridTable,
 	EmptyState,
+	Toolbar,
+	ToolbarButton,
 } from '../PropertyDetailPage.styles';
 import { getDeviceNameUtil } from '../PropertyDetailPage.utils';
 import {
@@ -612,6 +614,7 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 	const [filters, setFilters] = useState<FilterValues>({});
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
+	const [showFilters, setShowFilters] = useState(false);
 
 	// Mobile detection
 	useEffect(() => {
@@ -626,12 +629,6 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 
 	// Filter configuration for maintenance history
 	const maintenanceFilters: FilterConfig[] = [
-		{
-			key: 'search',
-			label: 'Search',
-			type: 'text' as const,
-			placeholder: 'Search tasks, notes...',
-		},
 		// Only show unit filter for Multi-Family properties
 		...(property?.propertyType === 'Multi-Family'
 			? [
@@ -784,27 +781,69 @@ export const MaintenanceTab: React.FC<MaintenanceTabProps> = ({
 
 	return (
 		<SectionContainer>
-			<SectionHeader>
-				Maintenance History
-				{onAddMaintenanceHistory && (
-					<button
-						onClick={() => setShowAddModal(true)}
-						style={{
-							marginLeft: 'auto',
-							padding: '8px 16px',
-							background: '#22c55e',
-							color: 'white',
-							border: 'none',
-							borderRadius: '4px',
-							cursor: 'pointer',
-							fontSize: '14px',
-						}}>
-						+ Add History
-					</button>
-				)}
-			</SectionHeader>
+			<SectionHeader>Maintenance History</SectionHeader>
 
-			<FilterBar filters={maintenanceFilters} onFiltersChange={setFilters} />
+			{/* Toolbar with Add button */}
+			{onAddMaintenanceHistory && (
+				<Toolbar>
+					<ToolbarButton onClick={() => setShowAddModal(true)}>
+						+ Add History
+					</ToolbarButton>
+				</Toolbar>
+			)}
+
+			{/* Collapsable Filter Section */}
+			<div style={{ marginBottom: '16px' }}>
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						gap: '8px',
+						marginBottom: showFilters ? '12px' : '0',
+					}}>
+					<input
+						type='text'
+						placeholder='Search tasks, notes...'
+						value={(filters.search as string) || ''}
+						onChange={(e) =>
+							setFilters((prev) => ({
+								...prev,
+								search: e.target.value,
+							}))
+						}
+						style={{
+							flex: 1,
+							padding: '8px 12px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							fontSize: '14px',
+						}}
+					/>
+					<button
+						onClick={() => setShowFilters(!showFilters)}
+						style={{
+							padding: '8px 10px',
+
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							background: '#f9fafb',
+							cursor: 'pointer',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							whiteSpace: 'nowrap',
+						}}
+						title={showFilters ? 'Hide filters' : 'Show filters'}>
+						{showFilters ? '▲ Hide Filters' : '▼ Filters'}
+					</button>
+				</div>
+				{showFilters && (
+					<FilterBar
+						filters={maintenanceFilters}
+						onFiltersChange={setFilters}
+					/>
+				)}
+			</div>
 
 			{Object.keys(groupedRecords.groups).length > 0 ||
 			groupedRecords.ungrouped.length > 0 ? (
@@ -1166,23 +1205,23 @@ const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
 				</div>
 			</div>
 
-				{isExpanded && (
-					<div>
-						{records.map((record) => (
-							<MaintenanceHistoryCard
-								key={record.id}
-								record={record}
-								units={units}
-								tasks={tasks}
-								propertyId={propertyId}
-								onDelete={onDelete}
-								onUpdate={onUpdate}
-								isGroupedView={true}
-								groupRecords={records}
-							/>
-						))}
-					</div>
-				)}
+			{isExpanded && (
+				<div>
+					{records.map((record) => (
+						<MaintenanceHistoryCard
+							key={record.id}
+							record={record}
+							units={units}
+							tasks={tasks}
+							propertyId={propertyId}
+							onDelete={onDelete}
+							onUpdate={onUpdate}
+							isGroupedView={true}
+							groupRecords={records}
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	);
 };

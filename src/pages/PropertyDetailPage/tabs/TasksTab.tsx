@@ -286,6 +286,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 }) => {
 	const [selectedTaskForModal, setSelectedTaskForModal] = useState<any>(null);
 	const [filters, setFilters] = useState<FilterValues>({});
+	const [showFilters, setShowFilters] = useState(false);
 	const [processedTasks, setProcessedTasks] = useState<any[]>([]);
 
 	// Utility function to resolve assignee name from task data
@@ -364,12 +365,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 
 	// Filter configuration for tasks
 	const taskFilters: FilterConfig[] = [
-		{
-			key: 'search',
-			label: 'Search',
-			type: 'text',
-			placeholder: 'Search task names, notes...',
-		},
 		{
 			key: 'status',
 			label: 'Status',
@@ -502,7 +497,54 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 				</ToolbarButton>
 			</Toolbar>
 
-			<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
+			{/* Collapsable Filter Section */}
+			<div style={{ marginBottom: '16px' }}>
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						gap: '8px',
+						marginBottom: showFilters ? '12px' : '0',
+					}}>
+					<input
+						type='text'
+						placeholder='Search tasks...'
+						value={(filters.search as string) || ''}
+						onChange={(e) =>
+							setFilters((prev) => ({
+								...prev,
+								search: e.target.value,
+							}))
+						}
+						style={{
+							flex: 1,
+							padding: '8px 12px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							fontSize: '14px',
+						}}
+					/>
+					<button
+						onClick={() => setShowFilters(!showFilters)}
+						style={{
+							padding: '8px 10px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							background: '#f9fafb',
+							cursor: 'pointer',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							whiteSpace: 'nowrap',
+						}}
+						title={showFilters ? 'Hide filters' : 'Show filters'}>
+						{showFilters ? '▲ Hide Filters' : '▼ Filters'}
+					</button>
+				</div>
+				{showFilters && (
+					<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
+				)}
+			</div>
 
 			{filteredTasks.length > 0 ? (
 				<GridContainer>
