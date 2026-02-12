@@ -385,6 +385,9 @@ export const DashboardTab = () => {
 	);
 
 	const handleTaskCompletion = (taskId: string) => {
+		console.log('🎯 handleTaskCompletion called for taskId:', taskId);
+		const task = allTasks.find((t) => t.id === taskId);
+		console.log('🎯 Task data:', task);
 		setCompletingTaskId(taskId);
 		setShowTaskCompletionModal(true);
 	};
@@ -446,7 +449,7 @@ export const DashboardTab = () => {
 						}}
 						showCheckbox={false}
 						onRowUpdate={(updatedRow) => {
-							console.log('Updated row:', updatedRow); // Log updated row
+							console.log('🔄 onRowUpdate called with:', updatedRow); // Log updated row
 							// Prepare updates for Firebase
 							const updates: any = {};
 
@@ -473,6 +476,9 @@ export const DashboardTab = () => {
 
 							// Handle logic for updated row, e.g., marking a task as completed
 							if (updatedRow.status === 'Completed') {
+								console.log(
+									'✅ Status changed to Completed, calling handleTaskCompletion',
+								);
 								handleTaskCompletion(updatedRow.id);
 								return;
 							}

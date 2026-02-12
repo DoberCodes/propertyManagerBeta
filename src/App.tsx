@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentUser, setAuthLoading } from './Redux/Slices/userSlice';
 import { RouterComponent } from './router';
@@ -37,10 +37,47 @@ const LoadingContainer = styled.div`
 	}
 `;
 
+const RefreshSpinner = styled.div<{ isVisible: boolean }>`
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 9999;
+	display: ${(props) => (props.isVisible ? 'flex' : 'none')};
+	justify-content: center;
+	align-items: center;
+	padding: 20px;
+	background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+	color: white;
+	font-size: 16px;
+	font-weight: 600;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+	.spinner {
+		width: 24px;
+		height: 24px;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-top: 3px solid white;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin-right: 12px;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+`;
+
 export const App = () => {
 	const dispatch = useDispatch();
 	const authLoading = useSelector((state: any) => state.user.authLoading);
 	const currentUser = useSelector((state: any) => state.user.currentUser);
+	const [isRefreshing, setIsRefreshing] = useState(false);
 
 	// Register push notifications on native app startup
 	useEffect(() => {
@@ -146,6 +183,7 @@ export const App = () => {
 				// Start hold timer if not already started
 				if (holdStartTime === 0) {
 					holdStartTime = Date.now();
+					setIsRefreshing(true); // Show spinner when threshold is reached
 				} else {
 					// Check if held long enough
 					const holdTime = Date.now() - holdStartTime;
@@ -157,12 +195,14 @@ export const App = () => {
 			} else {
 				// Reset hold timer if user pulls back below threshold
 				holdStartTime = 0;
+				setIsRefreshing(false); // Hide spinner if pulled back
 			}
 		};
 
 		const onTouchEnd = () => {
 			isPulling = false;
 			holdStartTime = 0;
+			setIsRefreshing(false); // Hide spinner when touch ends
 		};
 
 		window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -189,6 +229,10 @@ export const App = () => {
 
 	return (
 		<DataFetchProvider>
+			<RefreshSpinner isVisible={isRefreshing}>
+				<div className='spinner'></div>
+				Refreshing...
+			</RefreshSpinner>
 			<RouterComponent />
 			<UpdateNotification />
 		</DataFetchProvider>
