@@ -54,6 +54,35 @@ export interface User {
 		agreedAt: string; // ISO date string
 		agreedVersion: string; // Version of terms agreed to
 	};
+	notificationPreferences?: {
+		enabled: boolean; // Master switch for all notifications
+		types: {
+			property_added: boolean;
+			property_updated: boolean;
+			property_deleted: boolean;
+			property_group_created: boolean;
+			property_group_updated: boolean;
+			property_group_deleted: boolean;
+			task_created: boolean;
+			task_assigned: boolean;
+			task_updated: boolean;
+			task_deleted: boolean;
+			task_reminder: boolean;
+			task_overdue: boolean;
+			team_member_added: boolean;
+			team_member_updated: boolean;
+			team_member_removed: boolean;
+			team_group_created: boolean;
+			team_group_updated: boolean;
+			team_group_deleted: boolean;
+			maintenance_request: boolean;
+			maintenance_request_created: boolean;
+			legal_update: boolean;
+			property_shared: boolean;
+			share_invitation: boolean;
+			share_invitation_accepted: boolean;
+		};
+	};
 	onboardingCompleted?: boolean;
 	createdAt?: string;
 	updatedAt?: string;

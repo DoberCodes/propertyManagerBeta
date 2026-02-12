@@ -47,6 +47,8 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 			dueDate: '',
 			status: 'Pending',
 			notes: '',
+			enableNotifications: false,
+			notifications: [],
 		});
 		setShowTaskDialog(true);
 	};

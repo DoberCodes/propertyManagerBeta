@@ -13,6 +13,11 @@ import {
 	ModalTabContent,
 } from './ModalStyles';
 import { MultiSelect } from '../index';
+import { TaskNotification } from '../../../types/Task.types';
+import {
+	getDefaultTaskNotifications,
+	getDefaultNotificationMessage,
+} from '../../../utils/taskNotificationUtils';
 
 interface TaskFormData {
 	title: string;
@@ -26,6 +31,8 @@ interface TaskFormData {
 	recurrenceFrequency?: string;
 	recurrenceInterval?: number;
 	recurrenceCustomUnit?: string;
+	enableNotifications?: boolean;
+	notifications?: TaskNotification[];
 }
 
 interface EditTaskModalProps {
@@ -83,7 +90,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	onDevicesChange,
 	taskTitlePlaceholder = 'Enter task name',
 }) => {
-	const [activeTab, setActiveTab] = useState<'details' | 'schedule'>('details');
+	const [activeTab, setActiveTab] = useState<
+		'details' | 'schedule' | 'notifications'
+	>('details');
 	const wantsRecurrence = Boolean(
 		formData.recurrenceFrequency ||
 			formData.recurrenceInterval ||
@@ -141,6 +150,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 					active={activeTab === 'schedule'}
 					onClick={() => setActiveTab('schedule')}>
 					📅 Recurrence Schedule
+				</ModalTab>
+				<ModalTab
+					type='button'
+					active={activeTab === 'notifications'}
+					onClick={() => setActiveTab('notifications')}>
+					🔔 Notifications
 				</ModalTab>
 			</ModalTabContainer>
 
@@ -303,6 +318,129 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							due date each time it is marked as completed.
 						</small>
 					</FormGroupFull>
+				</FormGrid>
+			</ModalTabContent>
+
+			<ModalTabContent active={activeTab === 'notifications'}>
+				<FormGrid>
+					<FormGroupFull>
+						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+							<input
+								type='checkbox'
+								id='enableNotifications'
+								name='enableNotifications'
+								checked={formData.enableNotifications || false}
+								onChange={(e) => {
+									const isChecked = e.target.checked;
+									onChange({
+										target: {
+											name: 'enableNotifications',
+											value: isChecked,
+											checked: isChecked,
+											type: 'checkbox',
+										},
+									} as any);
+
+									// If enabling notifications and no notifications exist, set defaults
+									if (
+										isChecked &&
+										(!formData.notifications ||
+											formData.notifications.length === 0)
+									) {
+										const defaultNotifications = getDefaultTaskNotifications();
+										onChange({
+											target: {
+												name: 'notifications',
+												value: defaultNotifications,
+												type: 'custom',
+											},
+										} as any);
+									}
+								}}
+							/>
+							<FormLabel htmlFor='enableNotifications' style={{ margin: 0 }}>
+								Enable task notifications
+							</FormLabel>
+						</div>
+						<small style={{ color: '#6b7280', marginTop: '4px' }}>
+							Get reminded about upcoming and overdue tasks
+						</small>
+					</FormGroupFull>
+
+					{formData.enableNotifications && (
+						<>
+							<FormGroupFull>
+								<FormLabel>Notification Schedule</FormLabel>
+								<div
+									style={{
+										display: 'flex',
+										flexDirection: 'column',
+										gap: '12px',
+									}}>
+									{(formData.notifications || []).map((notification, index) => (
+										<div
+											key={notification.id}
+											style={{
+												display: 'flex',
+												alignItems: 'center',
+												gap: '12px',
+												padding: '12px',
+												border: '1px solid #e5e7eb',
+												borderRadius: '6px',
+												backgroundColor: '#f9fafb',
+											}}>
+											<input
+												type='checkbox'
+												id={`notification-${index}`}
+												checked={notification.enabled}
+												onChange={(e) => {
+													const updatedNotifications = [
+														...(formData.notifications || []),
+													];
+													updatedNotifications[index] = {
+														...updatedNotifications[index],
+														enabled: e.target.checked,
+													};
+													onChange({
+														target: {
+															name: 'notifications',
+															value: updatedNotifications,
+															type: 'custom',
+														},
+													} as any);
+												}}
+											/>
+											<div style={{ flex: 1 }}>
+												<div style={{ fontWeight: '500', color: '#374151' }}>
+													{notification.type === 'reminder'
+														? notification.daysBeforeDue === 1
+															? '1 day before due'
+															: `${notification.daysBeforeDue} days before due`
+														: `Week ${
+																Math.abs(notification.daysBeforeDue || 0) / 7
+														  } overdue`}
+												</div>
+												<div style={{ fontSize: '14px', color: '#6b7280' }}>
+													{getDefaultNotificationMessage(
+														notification,
+														formData.title || 'Task',
+													)}
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</FormGroupFull>
+
+							<FormGroupFull>
+								<small style={{ color: '#6b7280' }}>
+									💡 Default schedule: 30 days, 7 days, and 1 day before due
+									date, plus weekly reminders for 4 weeks when overdue. You can
+									customize these settings after creating the task.
+								</small>
+							</FormGroupFull>
+						</>
+					)}
 				</FormGrid>
 			</ModalTabContent>
 		</GenericModal>

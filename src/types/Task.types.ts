@@ -38,6 +38,17 @@ export type TaskStatus =
 
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
+// Task notification types
+export type TaskNotificationType = 'reminder' | 'overdue';
+
+export interface TaskNotification {
+	id: string;
+	type: TaskNotificationType;
+	daysBeforeDue?: number; // For reminder notifications (negative for after due date)
+	enabled: boolean;
+	customMessage?: string;
+}
+
 export interface Task {
 	id: string;
 	userId?: string;
@@ -74,6 +85,9 @@ export interface Task {
 	recurrenceCustomUnit?: RecurrenceCustomUnit; // Unit for 'custom' frequency
 	parentTaskId?: string; // Reference to original recurring task (if this is a copy)
 	lastRecurrenceDate?: string; // Last date this recurring task was auto-created
+	// Notification fields
+	enableNotifications?: boolean;
+	notifications?: TaskNotification[];
 }
 
 export interface CompletionFile {
@@ -98,6 +112,8 @@ export interface TaskFormData {
 	recurrenceFrequency?: RecurrenceFrequency;
 	recurrenceInterval?: number;
 	recurrenceCustomUnit?: RecurrenceCustomUnit;
+	enableNotifications?: boolean;
+	notifications?: TaskNotification[];
 }
 
 export interface TaskHandlers {

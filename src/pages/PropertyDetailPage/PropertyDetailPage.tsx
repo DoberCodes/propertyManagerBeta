@@ -90,6 +90,24 @@ import {
 	ContractorsTab,
 } from './tabs';
 
+// Utility function to clean objects of undefined values for Firebase
+const cleanObjectForFirebase = (obj: any): any => {
+	if (obj === null || obj === undefined) return obj;
+	if (typeof obj !== 'object') return obj;
+	if (Array.isArray(obj)) {
+		return obj.map(cleanObjectForFirebase).filter((item) => item !== undefined);
+	}
+
+	const cleaned: any = {};
+	for (const [key, value] of Object.entries(obj)) {
+		const cleanedValue = cleanObjectForFirebase(value);
+		if (cleanedValue !== undefined) {
+			cleaned[key] = cleanedValue;
+		}
+	}
+	return cleaned;
+};
+
 export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	props,
 ) => {
@@ -403,6 +421,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			recurrenceFrequency: taskToEdit.recurrenceFrequency,
 			recurrenceInterval: taskToEdit.recurrenceInterval,
 			recurrenceCustomUnit: taskToEdit.recurrenceCustomUnit,
+			enableNotifications: (taskToEdit as any).enableNotifications || false,
+			notifications: (taskToEdit as any).notifications || [],
 		});
 	}, [editingTaskId, allTasks, setTaskFormData]);
 
@@ -713,10 +733,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						dueDate: taskFormData.dueDate,
 						status: reduxStatus,
 						notes: taskFormData.notes,
-						priority: taskFormData.priority,
 						isRecurring: Boolean(taskFormData.isRecurring),
 						devices: taskFormData.devices || [],
+						enableNotifications: Boolean(taskFormData.enableNotifications),
 					};
+
+					// Only add priority if it has a value
+					if (taskFormData.priority) {
+						updates.priority = taskFormData.priority;
+					}
+
+					if (taskFormData.notifications) {
+						updates.notifications = taskFormData.notifications;
+					}
 
 					if (assignedTo) {
 						updates.assignedTo = {
@@ -740,7 +769,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 					await updateTaskMutation({
 						id: editingTaskId,
-						updates,
+						updates: cleanObjectForFirebase(updates),
 					}).unwrap();
 
 					// Create notification for task update
@@ -871,10 +900,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					property: property.title,
 					propertyId: property.id,
 					notes: taskFormData.notes,
-					priority: taskFormData.priority,
 					isRecurring: Boolean(taskFormData.isRecurring),
 					devices: taskFormData.devices || [],
+					enableNotifications: Boolean(taskFormData.enableNotifications),
 				};
+
+				// Only add priority if it has a value
+				if (taskFormData.priority) {
+					newTask.priority = taskFormData.priority;
+				}
+
+				if (taskFormData.notifications) {
+					newTask.notifications = taskFormData.notifications;
+				}
 
 				if (assignedTo) {
 					newTask.assignedTo = {
@@ -900,7 +938,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					newTask.recurrenceCustomUnit = taskFormData.recurrenceCustomUnit;
 				}
 
-				const createdTask = await createTaskMutation(newTask).unwrap();
+				const createdTask = await createTaskMutation(
+					cleanObjectForFirebase(newTask),
+				).unwrap();
 
 				// Add to Redux state immediately for UI update
 				dispatch(addTask(createdTask));
@@ -1087,7 +1127,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	return (
 		<Wrapper>
 			<Header style={{ backgroundImage: `url(${property.image})` }}>
-				<BackButton onClick={() => navigate('/manage')} title='Go back'>
+				<BackButton onClick={() => navigate('/properties')} title='Go back'>
 					<FontAwesomeIcon icon={faArrowLeft} />
 				</BackButton>
 				{/* 3-dot menu for mobile */}
@@ -1550,6 +1590,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						isOpen={showTaskAssignDialog}
 						onClose={() => setShowTaskAssignDialog(false)}
 						title='Assign Task to Team Member'
+						showActions={true}
 						primaryButtonLabel='Assign'
 						primaryButtonDisabled={!selectedAssignee}
 						secondaryButtonLabel='Cancel'>

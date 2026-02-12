@@ -98,6 +98,8 @@ export interface Notification {
 		| 'task_assigned'
 		| 'task_updated'
 		| 'task_deleted'
+		| 'task_reminder'
+		| 'task_overdue'
 		| 'team_member_added'
 		| 'team_member_updated'
 		| 'team_member_removed'

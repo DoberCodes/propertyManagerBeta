@@ -34,6 +34,7 @@ import {
 	removeFamilyMember,
 	getFamilyMembers,
 } from '../services/authService';
+import { NotificationPreferences } from '../Components/NotificationPreferences';
 
 const Container = styled.div`
 	max-width: 100%;
@@ -741,6 +742,8 @@ const SettingsPage: React.FC = () => {
 					</DeleteAccountButton>
 				</AccountActions>
 			</AccountSection>
+
+			<NotificationPreferences currentUser={currentUser} />
 
 			<AccountSection>
 				<SectionTitle>Getting Started</SectionTitle>
