@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserAccount = exports.markTasksAsOverdue = exports.sendFeedbackEmail = exports.createTrialSubscription = exports.stripeWebhook = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
+exports.addFamilyMember = exports.deleteUserAccount = exports.markTasksAsOverdue = exports.sendFeedbackEmail = exports.createTrialSubscription = exports.stripeWebhook = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createCheckoutSession = exports.sendPushOnNotificationCreate = void 0;
 var sendPushOnNotificationCreate_1 = require("./sendPushOnNotificationCreate");
 Object.defineProperty(exports, "sendPushOnNotificationCreate", { enumerable: true, get: function () { return sendPushOnNotificationCreate_1.sendPushOnNotificationCreate; } });
 var stripeFunctions_1 = require("./stripeFunctions");
@@ -16,3 +16,5 @@ var markTasksAsOverdue_1 = require("./markTasksAsOverdue");
 Object.defineProperty(exports, "markTasksAsOverdue", { enumerable: true, get: function () { return markTasksAsOverdue_1.markTasksAsOverdue; } });
 var deleteUserAccount_1 = require("./deleteUserAccount");
 Object.defineProperty(exports, "deleteUserAccount", { enumerable: true, get: function () { return deleteUserAccount_1.deleteUserAccount; } });
+var addFamilyMember_1 = require("./addFamilyMember");
+Object.defineProperty(exports, "addFamilyMember", { enumerable: true, get: function () { return addFamilyMember_1.addFamilyMember; } });

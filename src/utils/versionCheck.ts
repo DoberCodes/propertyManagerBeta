@@ -181,11 +181,11 @@ export const getAPKDownloadURL = (): string => {
 	if (configuredUrl) {
 		// Ignore legacy GitHub Pages URL to ensure we always check the release asset
 		if (configuredUrl.includes('github.io')) {
-			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
+			return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
 		}
 		return configuredUrl;
 	}
-	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/PropertyManager.apk';
+	return 'https://github.com/DoberCodes/propertyManagerWebApp/releases/latest/download/app-release.apk';
 };
 
 /**
@@ -201,7 +201,7 @@ export const downloadAPK = async (): Promise<void> => {
 		// On web, trigger direct download
 		const link = document.createElement('a');
 		link.href = url;
-		link.download = 'PropertyManager.apk';
+		link.download = 'app-release.apk';
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);

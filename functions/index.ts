@@ -10,3 +10,4 @@ export {
 export { sendFeedbackEmail } from './sendFeedbackEmail';
 export { markTasksAsOverdue } from './markTasksAsOverdue';
 export { deleteUserAccount } from './deleteUserAccount';
+export { addFamilyMember } from './addFamilyMember';

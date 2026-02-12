@@ -39,6 +39,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	const [dragStart, setDragStart] = useState(0);
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 	const [showDetailModal, setShowDetailModal] = useState(false);
+	const [isEditMode, setIsEditMode] = useState(false);
 	const trackRef = useRef<HTMLDivElement>(null);
 
 	if (tasks.length === 0) {
@@ -122,12 +123,20 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 
 	const handleCardClick = () => {
 		setSelectedTask(currentTask);
+		setIsEditMode(false);
+		setShowDetailModal(true);
+	};
+
+	const handleEditClick = () => {
+		setSelectedTask(currentTask);
+		setIsEditMode(true);
 		setShowDetailModal(true);
 	};
 
 	const handleDetailModalClose = () => {
 		setShowDetailModal(false);
 		setSelectedTask(null);
+		setIsEditMode(false);
 	};
 
 	return (
@@ -220,7 +229,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 									<ActionButton
 										onClick={(e) => {
 											e.stopPropagation();
-											handleCardClick();
+											handleEditClick();
 										}}
 										style={{ backgroundColor: '#3b82f6', color: 'white' }}>
 										Edit
@@ -252,6 +261,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 					onUpdate={onTaskUpdate}
 					onDelete={onTaskDelete}
 					onComplete={onTaskComplete}
+					initialEditMode={isEditMode}
 				/>
 			)}
 		</>

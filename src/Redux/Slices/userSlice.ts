@@ -1,6 +1,26 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { clearUserLocalStorage } from '../../utils/localStorageCleanup';
 
+// Family account type for shared subscriptions
+export interface FamilyAccount {
+	id: string;
+	ownerId: string; // User ID of the account owner
+	memberIds: string[]; // Array of user IDs in this family account
+	subscription: {
+		status: 'trial' | 'active' | 'cancelled' | 'expired' | 'past_due';
+		plan: string;
+		currentPeriodStart: number;
+		currentPeriodEnd: number;
+		trialEndsAt?: number | null;
+		canceledAt?: number;
+		stripeCustomerId?: string;
+		stripeSubscriptionId?: string;
+		updatedAt?: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+}
+
 // User type matching Firebase Auth + Firestore user data
 export interface User {
 	id: string;
@@ -16,6 +36,8 @@ export interface User {
 	hiddenPropertyIds?: string[]; // Properties hidden from dashboard
 	pushToken?: string; // Push notification token for FCM
 	pushTokenUpdatedAt?: string; // When push token was last updated
+	accountId?: string; // Family account ID for shared subscriptions
+	isAccountOwner?: boolean; // Whether this user owns the account/subscription
 	subscription?: {
 		status: 'trial' | 'active' | 'cancelled' | 'expired' | 'past_due';
 		plan: string;

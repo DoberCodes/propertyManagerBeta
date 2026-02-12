@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -29,6 +29,11 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../config/firebase';
 import { useUpdateUserMutation } from '../Redux/API/apiSlice';
 import { setCurrentUser } from '../Redux/Slices/userSlice';
+import {
+	addFamilyMember,
+	removeFamilyMember,
+	getFamilyMembers,
+} from '../services/authService';
 
 const Container = styled.div`
 	max-width: 100%;
@@ -287,6 +292,36 @@ const SettingsPage: React.FC = () => {
 		useState(false);
 	const [cancelSubscriptionError, setCancelSubscriptionError] = useState('');
 	const [subscriptionError, setSubscriptionError] = useState(false);
+	const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+	const [showAddFamilyMemberModal, setShowAddFamilyMemberModal] =
+		useState(false);
+	const [isLoadingFamilyMembers, setIsLoadingFamilyMembers] = useState(false);
+	const [familyMemberForm, setFamilyMemberForm] = useState({
+		firstName: '',
+		lastName: '',
+		email: '',
+	});
+	const [isAddingFamilyMember, setIsAddingFamilyMember] = useState(false);
+	const [addFamilyMemberError, setAddFamilyMemberError] = useState('');
+
+	// Load family members
+	useEffect(() => {
+		const loadFamilyMembers = async () => {
+			if (currentUser?.accountId) {
+				setIsLoadingFamilyMembers(true);
+				try {
+					const members = await getFamilyMembers(currentUser.accountId);
+					setFamilyMembers(members);
+				} catch (error) {
+					console.error('Failed to load family members:', error);
+				} finally {
+					setIsLoadingFamilyMembers(false);
+				}
+			}
+		};
+
+		loadFamilyMembers();
+	}, [currentUser?.accountId]);
 
 	if (!currentUser?.subscription) {
 		return (
@@ -301,6 +336,79 @@ const SettingsPage: React.FC = () => {
 	const planDetails = getSubscriptionPlanDetails(subscription.plan);
 	const isOnTrial = isTrialActive(subscription);
 	const trialDaysRemaining = getTrialDaysRemaining(subscription);
+
+	const handleAddFamilyMember = async () => {
+		if (
+			!currentUser?.accountId ||
+			(!currentUser?.isAccountOwner &&
+				currentUser?.accountId !== currentUser?.id)
+		) {
+			setAddFamilyMemberError('Only account owners can add family members');
+			return;
+		}
+
+		if (
+			!familyMemberForm.firstName.trim() ||
+			!familyMemberForm.lastName.trim() ||
+			!familyMemberForm.email.trim()
+		) {
+			setAddFamilyMemberError('Please fill in all fields');
+			return;
+		}
+
+		setIsAddingFamilyMember(true);
+		setAddFamilyMemberError('');
+
+		try {
+			await addFamilyMember(
+				currentUser.accountId,
+				familyMemberForm.email.trim(),
+				familyMemberForm.firstName.trim(),
+				familyMemberForm.lastName.trim(),
+			);
+
+			// Reload family members
+			const members = await getFamilyMembers(currentUser.accountId);
+			setFamilyMembers(members);
+
+			// Reset form and close modal
+			setFamilyMemberForm({ firstName: '', lastName: '', email: '' });
+			setShowAddFamilyMemberModal(false);
+		} catch (error: any) {
+			setAddFamilyMemberError(error.message || 'Failed to add family member');
+		} finally {
+			setIsAddingFamilyMember(false);
+		}
+	};
+
+	const handleRemoveFamilyMember = async (memberId: string) => {
+		if (
+			!currentUser?.accountId ||
+			(!currentUser?.isAccountOwner &&
+				currentUser?.accountId !== currentUser?.id)
+		) {
+			return;
+		}
+
+		if (
+			!window.confirm(
+				'Are you sure you want to remove this family member? They will lose access to the shared subscription.',
+			)
+		) {
+			return;
+		}
+
+		try {
+			await removeFamilyMember(currentUser.accountId, memberId, currentUser.id);
+
+			// Reload family members
+			const members = await getFamilyMembers(currentUser.accountId);
+			setFamilyMembers(members);
+		} catch (error: any) {
+			console.error('Failed to remove family member:', error);
+			alert('Failed to remove family member. Please try again.');
+		}
+	};
 
 	const handleRestartOnboarding = async () => {
 		if (!currentUser) return;
@@ -514,6 +622,88 @@ const SettingsPage: React.FC = () => {
 						)}
 				</ButtonContainer>
 			</SubscriptionSection>
+
+			{/* Family Members Section */}
+			{(currentUser?.isAccountOwner ||
+				currentUser?.accountId === currentUser?.id) && (
+				<>
+					<AccountSection>
+						<SectionTitle>Family Members</SectionTitle>
+						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
+							Add family members to share your subscription. They get full
+							access to all features without additional cost.
+						</p>
+
+						{familyMembers.length > 0 && (
+							<div style={{ marginBottom: '16px' }}>
+								<h4
+									style={{
+										marginBottom: '8px',
+										fontSize: '14px',
+										fontWeight: '600',
+										color: '#374151',
+									}}>
+									Current Family Members:
+								</h4>
+								{familyMembers
+									.filter((member) => member.id !== currentUser.id)
+									.map((member) => (
+										<div
+											key={member.id}
+											style={{
+												display: 'flex',
+												justifyContent: 'space-between',
+												alignItems: 'center',
+												padding: '8px 12px',
+												background: '#f9fafb',
+												borderRadius: '6px',
+												marginBottom: '8px',
+											}}>
+											<div>
+												<span style={{ fontWeight: '500' }}>
+													{member.firstName} {member.lastName}
+												</span>
+												<span style={{ color: '#6b7280', marginLeft: '8px' }}>
+													{member.email}
+												</span>
+											</div>
+											<button
+												onClick={() => handleRemoveFamilyMember(member.id)}
+												style={{
+													background: '#ef4444',
+													color: 'white',
+													border: 'none',
+													borderRadius: '4px',
+													padding: '4px 8px',
+													fontSize: '12px',
+													cursor: 'pointer',
+												}}>
+												Remove
+											</button>
+										</div>
+									))}
+							</div>
+						)}
+
+						{familyMembers.length < 2 && (
+							<AccountButton onClick={() => setShowAddFamilyMemberModal(true)}>
+								Add Family Member
+							</AccountButton>
+						)}
+
+						{familyMembers.length >= 2 && (
+							<p
+								style={{
+									color: '#6b7280',
+									fontSize: '14px',
+									marginTop: '8px',
+								}}>
+								Family accounts are limited to 2 members.
+							</p>
+						)}
+					</AccountSection>
+				</>
+			)}
 
 			<AccountSection>
 				<SectionTitle>Account Settings</SectionTitle>
@@ -767,6 +957,77 @@ const SettingsPage: React.FC = () => {
 
 				<p style={{ marginBottom: '16px', color: '#dc2626' }}>
 					Are you sure you want to cancel your subscription?
+				</p>
+			</GenericModal>
+
+			{/* Add Family Member Modal */}
+			<GenericModal
+				isOpen={showAddFamilyMemberModal}
+				onClose={() => {
+					setShowAddFamilyMemberModal(false);
+					setFamilyMemberForm({ firstName: '', lastName: '', email: '' });
+					setAddFamilyMemberError('');
+				}}
+				title='Add Family Member'
+				primaryButtonLabel={isAddingFamilyMember ? 'Adding...' : 'Add Member'}
+				primaryButtonAction={handleAddFamilyMember}
+				secondaryButtonLabel='Cancel'
+				showActions={true}
+				primaryButtonDisabled={isAddingFamilyMember}>
+				<FormGroup>
+					<FormLabel>First Name</FormLabel>
+					<FormInput
+						type='text'
+						value={familyMemberForm.firstName}
+						onChange={(e) =>
+							setFamilyMemberForm((prev) => ({
+								...prev,
+								firstName: e.target.value,
+							}))
+						}
+						placeholder='Enter first name'
+					/>
+				</FormGroup>
+
+				<FormGroup>
+					<FormLabel>Last Name</FormLabel>
+					<FormInput
+						type='text'
+						value={familyMemberForm.lastName}
+						onChange={(e) =>
+							setFamilyMemberForm((prev) => ({
+								...prev,
+								lastName: e.target.value,
+							}))
+						}
+						placeholder='Enter last name'
+					/>
+				</FormGroup>
+
+				<FormGroup>
+					<FormLabel>Email Address</FormLabel>
+					<FormInput
+						type='email'
+						value={familyMemberForm.email}
+						onChange={(e) =>
+							setFamilyMemberForm((prev) => ({
+								...prev,
+								email: e.target.value,
+							}))
+						}
+						placeholder='Enter email address'
+					/>
+				</FormGroup>
+
+				{addFamilyMemberError && (
+					<ErrorMessage style={{ marginTop: '16px' }}>
+						{addFamilyMemberError}
+					</ErrorMessage>
+				)}
+
+				<p style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+					The family member will receive an email with instructions to set up
+					their account and access the shared subscription.
 				</p>
 			</GenericModal>
 		</Container>

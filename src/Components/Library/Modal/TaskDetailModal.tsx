@@ -19,6 +19,7 @@ interface TaskDetailModalProps {
 	onUpdate?: (taskId: string, updates: Partial<Task>) => Promise<void>;
 	onDelete?: (taskId: string) => Promise<void>;
 	onComplete?: (taskId: string) => void;
+	initialEditMode?: boolean;
 }
 
 const ButtonGroup = styled.div`
@@ -85,8 +86,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 	onUpdate,
 	onDelete,
 	onComplete,
+	initialEditMode = false,
 }) => {
-	const [isEditing, setIsEditing] = useState(false);
+	const [isEditing, setIsEditing] = useState(initialEditMode);
 	const [editData, setEditData] = useState<Partial<Task>>(task);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);

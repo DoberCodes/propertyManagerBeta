@@ -403,11 +403,18 @@ export const apiSlice = createApi({
 					const userDoc = await getDoc(userDocRef);
 					const userData = userDoc.data();
 					const userEmail = userData?.email;
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// Determine which user's property groups to fetch
+					// For family members, use the account owner's ID
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : userId;
 
 					// Get property groups
 					const q = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', userId),
+						where('userId', '==', targetUserId),
 					);
 					const querySnapshot = await getDocs(q);
 					const groups = querySnapshot.docs
@@ -562,12 +569,36 @@ export const apiSlice = createApi({
 		>({
 			async queryFn(newGroup) {
 				try {
+					// Get current user to determine correct userId for family accounts
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+
+					// Get user data to check for family account
+					const userDocRef = doc(db, 'users', currentUser.uid);
+					const userDoc = await getDoc(userDocRef);
+					const userData = userDoc.data();
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// For family accounts, property groups should be owned by the account owner
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : currentUser.uid;
+
 					const docRef = await addDoc(collection(db, 'propertyGroups'), {
 						...newGroup,
+						userId: targetUserId, // Ensure property group is owned by account owner
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newGroup } as PropertyGroup };
+					return {
+						data: {
+							id: docRef.id,
+							...newGroup,
+							userId: targetUserId,
+						} as PropertyGroup,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -620,12 +651,20 @@ export const apiSlice = createApi({
 					// Get user's email for shared properties lookup
 					const userDocRef = doc(db, 'users', userId);
 					const userDoc = await getDoc(userDocRef);
-					const userEmail = userDoc.data()?.email;
+					const userData = userDoc.data();
+					const userEmail = userData?.email;
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// Determine which user's data to fetch
+					// For family members, use the account owner's ID
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : userId;
 
 					// Get all property groups owned by this user
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', userId),
+						where('userId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -768,8 +807,26 @@ export const apiSlice = createApi({
 		createProperty: builder.mutation<Property, Omit<Property, 'id'>>({
 			async queryFn(newProperty) {
 				try {
+					// Get current user to determine correct userId for family accounts
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+
+					// Get user data to check for family account
+					const userDocRef = doc(db, 'users', currentUser.uid);
+					const userDoc = await getDoc(userDocRef);
+					const userData = userDoc.data();
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// For family accounts, properties should be owned by the account owner
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : currentUser.uid;
+
 					const docRef = await addDoc(collection(db, 'properties'), {
 						...newProperty,
+						userId: targetUserId, // Ensure property is owned by account owner
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
@@ -839,10 +896,22 @@ export const apiSlice = createApi({
 					}
 					const userId = currentUser.uid;
 
+					// Get user data to check for family account
+					const userDocRef = doc(db, 'users', userId);
+					const userDoc = await getDoc(userDocRef);
+					const userData = userDoc.data();
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// Determine which user's data to fetch
+					// For family members, use the account owner's ID
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : userId;
+
 					// Get all properties for this user's groups
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', userId),
+						where('userId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -1307,10 +1376,22 @@ export const apiSlice = createApi({
 					}
 					const userId = currentUser.uid;
 
+					// Get user data to check for family account
+					const userDocRef = doc(db, 'users', userId);
+					const userDoc = await getDoc(userDocRef);
+					const userData = userDoc.data();
+					const accountId = userData?.accountId;
+					const isAccountOwner = userData?.isAccountOwner;
+
+					// Determine which user's data to fetch
+					// For family members, use the account owner's ID
+					const targetUserId =
+						!isAccountOwner && accountId ? accountId : userId;
+
 					// Get all properties for this user's groups
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', userId),
+						where('userId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
