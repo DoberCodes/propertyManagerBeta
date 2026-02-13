@@ -29,6 +29,7 @@ import { TabConfig } from '../../types/DetailPage.types';
 import { addMaintenanceRequest } from '../../Redux/Slices/maintenanceRequestsSlice';
 import { createMaintenanceRequestUtil } from '../PropertyDetailPage/PropertyDetailPage.utils';
 import { MaintenanceRequest } from '../../types/MaintenanceRequest.types';
+import { uploadMaintenanceRequestFiles } from '../../utils/maintenanceRequestUpload';
 import {
 	InfoGrid,
 	InfoCard,
@@ -142,16 +143,32 @@ export const UnitDetailPage: React.FC = () => {
 		setShowLinkHistoryModal(false);
 	};
 
-	const handleMaintenanceRequestSubmit = (request: MaintenanceRequest) => {
+	const handleMaintenanceRequestSubmit = async (
+		request: MaintenanceRequest,
+	) => {
 		if (!property || !currentUser) return;
-
-		const newRequest = createMaintenanceRequestUtil(
-			request,
-			property,
-			currentUser,
-		);
-		dispatch(addMaintenanceRequest(newRequest));
-		setShowMaintenanceRequestModal(false);
+		try {
+			const rawFiles = (request.files || []).filter(
+				(file): file is File => file instanceof File,
+			);
+			const uploadedFiles = await uploadMaintenanceRequestFiles(
+				rawFiles,
+				property.id,
+			);
+			const newRequest = createMaintenanceRequestUtil(
+				{
+					...request,
+					files: uploadedFiles,
+				},
+				property,
+				currentUser,
+			);
+			dispatch(addMaintenanceRequest(newRequest));
+			setShowMaintenanceRequestModal(false);
+		} catch (error) {
+			console.error('Failed to upload maintenance request files:', error);
+			alert('Failed to upload files. Please try again.');
+		}
 	};
 
 	const syncTaskMaintenanceLinks = async (

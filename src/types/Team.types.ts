@@ -18,7 +18,13 @@ export interface TeamMember {
 	notes: string;
 	linkedProperties: string[];
 	taskHistory: Array<{ date: string; task: string }>;
-	files: Array<{ name: string; id: string }>;
+	files: Array<{
+		name: string;
+		url?: string;
+		size?: number;
+		type?: string;
+		id?: string;
+	}>;
 	createdAt?: string;
 	updatedAt?: string;
 }

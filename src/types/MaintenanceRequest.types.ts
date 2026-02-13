@@ -42,7 +42,9 @@ export interface MaintenanceRequest {
 	description: string;
 	priority: 'Low' | 'Medium' | 'High' | 'Urgent';
 	category: string;
-	files?: File[];
+	files?: Array<
+		File | { name: string; url: string; size: number; type: string }
+	>;
 }
 
 export type MaintenanceRequestPriority =
@@ -66,7 +68,9 @@ export interface MaintenanceRequestHandlers {
 	setShowConvertModal: (show: boolean) => void;
 	convertingRequest: MaintenanceRequestItem | null;
 	setConvertingRequest: (request: MaintenanceRequestItem | null) => void;
-	handleMaintenanceRequestSubmit: (request: MaintenanceRequest) => void;
+	handleMaintenanceRequestSubmit: (
+		request: MaintenanceRequest,
+	) => Promise<void>;
 	handleConvertRequestToTask: (requestId: string) => void;
 	handleConvertToTask: (taskData: TaskData) => Promise<void>;
 }

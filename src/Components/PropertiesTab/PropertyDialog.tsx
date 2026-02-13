@@ -24,14 +24,12 @@ import {
 	PhotoPreviewImage,
 	MaintenanceHistoryBox,
 	HistoryItem,
-	FileUploadSection,
-	FileInput,
-	FileLabel,
 	TagsContainer,
 	Tag,
 	RemoveTagButton,
 	TagInput,
 } from './PropertyDialog.styles';
+import { FileUploader } from '../Library/FileUploader';
 import {
 	uploadPropertyImage,
 	isValidPropertyImageFile,
@@ -56,7 +54,6 @@ interface PropertyFormData {
 	bedrooms?: number | null;
 	bathrooms?: number | null;
 	notes: string;
-	files?: string[];
 	maintenanceHistory?: MaintenanceRecord[];
 	groupId?: string | null;
 }
@@ -220,29 +217,25 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 		setImageError(null);
 	};
 
-	const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) {
-			if (!isValidPropertyImageFile(file)) {
-				setImageError('Invalid file. Please upload an image under 8MB.');
-				return;
-			}
+	const handlePhotoUpload = async (file: File | null) => {
+		if (!file) return;
+		if (!isValidPropertyImageFile(file)) {
+			setImageError('Invalid file. Please upload an image under 8MB.');
+			return;
+		}
 
-			setImageError(null);
-			setIsUploadingImage(true);
+		setImageError(null);
+		setIsUploadingImage(true);
 
-			try {
-				const imageUrl = await uploadPropertyImage(file);
-				handleInputChange('photo', imageUrl);
-				setIsUploadingImage(false);
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Failed to upload image';
-				setImageError(errorMessage);
-				setIsUploadingImage(false);
-			}
-			// Clear the file input
-			e.target.value = '';
+		try {
+			const imageUrl = await uploadPropertyImage(file);
+			handleInputChange('photo', imageUrl);
+			setIsUploadingImage(false);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Failed to upload image';
+			setImageError(errorMessage);
+			setIsUploadingImage(false);
 		}
 	};
 
@@ -371,16 +364,15 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 								Processing image...
 							</div>
 						) : (
-							<FileLabel htmlFor='photo-upload-input'>
-								<input
-									id='photo-upload-input'
-									type='file'
-									accept='image/*'
-									onChange={handlePhotoUpload}
-									style={{ display: 'none' }}
-								/>
-								📤 Upload Image File
-							</FileLabel>
+							<FileUploader
+								label='Upload Image File'
+								helperText='JPG, PNG, GIF, WEBP (max 8MB)'
+								accept='image/*'
+								allowedTypes={['image/*']}
+								maxSizeBytes={8 * 1024 * 1024}
+								setFile={handlePhotoUpload}
+								showSelectedFiles={false}
+							/>
 						)}
 						{formData.photo && (
 							<PhotoPreview>
@@ -735,29 +727,6 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 							)}
 						</MaintenanceHistoryBox>
 					</FormSection>
-
-					{/* General Files */}
-					<FileUploadSection>
-						<SectionTitle>Additional Files</SectionTitle>
-						<FileLabel htmlFor='files-input'>
-							<FileInput
-								id='files-input'
-								type='file'
-								multiple
-								onChange={(e) => {
-									const files = e.target.files;
-									if (files) {
-										const fileNames: string[] = [];
-										for (let i = 0; i < files.length; i++) {
-											fileNames.push(files[i].name);
-										}
-										handleInputChange('files', fileNames);
-									}
-								}}
-							/>
-							Choose Files
-						</FileLabel>
-					</FileUploadSection>
 				</DialogContent>
 
 				<DialogFooter

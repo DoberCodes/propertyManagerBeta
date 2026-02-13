@@ -34,6 +34,11 @@ import {
 	FormSelect,
 	FormTextarea,
 } from '../../Components/Library';
+import { FileUploader } from '../../Components/Library/FileUploader';
+import {
+	uploadTeamMemberFile,
+	uploadTeamMemberImage,
+} from '../../utils/teamMemberFileUpload';
 import {
 	Wrapper,
 	PageHeader,
@@ -62,16 +67,12 @@ import {
 	RightColumn,
 	ImageUploadSection,
 	ImagePreview,
-	ImageUploadInput,
-	ImageUploadButton,
 	SectionTitle,
 	PropertyMultiSelect,
 	PropertyCheckbox,
 	QuickTaskHistory,
 	TaskHistoryItem,
 	FileUploadSection,
-	FileUploadButton,
-	FileUploadInput,
 	FileList,
 	FileItem,
 	DialogFooter,
@@ -227,6 +228,10 @@ export default function TeamPage() {
 	const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 	const [editingGroupName, setEditingGroupName] = useState<string>('');
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
+	const [isUploadingImage, setIsUploadingImage] = useState(false);
+	const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+	const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+	const [fileUploadError, setFileUploadError] = useState<string | null>(null);
 	const [formData, setFormData] = useState({
 		firstName: '',
 		lastName: '',
@@ -238,9 +243,7 @@ export default function TeamPage() {
 		linkedProperties: [] as string[],
 		enableInvitationCode: true,
 	});
-	const [uploadedFiles, setUploadedFiles] = useState<
-		Array<{ name: string; id: string }>
-	>([]);
+	const [uploadedFiles, setUploadedFiles] = useState<TeamMember['files']>([]);
 	const [generatedInvitationCode, setGeneratedInvitationCode] =
 		useState<string>('');
 
@@ -299,31 +302,56 @@ export default function TeamPage() {
 		setShowTeamMemberDialog(true);
 	};
 
-	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setImagePreview(reader.result as string);
-			};
-			reader.readAsDataURL(file);
+	const handleImageUpload = async (file: File | null) => {
+		if (!file || !currentUser) return;
+		setImageUploadError(null);
+		setIsUploadingImage(true);
+		try {
+			const imageUrl = await uploadTeamMemberImage(
+				file,
+				currentUser.id,
+				editingMember?.id,
+			);
+			setImagePreview(imageUrl);
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: 'Failed to upload image. Please try again.';
+			setImageUploadError(message);
+			console.error('Team member image upload failed:', error);
+		} finally {
+			setIsUploadingImage(false);
 		}
 	};
 
-	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (files) {
-			Array.from(files).forEach((file) => {
-				setUploadedFiles((prev) => [
-					...prev,
-					{ name: file.name, id: Math.random().toString() },
-				]);
-			});
+	const handleFileUpload = async (files: File[]) => {
+		if (!files.length || !currentUser) return;
+		setFileUploadError(null);
+		setIsUploadingFiles(true);
+		try {
+			const uploaded = await Promise.all(
+				files.map((file) =>
+					uploadTeamMemberFile(file, currentUser.id, editingMember?.id),
+				),
+			);
+			setUploadedFiles((prev) => [...prev, ...uploaded]);
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: 'Failed to upload files. Please try again.';
+			setFileUploadError(message);
+			console.error('Team member file upload failed:', error);
+		} finally {
+			setIsUploadingFiles(false);
 		}
 	};
 
 	const handleRemoveFile = (fileId: string) => {
-		setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
+		setUploadedFiles((prev) =>
+			prev.filter((file) => (file.url || file.id || file.name) !== fileId),
+		);
 	};
 
 	const handleFormChange = (field: string, value: any) => {
@@ -505,7 +533,7 @@ export default function TeamPage() {
 			enableInvitationCode: !!(member as any).invitationCodeId, // Enable if they already have an invitation code
 		});
 		setImagePreview(member.image || null);
-		setUploadedFiles(member.files);
+		setUploadedFiles(member.files || []);
 		setGeneratedInvitationCode(''); // Reset - will be generated if needed
 		setShowTeamMemberDialog(true);
 	};
@@ -921,15 +949,21 @@ export default function TeamPage() {
 											{formData.lastName.charAt(0) || '?'}
 										</TeamMemberImagePlaceholder>
 									)}
-									<ImageUploadButton htmlFor='image-upload'>
-										Upload Photo
-									</ImageUploadButton>
-									<ImageUploadInput
-										id='image-upload'
-										type='file'
+									<FileUploader
+										label='Upload Photo'
+										helperText='JPG, PNG, GIF, WEBP (max 8MB)'
 										accept='image/*'
-										onChange={handleImageUpload}
+										allowedTypes={['image/*']}
+										maxSizeBytes={8 * 1024 * 1024}
+										setFile={handleImageUpload}
+										disabled={isUploadingImage}
+										showSelectedFiles={false}
 									/>
+									{imageUploadError && (
+										<div style={{ color: '#dc2626', fontSize: '12px' }}>
+											{imageUploadError}
+										</div>
+									)}
 								</ImageUploadSection>
 
 								{/* Basic Info */}
@@ -1263,25 +1297,56 @@ export default function TeamPage() {
 								{/* File Upload */}
 								<FileUploadSection>
 									<SectionTitle>Documents & Files</SectionTitle>
-									<FileUploadButton htmlFor='file-upload'>
-										+ Upload File
-									</FileUploadButton>
-									<FileUploadInput
-										id='file-upload'
-										type='file'
-										multiple
-										onChange={handleFileUpload}
+									<FileUploader
+										label='Upload Documents'
+										helperText='Images, PDF, Word, Excel, Text (max 10MB)'
+										accept='image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx'
+										allowedTypes={[
+											'image/jpeg',
+											'image/png',
+											'image/jpg',
+											'image/gif',
+											'image/webp',
+											'application/pdf',
+											'application/msword',
+											'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+											'text/plain',
+											'application/vnd.ms-excel',
+											'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+										]}
+										maxSizeBytes={10 * 1024 * 1024}
+										multiple={true}
+										setFiles={handleFileUpload}
+										disabled={isUploadingFiles}
+										showSelectedFiles={false}
 									/>
+									{fileUploadError && (
+										<div style={{ color: '#dc2626', fontSize: '12px' }}>
+											{fileUploadError}
+										</div>
+									)}
 									{uploadedFiles.length > 0 && (
 										<FileList>
-											{uploadedFiles.map((file) => (
-												<FileItem key={file.id}>
-													<span>{file.name}</span>
-													<button onClick={() => handleRemoveFile(file.id)}>
-														✕
-													</button>
-												</FileItem>
-											))}
+											{uploadedFiles.map((file) => {
+												const fileId = file.url || file.id || file.name;
+												return (
+													<FileItem key={fileId}>
+														{file.url ? (
+															<a
+																href={file.url}
+																target='_blank'
+																rel='noreferrer'>
+																{file.name}
+															</a>
+														) : (
+															<span>{file.name}</span>
+														)}
+														<button onClick={() => handleRemoveFile(fileId)}>
+															✕
+														</button>
+													</FileItem>
+												);
+											})}
 										</FileList>
 									)}
 								</FileUploadSection>

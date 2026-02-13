@@ -1,5 +1,36 @@
 import { MaintenanceRequestItem } from '../../Redux/Slices/maintenanceRequestsSlice';
 
+const normalizeRequestFiles = (
+	files?: Array<
+		File | { name: string; url: string; size: number; type: string }
+	>,
+) => {
+	if (!files || files.length === 0) {
+		return { files: undefined, images: undefined };
+	}
+
+	const normalizedFiles = files.map((file) => {
+		if ('url' in file) {
+			return file;
+		}
+		return {
+			name: file.name,
+			url: URL.createObjectURL(file),
+			size: file.size,
+			type: file.type,
+		};
+	});
+
+	const images = normalizedFiles
+		.filter((file) => file.type?.startsWith('image/'))
+		.map((file) => file.url);
+
+	return {
+		files: normalizedFiles,
+		images: images.length > 0 ? images : undefined,
+	};
+};
+
 /**
  * Get device name from device ID
  * Supports both old static structure and new Firebase structure
@@ -36,6 +67,7 @@ export const createMaintenanceRequestUtil = (
 	property: any,
 	currentUser: any,
 ): MaintenanceRequestItem => {
+	const { files, images } = normalizeRequestFiles(request.files);
 	return {
 		id: `req-${Date.now()}`,
 		title: request.title,
@@ -50,7 +82,8 @@ export const createMaintenanceRequestUtil = (
 		requestedDate: new Date().toISOString(),
 		submittedBy: currentUser.id,
 		submittedByName: `${currentUser.firstName} ${currentUser.lastName}`,
-		images: request.files?.map((file: File) => URL.createObjectURL(file)),
+		images,
+		files,
 	};
 };
 

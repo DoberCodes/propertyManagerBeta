@@ -7,6 +7,7 @@ import {
 	FormLabel,
 	FormSelect,
 } from '../../../Components/Library';
+import { FileUploader } from '../../../Components/Library/FileUploader';
 import {
 	SectionContainer,
 	SectionHeader,
@@ -149,8 +150,7 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 		}
 	};
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0] || null;
+	const handleFileChange = (file: File | null) => {
 		setFormData((prev) => ({
 			...prev,
 			completionFile: file,
@@ -458,17 +458,26 @@ const AddMaintenanceHistoryModal: React.FC<AddMaintenanceHistoryModalProps> = ({
 						}}>
 						Attachment (optional)
 					</label>
-					<input
-						type='file'
+					<FileUploader
+						label='Attach File'
+						helperText='Images, PDF, Word, Excel, Text (max 10MB)'
 						accept='image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx'
-						onChange={handleFileChange}
-						style={{
-							width: '100%',
-							padding: '8px',
-							border: '1px solid #ccc',
-							borderRadius: '4px',
-							fontSize: '14px',
-						}}
+						allowedTypes={[
+							'image/jpeg',
+							'image/png',
+							'image/jpg',
+							'image/gif',
+							'image/webp',
+							'application/pdf',
+							'application/msword',
+							'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+							'text/plain',
+							'application/vnd.ms-excel',
+							'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+						]}
+						maxSizeBytes={10 * 1024 * 1024}
+						setFile={handleFileChange}
+						showSelectedFiles={false}
 					/>
 					<small style={{ color: '#6b7280', fontSize: '12px' }}>
 						Supported formats: Images, PDF, Word, Excel, Text (max 10MB)

@@ -56,37 +56,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 
 	// currentUser is guaranteed to exist in protected routes
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (file) {
-			// Validate file size (max 25MB for Firebase Storage)
-			if (file.size > 25 * 1024 * 1024) {
-				setErrors({ ...errors, file: 'File size must be less than 25MB' });
-				return;
-			}
-
-			// Validate file type (images and PDFs for Firebase Storage)
-			const allowedTypes = [
-				'image/jpeg',
-				'image/png',
-				'image/jpg',
-				'image/gif',
-				'image/webp',
-				'application/pdf',
-			];
-			if (!allowedTypes.includes(file.type)) {
-				setErrors({
-					...errors,
-					file: 'Invalid file type. Please upload an image or PDF file',
-				});
-				return;
-			}
-
-			setSelectedFile(file);
-			setErrors({ ...errors, file: undefined });
-		}
-	};
-
 	const validateForm = (): boolean => {
 		const newErrors: typeof errors = {};
 
@@ -336,7 +305,25 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 				/>
 			</FormGroup>
 
-			<FileUploader setFile={setSelectedFile} />
+			<FileUploader
+				label='Upload Completion Document'
+				helperText='JPG, PNG, GIF, WEBP, PDF (max 25MB)'
+				accept='image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf'
+				allowedTypes={[
+					'image/jpeg',
+					'image/png',
+					'image/jpg',
+					'image/gif',
+					'image/webp',
+					'application/pdf',
+				]}
+				maxSizeBytes={25 * 1024 * 1024}
+				required={true}
+				setFile={(file) => {
+					setSelectedFile(file);
+					setErrors({ ...errors, file: undefined });
+				}}
+			/>
 
 			{errors.general && (
 				<ErrorMessage style={{ marginBottom: '1rem' }}>

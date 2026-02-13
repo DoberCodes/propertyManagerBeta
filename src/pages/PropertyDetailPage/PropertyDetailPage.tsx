@@ -54,6 +54,7 @@ import {
 } from '../../utils/propertyImageUpload';
 import { getFamilyMembers } from '../../services/authService';
 import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
+import { FileUploader } from '../../Components/Library/FileUploader';
 
 import { ConvertRequestToTaskModal } from '../../Components/ConvertRequestToTaskModal';
 import { SharePropertyModal } from '../../Components/SharePropertyModal';
@@ -434,7 +435,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		handleConvertRequestToTask,
 		handleConvertToTask,
 	} = maintenanceHandlers;
-	
+
 	const hasCommercialSuites =
 		property?.propertyType === 'Commercial' &&
 		(((property as any)?.hasSuites ?? false) ||
@@ -575,8 +576,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	};
 
 	// Photo upload handler
-	const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
+	const handlePhotoUpload = async (file: File | null) => {
 		if (file && property) {
 			if (!isValidPropertyImageFile(file)) {
 				setImageError('Invalid file. Please upload an image under 8MB.');
@@ -622,8 +622,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				setImageError(errorMessage);
 				setIsUploadingImage(false);
 			}
-			// Clear the file input
-			e.target.value = '';
 		}
 	};
 
@@ -845,12 +843,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						Uploading image...
 					</div>
 				) : null}
-				<input
+				<FileUploader
 					id='header-photo-upload'
-					type='file'
 					accept='image/*'
-					onChange={handlePhotoUpload}
-					style={{ display: 'none' }}
+					allowedTypes={['image/*']}
+					maxSizeBytes={8 * 1024 * 1024}
+					setFile={handlePhotoUpload}
+					variant='hidden'
+					onError={(message) => setImageError(message)}
 				/>
 				<HeaderContent>
 					<TitleContainer>

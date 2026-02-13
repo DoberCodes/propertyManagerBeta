@@ -9,6 +9,7 @@ import {
 	FormSelect as Select,
 	FormTextarea as Textarea,
 } from '../Library';
+import { FileUploader } from '../Library/FileUploader';
 
 interface MaintenanceRequestModalProps {
 	isOpen: boolean;
@@ -45,10 +46,8 @@ export const MaintenanceRequestModal: React.FC<
 		onClose();
 	};
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files) {
-			setSelectedFiles(Array.from(e.target.files));
-		}
+	const handleFileChange = (files: File[]) => {
+		setSelectedFiles(files);
 	};
 
 	return (
@@ -124,21 +123,24 @@ export const MaintenanceRequestModal: React.FC<
 
 			<FormGroup>
 				<Label>Attach Photos/Files (Optional)</Label>
-				<FileInput
-					type='file'
-					multiple
+				<FileUploader
+					label='Upload Attachments'
+					helperText='Images, PDF, Word (max 10MB)'
 					accept='image/*,.pdf,.doc,.docx'
-					onChange={handleFileChange}
+					allowedTypes={[
+						'image/jpeg',
+						'image/png',
+						'image/jpg',
+						'image/gif',
+						'image/webp',
+						'application/pdf',
+						'application/msword',
+						'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+					]}
+					maxSizeBytes={10 * 1024 * 1024}
+					multiple={true}
+					setFiles={handleFileChange}
 				/>
-				{selectedFiles.length > 0 && (
-					<FileList>
-						{selectedFiles.map((file, index) => (
-							<FileItem key={index}>
-								📎 {file.name} ({Math.round(file.size / 1024)}KB)
-							</FileItem>
-						))}
-					</FileList>
-				)}
 			</FormGroup>
 
 			<InfoBox>
@@ -151,42 +153,6 @@ export const MaintenanceRequestModal: React.FC<
 		</GenericModal>
 	);
 };
-
-// Styled Components
-const FileInput = styled.input`
-	width: 100%;
-	padding: 10px;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	font-size: 14px;
-	cursor: pointer;
-
-	&::-webkit-file-upload-button {
-		padding: 6px 12px;
-		border: none;
-		background-color: #f5f5f5;
-		border-radius: 4px;
-		cursor: pointer;
-		margin-right: 10px;
-
-		&:hover {
-			background-color: #e0e0e0;
-		}
-	}
-`;
-
-const FileList = styled.div`
-	margin-top: 10px;
-	padding: 10px;
-	background-color: #f9f9f9;
-	border-radius: 4px;
-`;
-
-const FileItem = styled.div`
-	padding: 4px 0;
-	font-size: 13px;
-	color: #555;
-`;
 
 const InfoBox = styled.div`
 	display: flex;

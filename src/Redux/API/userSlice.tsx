@@ -20,8 +20,6 @@ import { User } from '../Slices/userSlice';
 const userSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
 		// User endpoints
-
-		// User endpoints
 		updateUser: builder.mutation<
 			User,
 			{ id: string; updates: Partial<Omit<User, 'id' | 'role'>> }

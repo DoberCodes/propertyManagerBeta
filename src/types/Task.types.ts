@@ -110,7 +110,6 @@ export interface CompletionFile {
 	size: number;
 	type: string;
 	url: string;
-	base64Data?: string;
 	uploadedAt: string;
 }
 

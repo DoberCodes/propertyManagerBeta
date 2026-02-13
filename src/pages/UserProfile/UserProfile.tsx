@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../../Redux/store';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { useUpdateUserMutation } from '../../Redux/API/userSlice';
-import { uploadToBase64, isValidImageFile } from '../../utils/base64Upload';
+import { FileUploader } from '../../Components/Library/FileUploader';
+import { uploadUserProfileImage } from '../../utils/userProfileImageUpload';
 import {
 	PageHeaderSection,
 	PageTitle as StandardPageTitle,
@@ -22,8 +23,6 @@ import {
 	FormSection,
 	ImageUploadSection,
 	ImagePreview,
-	ImageUploadButton,
-	ImageUploadInput,
 	CancelButton,
 	SaveButton,
 	ErrorMessage,
@@ -75,24 +74,16 @@ export const UserProfile: React.FC = () => {
 		setError(null);
 	};
 
-	const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
+	const handlePhotoUpload = async (file: File | null) => {
+		if (!file || !currentUser) return;
 
 		setImageError(null);
-
-		// Validate image
-		if (!isValidImageFile(file)) {
-			setImageError('Invalid image. Please use an image file under 700KB.');
-			return;
-		}
-
 		setIsUploadingImage(true);
 		try {
-			const base64Url = await uploadToBase64(file);
+			const imageUrl = await uploadUserProfileImage(file, currentUser.id);
 			setFormData((prev) => ({
 				...prev,
-				image: base64Url,
+				image: imageUrl,
 			}));
 		} catch (err) {
 			setImageError('Failed to upload image. Please try again.');
@@ -180,17 +171,16 @@ export const UserProfile: React.FC = () => {
 							{formData.image && (
 								<ImagePreview src={formData.image} alt='Profile' />
 							)}
-							<label>
-								<ImageUploadInput
-									type='file'
-									accept='image/*'
-									onChange={handlePhotoUpload}
-									disabled={isUploadingImage || isLoading}
-								/>
-								<ImageUploadButton as='span'>
-									{isUploadingImage ? 'Uploading...' : 'Choose Photo'}
-								</ImageUploadButton>
-							</label>
+							<FileUploader
+								label='Choose Photo'
+								helperText='JPG, PNG, GIF, WEBP (max 8MB)'
+								accept='image/*'
+								allowedTypes={['image/*']}
+								maxSizeBytes={8 * 1024 * 1024}
+								setFile={handlePhotoUpload}
+								disabled={isUploadingImage || isLoading}
+								showSelectedFiles={false}
+							/>
 							{imageError && <ErrorMessage>{imageError}</ErrorMessage>}
 						</ImageUploadSection>
 

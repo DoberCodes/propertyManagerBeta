@@ -13,6 +13,7 @@ import {
 } from '../../types/MaintenanceRequest.types';
 import { TaskData } from '../../types/Task.types';
 import { createMaintenanceRequestUtil } from './PropertyDetailPage.utils';
+import { uploadMaintenanceRequestFiles } from '../../utils/maintenanceRequestUpload';
 
 export const useMaintenanceRequestHandlers = (
 	property: any,
@@ -26,15 +27,38 @@ export const useMaintenanceRequestHandlers = (
 	const [convertingRequest, setConvertingRequest] =
 		useState<MaintenanceRequestItem | null>(null);
 
-	const handleMaintenanceRequestSubmit = (request: MaintenanceRequest) => {
+	const handleMaintenanceRequestSubmit = async (
+		request: MaintenanceRequest,
+	) => {
 		if (!property || !currentUser) return;
+		let newRequest: MaintenanceRequestItem | null = null;
 
-		const newRequest = createMaintenanceRequestUtil(
-			request,
-			property,
-			currentUser,
-		);
-		dispatch(addMaintenanceRequest(newRequest));
+		try {
+			const rawFiles = (request.files || []).filter(
+				(file): file is File => file instanceof File,
+			);
+			const uploadedFiles = await uploadMaintenanceRequestFiles(
+				rawFiles,
+				property.id,
+			);
+			newRequest = createMaintenanceRequestUtil(
+				{
+					...request,
+					files: uploadedFiles,
+				},
+				property,
+				currentUser,
+			);
+			dispatch(addMaintenanceRequest(newRequest));
+		} catch (error) {
+			console.error('Failed to upload maintenance request files:', error);
+			alert('Failed to upload files. Please try again.');
+			return;
+		}
+
+		if (!newRequest) {
+			return;
+		}
 
 		// Create notification for maintenance request submission
 		try {
