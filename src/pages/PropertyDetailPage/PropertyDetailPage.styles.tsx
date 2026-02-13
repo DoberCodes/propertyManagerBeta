@@ -40,7 +40,7 @@ export const Header = styled.div`
 		pointer-events: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 180px;
 		padding: 40px 15px 20px;
 		border-radius: 0 0 20px 20px;
@@ -63,7 +63,7 @@ export const HeaderContent = styled.div`
 	gap: 24px;
 	flex-wrap: wrap;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 16px;
 		align-items: center;
 	}
@@ -120,7 +120,7 @@ export const TabButton = styled.button<{ isActive: boolean }>`
 		}
 	`}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 16px;
 		font-size: 12px;
 	}
@@ -136,7 +136,7 @@ export const TabContent = styled.div`
 	padding: 16px;
 	overflow: visible;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 	}
 
@@ -200,7 +200,7 @@ export const GridContainer = styled.div`
 	border: 1px solid #e0e0e0;
 	border-radius: 6px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		overflow-x: auto;
 	}
 `;
@@ -224,7 +224,7 @@ export const GridTable = styled.table`
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 8px 12px;
 			font-size: 11px;
 		}
@@ -241,7 +241,7 @@ export const GridTable = styled.table`
 		font-size: 14px;
 		color: #333;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 8px 12px;
 			font-size: 12px;
 		}
@@ -270,7 +270,7 @@ export const PropertyTitle = styled.h1`
 	letter-spacing: -0.025em;
 	line-height: 1.1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 2rem;
 	}
 
@@ -357,7 +357,7 @@ export const DeviceCard = styled.div`
 		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 12px;
 	}
@@ -401,7 +401,7 @@ export const MaintenanceItem = styled.div`
 		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 14px;
 	}
@@ -457,7 +457,7 @@ export const TaskCard = styled.div`
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 12px;
 	}
@@ -534,7 +534,7 @@ export const EmptyState = styled.div`
 		margin-top: 20px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 32px 20px;
 
 		h2 {
@@ -590,7 +590,7 @@ export const EditableTitleInput = styled.input`
 		box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 1.75rem;
 		max-width: 300px;
 	}
@@ -773,7 +773,7 @@ export const SectionContainer = styled.div`
 	margin-bottom: 24px;
 	width: 100%;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin-bottom: 20px;
 	}
 	@media (max-width: 480px) {
@@ -792,7 +792,7 @@ export const InfoGrid = styled.div`
 	justify-items: center;
 	width: 100%;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 14px;
 		justify-items: center;
@@ -831,7 +831,7 @@ export const InfoCard = styled.div`
 		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 8px;
 		min-height: 100px;
@@ -869,7 +869,7 @@ export const TabContentContainer = styled.div`
 	flex: 1;
 	min-height: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 1rem;
 	}
 

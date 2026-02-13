@@ -30,7 +30,7 @@ export const Container = styled.div`
 	overflow: hidden;
 	gap: 12px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 16px;
 	}
 

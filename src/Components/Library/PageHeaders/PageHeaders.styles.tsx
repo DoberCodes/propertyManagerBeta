@@ -31,7 +31,7 @@ const PageHeaderSection = styled.div`
 	flex-wrap: wrap;
 	box-shadow: ${COLORS.shadow};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 16px;
 		padding: 20px;
 	}
@@ -56,7 +56,7 @@ const PageTitle = styled.h1`
 	letter-spacing: 0.5px;
 	flex-shrink: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 	}
 
@@ -97,7 +97,7 @@ const HeroHeader = styled.div`
 		pointer-events: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 160px;
 		padding: 40px 20px 15px;
 	}
@@ -138,7 +138,7 @@ const HeroTitle = styled.h1`
 	text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 	}
 
@@ -157,7 +157,7 @@ const SectionHeader = styled.h2`
 	margin: 0 0 16px 0;
 	letter-spacing: 0.25px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -210,7 +210,7 @@ const GroupTitle = styled.h3`
 	margin: 0;
 	flex-grow: 1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 	}
 

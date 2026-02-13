@@ -53,7 +53,7 @@ const TaskDetailRow = styled.div`
 		border-bottom: none;
 	}
 
-	@media (min-width: 769px) {
+	@media (min-width: 1025px) {
 		flex-direction: row;
 		align-items: center;
 		gap: 1rem;
@@ -65,7 +65,7 @@ const TaskDetailLabel = styled.span`
 	color: #374151;
 	font-size: 14px;
 
-	@media (min-width: 769px) {
+	@media (min-width: 1025px) {
 		min-width: 100px;
 		font-size: 14px;
 	}
@@ -76,7 +76,7 @@ const TaskDetailValue = styled.span`
 	font-size: 14px;
 	word-break: break-word;
 
-	@media (min-width: 769px) {
+	@media (min-width: 1025px) {
 		flex: 1;
 		text-align: right;
 	}
@@ -88,7 +88,7 @@ const ModalActions = styled.div`
 	margin-top: 1.5rem;
 	flex-direction: column;
 
-	@media (min-width: 769px) {
+	@media (min-width: 1025px) {
 		flex-direction: row;
 		flex-wrap: wrap;
 	}
@@ -97,25 +97,25 @@ const ModalActions = styled.div`
 		flex: 1;
 		min-width: fit-content;
 
-		@media (min-width: 769px) {
+		@media (min-width: 1025px) {
 			flex: none;
 		}
 	}
 `;
 
 const ResponsiveTable = styled(GridTable)`
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 
 	.desktop-only {
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			display: none;
 		}
 	}
 
 	.mobile-only {
-		@media (min-width: 769px) {
+		@media (min-width: 1025px) {
 			display: none;
 		}
 	}
@@ -145,7 +145,7 @@ const MobileTaskCard = styled.div<{ isSelected: boolean }>`
 		transform: translateY(-1px);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: block;
 	}
 

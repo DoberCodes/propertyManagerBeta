@@ -33,7 +33,7 @@ export const PrimaryButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 20px;
 		font-size: 13px;
 	}
@@ -63,7 +63,7 @@ export const SecondaryButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 20px;
 		font-size: 13px;
 	}
@@ -97,7 +97,7 @@ export const DangerButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 20px;
 		font-size: 13px;
 	}
@@ -182,7 +182,7 @@ export const OutlineButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 20px;
 		font-size: 13px;
 	}

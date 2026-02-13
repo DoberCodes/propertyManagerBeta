@@ -10,7 +10,7 @@ export const Wrapper = styled.div<{ background?: string }>`
 	background-color: ${(props) => props.background};
 	padding: 20px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		min-height: 400px;
 		padding: 15px;
 		scroll-margin-top: 80px;

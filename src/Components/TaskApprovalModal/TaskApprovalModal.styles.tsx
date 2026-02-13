@@ -29,7 +29,7 @@ export const ModalContainer = styled.div`
 	overflow-y: auto;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 90%;
 	}
 

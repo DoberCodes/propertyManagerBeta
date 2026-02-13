@@ -58,7 +58,7 @@ const TableContainer = styled.div`
 	border: 1px solid #ddd;
 	border-radius: 4px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 `;
@@ -91,7 +91,7 @@ const Table = styled.table`
 const MobileCarouselContainer = styled.div`
 	display: none;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: flex;
 		flex-direction: column;
 		gap: 16px;

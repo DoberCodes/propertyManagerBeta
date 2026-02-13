@@ -62,7 +62,7 @@ export const TabButton = styled.button<TabButtonProps>`
 		opacity: 0.5;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 12px;
 		font-size: 13px;
 	}
@@ -81,7 +81,7 @@ export const TabContent = styled.div`
 	padding: 20px;
 	background-color: #ffffff;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 	}
 

@@ -14,7 +14,7 @@ export const InfoGrid = styled.div`
 	gap: 16px;
 	margin-bottom: 20px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 12px;
 	}
@@ -40,7 +40,7 @@ export const InfoCard = styled.div`
 		border-color: #d1d5db;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 14px;
 	}
 
@@ -77,7 +77,7 @@ export const InfoValue = styled.p`
 	font-weight: 500;
 	word-break: break-word;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 	}
 
@@ -106,7 +106,7 @@ export const SectionHeader = styled.h2`
 	color: #1f2937;
 	margin: 0 0 16px 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 17px;
 		margin: 0 0 14px 0;
 	}

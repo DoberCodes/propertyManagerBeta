@@ -34,7 +34,7 @@ const NotificationWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 1rem;
 	}
 
@@ -65,7 +65,7 @@ const NotificationCard = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 95%;
 		max-height: 85vh;
 	}

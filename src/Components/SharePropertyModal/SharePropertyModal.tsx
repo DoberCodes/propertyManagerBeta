@@ -623,7 +623,7 @@ const SharePropertyModalWrapper = styled.div`
 		min-height: 600px !important;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		> div > div {
 			height: 80vh !important;
 			max-height: 90vh !important;

@@ -29,7 +29,7 @@ export const PaywallContainer = styled.div<{
 	margin: 0 auto;
 	padding: ${(props) => (props.variant === 'embedded' ? '0 10px' : '0 40px')};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: ${(props) => (props.variant === 'embedded' ? '0 8px' : '0 20px')};
 	}
 `;
@@ -44,7 +44,7 @@ export const PaywallTitle = styled.h1<{ variant?: 'full' | 'embedded' }>`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: ${(props) => (props.variant === 'embedded' ? '26px' : '36px')};
 	}
 `;
@@ -58,7 +58,7 @@ export const PaywallSubtitle = styled.p<{ variant?: 'full' | 'embedded' }>`
 	margin-left: auto;
 	margin-right: auto;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: ${(props) => (props.variant === 'embedded' ? '14px' : '16px')};
 		margin-bottom: ${(props) =>
 			props.variant === 'embedded' ? '20px' : '40px'};
@@ -87,7 +87,7 @@ export const BackButton = styled.button<{ variant?: 'full' | 'embedded' }>`
 		color: ${COLORS.primary};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 13px;
 		padding: 6px 12px;
 	}
@@ -108,7 +108,7 @@ export const TrialBannerTitle = styled.h2<{ variant?: 'full' | 'embedded' }>`
 	font-weight: 800;
 	margin: 0 0 ${(props) => (props.variant === 'embedded' ? '6px' : '15px')} 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: ${(props) => (props.variant === 'embedded' ? '15px' : '24px')};
 	}
 `;
@@ -118,7 +118,7 @@ export const TrialBannerText = styled.p<{ variant?: 'full' | 'embedded' }>`
 	margin: 0 0 ${(props) => (props.variant === 'embedded' ? '0' : '20px')} 0;
 	opacity: 0.95;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: ${(props) => (props.variant === 'embedded' ? '11px' : '16px')};
 	}
 `;
@@ -128,7 +128,7 @@ export const TrialCountdown = styled.div<{ variant?: 'full' | 'embedded' }>`
 	font-weight: 800;
 	margin-bottom: 20px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: ${(props) => (props.variant === 'embedded' ? '26px' : '36px')};
 	}
 `;
@@ -151,7 +151,7 @@ export const PricingCardsGrid = styled.div<{ layout?: 'grid' | 'horizontal' }>`
 	overflow-y: visible;
 	padding-bottom: ${(props) => (props.layout === 'horizontal' ? '12px' : '0')};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: grid;
 		grid-template-columns: 1fr;
 		gap: 12px;
@@ -194,7 +194,7 @@ export const PricingCard = styled.div<{
 		border-color: ${COLORS.primary};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: ${(props) =>
 			props.layout === 'horizontal' ? '16px 12px' : '30px 20px'};
 		margin-top: 0;
@@ -233,7 +233,7 @@ export const PlanPrice = styled.div<{ color?: 'white' | 'black' }>`
 		font-weight: 800;
 		color: ${(props) => (props.color === 'white' ? 'white' : COLORS.primary)};
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			font-size: 32px;
 		}
 	}
@@ -296,7 +296,7 @@ export const SelectPlanButton = styled.button<{ isCurrentPlan?: boolean }>`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 20px;
 		font-size: 14px;
 	}
@@ -320,7 +320,7 @@ export const UpgradeMessage = styled.div`
 	text-align: center;
 	font-weight: 500;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		font-size: 14px;
 	}
@@ -332,7 +332,7 @@ export const ButtonGroup = styled.div`
 	justify-content: center;
 	flex-wrap: wrap;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-direction: column;
 		gap: 10px;
 	}
@@ -363,7 +363,7 @@ export const AdditionalOptionsContainer = styled.div<{
 	gap: ${(props) => (props.layout === 'horizontal' ? '16px' : '24px')};
 	margin-top: ${(props) => (props.layout === 'horizontal' ? '20px' : '40px')};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 16px;
 		margin-top: 16px;
@@ -378,7 +378,7 @@ export const PromoSection = styled.div<{ layout?: 'grid' | 'horizontal' }>`
 	text-align: center;
 	box-shadow: ${COLORS.shadow};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: ${(props) => (props.layout === 'horizontal' ? '14px' : '24px')};
 	}
 `;
@@ -449,7 +449,7 @@ export const ContactSalesSection = styled.div<{
 	color: white;
 	box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: ${(props) => (props.layout === 'horizontal' ? '14px' : '24px')};
 	}
 `;

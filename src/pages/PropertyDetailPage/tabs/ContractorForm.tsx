@@ -44,7 +44,7 @@ const FormContainer = styled.div`
 	max-height: 90vh;
 	overflow-y: auto;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 90%;
 		padding: 1.5rem;
 	}

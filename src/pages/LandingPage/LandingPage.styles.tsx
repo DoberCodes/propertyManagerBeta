@@ -7,7 +7,7 @@ export const Wrapper = styled.div`
 	background-color: ${COLORS.bgWhite};
 	margin-top: 80px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin-top: 70px;
 	}
 
@@ -53,7 +53,7 @@ export const Hero = styled.section`
 		padding: 140px 30px 60px 30px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 120px 20px 40px 20px;
 		min-height: auto;
 		gap: 30px;
@@ -81,7 +81,7 @@ export const HeroContent = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 100%;
 	}
 `;
@@ -97,7 +97,7 @@ export const HeroTitle = styled.h1`
 	background-clip: text;
 	letter-spacing: -0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 40px;
 	}
 
@@ -113,7 +113,7 @@ export const HeroSubtitle = styled.p`
 	margin: 0 0 30px 0;
 	font-weight: 400;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 	}
 
@@ -149,7 +149,7 @@ export const HeroCTA = styled.button`
 		transform: translateY(-1px);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 14px 32px;
 		font-size: 16px;
 	}
@@ -189,7 +189,7 @@ export const HeroImage = styled.div`
 		max-width: 400px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 100%;
 	}
 `;
@@ -202,7 +202,7 @@ export const StorySection = styled.section`
 	background-color: ${COLORS.bgWhite};
 	position: relative;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -226,7 +226,7 @@ export const StoryTitle = styled.h2`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 36px;
 		margin-bottom: 40px;
 	}
@@ -248,7 +248,7 @@ export const StoryText = styled.p`
 		margin-bottom: 0;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 		margin-bottom: 20px;
 	}
@@ -267,7 +267,7 @@ export const MissionSection = styled.section`
 	background-color: ${COLORS.bgLight};
 	position: relative;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -286,7 +286,7 @@ export const MissionTitle = styled.h2`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 36px;
 		margin-bottom: 40px;
 	}
@@ -309,7 +309,7 @@ export const MissionContent = styled.div`
 		gap: 25px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 20px;
 	}
@@ -330,7 +330,7 @@ export const MissionCard = styled.div`
 		transform: translateY(-5px);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 24px 20px;
 	}
 `;
@@ -347,7 +347,7 @@ export const MissionCardTitle = styled.h3`
 	margin: 0 0 12px 0;
 	color: ${COLORS.textPrimary};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 `;
@@ -358,7 +358,7 @@ export const MissionCardDescription = styled.p`
 	color: ${COLORS.textSecondary};
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 	}
 `;
@@ -371,7 +371,7 @@ export const FeaturesSection = styled.section`
 	background-color: ${COLORS.bgWhite};
 	position: relative;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -390,7 +390,7 @@ export const FeaturesTitle = styled.h2`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 36px;
 		margin-bottom: 40px;
 	}
@@ -421,7 +421,7 @@ export const FeatureGrid = styled.div`
 		gap: 25px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 20px;
 		padding: 20px;
@@ -461,7 +461,7 @@ export const FeatureCard = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 24px 20px;
 	}
 `;
@@ -478,7 +478,7 @@ export const FeatureTitle = styled.h3`
 	margin: 0 0 12px 0;
 	color: ${COLORS.textPrimary};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 `;
@@ -489,7 +489,7 @@ export const FeatureDescription = styled.p`
 	color: ${COLORS.textSecondary};
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 	}
 `;
@@ -516,7 +516,7 @@ export const BenefitsSection = styled.section`
 	background-color: ${COLORS.bgLight};
 	position: relative;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -546,7 +546,7 @@ export const BenefitRow = styled.div<{ reverse?: boolean }>`
 		margin-bottom: 60px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-direction: column !important;
 		gap: 30px;
 		margin-bottom: 40px;
@@ -566,7 +566,7 @@ export const BenefitImage = styled.div`
 		object-fit: cover;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 100%;
 	}
 `;
@@ -575,7 +575,7 @@ export const BenefitContent = styled.div`
 	flex: 1;
 	min-width: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 100%;
 	}
 `;
@@ -590,7 +590,7 @@ export const BenefitTitle = styled.h2`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 	}
 
@@ -605,7 +605,7 @@ export const BenefitDescription = styled.p`
 	color: ${COLORS.textSecondary};
 	margin: 0 0 24px 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 	}
 
@@ -633,7 +633,7 @@ export const BenefitItem = styled.li`
 		margin-bottom: 0;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 	}
 `;
@@ -646,7 +646,7 @@ export const ContactSection = styled.section`
 	background-color: ${COLORS.bgWhite};
 	position: relative;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -665,7 +665,7 @@ export const ContactTitle = styled.h2`
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 36px;
 		margin-bottom: 40px;
 	}
@@ -686,7 +686,7 @@ export const ContactForm = styled.form`
 	flex-direction: column;
 	gap: 20px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 16px;
 	}
 `;
@@ -718,7 +718,7 @@ export const FormInput = styled.input`
 		border-color: ${COLORS.gray300};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 14px;
 		font-size: 15px;
 	}
@@ -747,7 +747,7 @@ export const FormTextarea = styled.textarea`
 		border-color: ${COLORS.gray300};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 14px;
 		font-size: 15px;
 	}
@@ -779,7 +779,7 @@ export const SubmitButton = styled.button`
 		transform: translateY(0);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 28px;
 		font-size: 15px;
 	}
@@ -819,7 +819,7 @@ export const CTASection = styled.section`
 		z-index: 0;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 
@@ -837,7 +837,7 @@ export const CTATitle = styled.h2`
 	z-index: 1;
 	letter-spacing: -0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 36px;
 	}
 
@@ -857,7 +857,7 @@ export const CTADescription = styled.p`
 	position: relative;
 	z-index: 1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		margin-bottom: 30px;
 	}
@@ -875,7 +875,7 @@ export const CTAButtons = styled.div`
 	z-index: 1;
 	flex-wrap: wrap;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 15px;
 	}
 
@@ -902,7 +902,7 @@ export const CTAButton = styled.button`
 		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 14px 32px;
 		font-size: 15px;
 	}
@@ -932,7 +932,7 @@ export const FooterSection = styled.footer`
 	color: white;
 	padding: 60px 40px 20px 40px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 40px 20px 20px 20px;
 	}
 
@@ -965,7 +965,7 @@ export const FooterContent = styled.div`
 		line-height: 1.6;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 30px;
 		margin-bottom: 30px;
@@ -977,7 +977,7 @@ export const FooterLinks = styled.div`
 	gap: 30px;
 	justify-content: flex-end;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		justify-content: flex-start;
 		flex-wrap: wrap;
 		gap: 20px;
@@ -1000,7 +1000,7 @@ export const FooterLink = styled.button`
 		color: ${COLORS.primary};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 	}
 `;
@@ -1012,7 +1012,7 @@ export const FooterCopyright = styled.div`
 	color: rgba(255, 255, 255, 0.6);
 	font-size: 14px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 13px;
 	}
 `;
@@ -1023,7 +1023,7 @@ export const DownloadSection = styled.section`
 	text-align: center;
 	color: white;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 60px 20px;
 	}
 `;
@@ -1039,7 +1039,7 @@ export const DownloadHeading = styled.h2`
 	margin-bottom: 20px;
 	line-height: 1.2;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 32px;
 	}
 `;
@@ -1050,7 +1050,7 @@ export const DownloadSubtext = styled.p`
 	margin-bottom: 40px;
 	line-height: 1.6;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 	}
 `;
@@ -1076,7 +1076,7 @@ export const DownloadButton = styled.a`
 		box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px 32px;
 		font-size: 16px;
 		margin: 10px 0;
@@ -1095,7 +1095,7 @@ export const DownloadInfo = styled.div`
 	gap: 40px;
 	flex-wrap: wrap;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 20px;
 	}
 `;
@@ -1127,7 +1127,7 @@ export const VersionStatus = styled.div`
 	text-align: center;
 	border: 1px solid rgba(255, 255, 255, 0.2);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 13px;
 		padding: 10px 16px;
 		margin-top: 16px;
@@ -1144,7 +1144,7 @@ export const Section = styled.section`
 	background: ${COLORS.bgLight};
 	box-sizing: border-box;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 500px;
 		padding: 30px;
 	}

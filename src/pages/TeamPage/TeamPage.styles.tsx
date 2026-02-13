@@ -8,7 +8,7 @@ export const Wrapper = styled.div`
 	background-color: #fafafa;
 	min-height: 100%;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 20px;
 		padding: 20px;
 	}
@@ -41,7 +41,7 @@ export const PageTitle = styled.h1`
 	margin: 0;
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 	}
 
@@ -71,7 +71,7 @@ export const AddTeamGroupButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px 16px;
 		font-size: 12px;
 	}
@@ -105,7 +105,7 @@ export const TeamGroupHeader = styled.div`
 	flex-wrap: wrap;
 	margin-bottom: 8px; /* breathing room before tiles, match Properties */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 16px;
 		gap: 12px;
 	}
@@ -123,7 +123,7 @@ export const TeamGroupTitle = styled.h2`
 	flex: 1;
 	letter-spacing: 0.3px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -151,7 +151,7 @@ export const TeamGroupNameInput = styled.input`
 		box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -196,7 +196,7 @@ export const TeamMembersGrid = styled.div`
 		gap: 16px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 		gap: 12px;
 	}
@@ -228,7 +228,7 @@ export const TeamMemberCard = styled.div`
 		transform: translateY(-2px);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px;
 		gap: 8px;
 	}
@@ -285,7 +285,7 @@ export const TeamMemberImage = styled.img`
 	object-fit: cover;
 	background-color: #e5e7eb;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 80px;
 		height: 80px;
 	}
@@ -311,7 +311,7 @@ export const TeamMemberImagePlaceholder = styled.div`
 	text-align: center;
 	word-break: break-all;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 80px;
 		height: 80px;
 		font-size: 32px;
@@ -332,7 +332,7 @@ export const TeamMemberName = styled.h3`
 	text-align: center;
 	word-break: break-word;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 12px;
 	}
 
@@ -388,7 +388,7 @@ export const DialogTitle = styled.h2`
 	color: #1f2937;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -423,7 +423,7 @@ export const DialogBody = styled.div`
 	overflow-y: auto;
 	flex: 1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 20px;
 		padding: 16px;
@@ -453,7 +453,7 @@ export const RightColumn = styled.div`
 	overflow-y: auto;
 	max-height: calc(90vh - 200px);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-height: calc(85vh - 200px);
 		gap: 15px;
 	}

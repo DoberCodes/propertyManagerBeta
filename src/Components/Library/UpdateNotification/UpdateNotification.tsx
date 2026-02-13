@@ -34,7 +34,7 @@ const NotificationWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		left: 10px;
 		right: 10px;
 		max-width: none;

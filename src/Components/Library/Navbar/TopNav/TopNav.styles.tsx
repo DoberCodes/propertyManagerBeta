@@ -21,11 +21,23 @@ export const Wrapper = styled.div`
 	z-index: 100;
 	box-shadow: ${COLORS.shadow};
 
+	/* Extend background into top safe area */
+	&::before {
+		content: '';
+		position: absolute;
+		top: calc(-1 * env(safe-area-inset-top));
+		left: 0;
+		right: 0;
+		height: env(safe-area-inset-top);
+		background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+		z-index: -1;
+	}
+
 	.mobile-title {
 		display: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 20px 15px;
 		padding-left: max(15px, env(safe-area-inset-left));
 		padding-right: max(15px, env(safe-area-inset-right));
@@ -74,7 +86,7 @@ export const LeftSection = styled.div`
 		max-width: 130px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 15px;
 		width: auto;
 
@@ -106,7 +118,7 @@ export const RightSection = styled.div`
 		display: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-wrap: nowrap;
 		justify-content: flex-end;
 		gap: 16px;
@@ -142,7 +154,7 @@ export const Title = styled.div`
 		object-fit: contain;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		img {
 			height: 100%;
 			max-width: 100%;
@@ -167,7 +179,7 @@ export const NavItems = styled.div`
 		gap: 15px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 10px;
 	}
 
@@ -216,7 +228,7 @@ export const HamburgerButton = styled.button`
 		color: ${COLORS.primaryLight};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: block;
 	}
 `;
@@ -231,7 +243,7 @@ export const SidebarOverlay = styled.div`
 	background-color: ${COLORS.overlay};
 	z-index: 999;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: block;
 	}
 `;
@@ -253,7 +265,7 @@ export const MobileSidebar = styled.div<{ $isOpen: boolean }>`
 		props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
 	transition: transform 0.3s ease;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: block;
 	}
 `;
@@ -310,7 +322,7 @@ export const NotificationIcon = styled.div<{
 		}
 	`}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 36px;
 		height: 36px;
 

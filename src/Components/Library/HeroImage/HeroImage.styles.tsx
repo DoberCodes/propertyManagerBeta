@@ -11,7 +11,7 @@ export const HeroImageWrapper = styled.div`
 	align-content: center;
 	padding: 20px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		min-height: 80vh;
 		padding: 15px;
 	}
@@ -28,7 +28,7 @@ export const HeroImageTitle = styled.h3`
 	padding: 25px;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 24px;
 		padding: 20px;
 	}
@@ -45,7 +45,7 @@ export const HeroImageSubtitle = styled.h4`
 	padding: 25px;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		padding: 15px;
 	}

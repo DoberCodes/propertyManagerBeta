@@ -5,7 +5,7 @@ export const Wrapper = styled.ul`
 	padding: 0;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 95%;
 	}
 
@@ -21,7 +21,7 @@ export const ListItem = styled.li`
 	font-size: 16px;
 	margin-top: 10px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 		margin-top: 8px;
 	}

@@ -32,7 +32,7 @@ export const UserInfo = styled.div`
 	justify-content: center;
 	margin-left: 8px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin-left: 6px;
 	}
 
@@ -50,7 +50,7 @@ export const UserName = styled.span`
 	margin: 0;
 	line-height: 1.2;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 12px;
 	}
 `;
@@ -62,7 +62,7 @@ export const UserTitle = styled.span`
 	margin: 0;
 	line-height: 1.2;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 10px;
 	}
 `;

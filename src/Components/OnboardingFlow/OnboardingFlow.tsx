@@ -290,7 +290,7 @@ const PageGuideModal = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		position: fixed;
 		top: auto;
 		bottom: 20px;
@@ -359,7 +359,7 @@ const MinimizedWaitingModal = styled.div<{ $visible: boolean }>`
 	transition: all 0.3s ease;
 	pointer-events: ${({ $visible }) => ($visible ? 'auto' : 'none')};
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		top: 20px;
 		right: 20px;
 		left: 20px;

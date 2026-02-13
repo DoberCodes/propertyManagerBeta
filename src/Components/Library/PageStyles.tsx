@@ -13,7 +13,7 @@ export const PageWrapper = styled.div`
 	min-height: 100%;
 	background-color: #fafafa;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		gap: 15px;
 	}
@@ -33,7 +33,7 @@ export const PageHeader = styled.div`
 	border-bottom: 2px solid #e5e7eb;
 	flex-wrap: wrap;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 15px;
 		padding-bottom: 15px;
 	}
@@ -51,7 +51,7 @@ export const PageTitle = styled.h1`
 	color: #1f2937;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 24px;
 	}
 
@@ -74,7 +74,7 @@ export const ContentContainer = styled.div`
 	width: 100%;
 	margin: 0 auto;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 15px;
 	}
 
@@ -89,7 +89,7 @@ export const Section = styled.div`
 	padding: 20px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		border-radius: 6px;
 	}

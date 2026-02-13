@@ -222,7 +222,7 @@ const InvitationItem = styled.div`
 	align-items: center;
 	gap: 16px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-direction: column;
 		align-items: flex-start;
 	}
@@ -272,7 +272,7 @@ const InvitationActions = styled.div`
 	display: flex;
 	gap: 8px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 100%;
 	}
 `;
@@ -300,7 +300,7 @@ const AcceptButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex: 1;
 		justify-content: center;
 	}
@@ -329,7 +329,7 @@ const DeclineButton = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex: 1;
 		justify-content: center;
 	}

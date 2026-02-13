@@ -31,7 +31,7 @@ const FilterContainer = styled.div<{ hideOnMobile?: boolean }>`
 	gap: 1rem;
 	align-items: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 0.75rem;
 		gap: 0.75rem;
 		display: ${(props) => (props.hideOnMobile ? 'none' : 'flex')};
@@ -44,7 +44,7 @@ const FilterGroup = styled.div`
 	min-width: 200px;
 	flex: 1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		min-width: 100%;
 	}
 
@@ -119,7 +119,7 @@ const ClearButton = styled.button`
 		background-color: #4b5563;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex: 1;
 		padding: 0.75rem;
 	}

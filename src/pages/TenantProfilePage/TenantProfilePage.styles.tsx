@@ -21,7 +21,7 @@ export const Container = styled.div`
 	flex-direction: column;
 	align-items: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 1.5rem;
 	}
 
@@ -42,7 +42,7 @@ export const TabContainer = styled.div`
 	margin-bottom: 2rem;
 	overflow-x: auto;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 0.5rem;
 	}
 `;
@@ -64,7 +64,7 @@ export const Tab = styled.button<{ active: boolean }>`
 		color: ${COLORS.primary};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 0.75rem 1rem;
 		font-size: 0.9rem;
 	}
@@ -96,7 +96,7 @@ export const FormRow = styled.div`
 	grid-template-columns: repeat(2, 1fr);
 	gap: 1.5rem;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 		gap: 1rem;
 	}
@@ -189,7 +189,7 @@ export const ButtonGroup = styled.div`
 	justify-content: flex-end;
 	margin-top: 2rem;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-direction: column;
 		gap: 0.75rem;
 	}

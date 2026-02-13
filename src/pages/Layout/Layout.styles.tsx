@@ -23,7 +23,7 @@ export const Main = styled.div`
 	flex-direction: row;
 	min-height: 0; /* Allow flex items to shrink below their minimum content size */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		flex-direction: column;
 		height: calc(100vh - ${nav_height} - 70px);
 	}
@@ -45,7 +45,7 @@ export const Sidebar = styled.div`
 		min-width: 200px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 `;
@@ -59,7 +59,7 @@ export const Content = styled.div`
 	background-color: #ffffff;
 	padding-bottom: 70px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		padding-bottom: 85px;
 	}

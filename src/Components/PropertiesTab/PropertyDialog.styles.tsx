@@ -29,7 +29,7 @@ export const DialogContainer = styled.div`
 		max-width: 800px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 95%;
 		max-height: 85vh;
 	}
@@ -50,7 +50,7 @@ export const DialogHeader = styled.div`
 	border-bottom: 1px solid #e0e0e0;
 	background-color: #fafafa;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px 20px;
 	}
 
@@ -65,7 +65,7 @@ export const DialogTitle = styled.h2`
 	color: black;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -119,7 +119,7 @@ export const DialogContent = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px 20px;
 		gap: 16px;
 	}
@@ -155,7 +155,7 @@ export const FormRow = styled.div`
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 	gap: 16px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(2, 1fr);
 		gap: 12px;
 	}
@@ -255,7 +255,7 @@ export const PhotoPreviewImage = styled.img`
 	object-fit: cover;
 	display: block;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 180px;
 	}
 
@@ -330,7 +330,7 @@ export const DeviceRow = styled.div`
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr auto auto;
 		gap: 10px;
 		padding: 12px;
@@ -381,7 +381,7 @@ export const AddDeviceButton = styled.button`
 		background-color: #16a34a;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 8px 12px;
 		font-size: 12px;
 	}
@@ -527,7 +527,7 @@ export const DialogFooter = styled.div`
 	border-top: 1px solid #e0e0e0;
 	background-color: #fafafa;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 20px;
 		gap: 10px;
 	}
@@ -558,7 +558,7 @@ export const SaveButton = styled.button`
 		background-color: #15803d;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 8px 16px;
 		font-size: 13px;
 	}
@@ -585,7 +585,7 @@ export const CancelButton = styled.button`
 		background-color: #d1d5db;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 8px 16px;
 		font-size: 13px;
 	}

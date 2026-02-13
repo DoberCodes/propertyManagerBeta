@@ -12,7 +12,7 @@ export const DesktopWrapper = styled.div`
 	overflow-y: auto; /* Enable scrolling if content exceeds height */
 	overflow-x: hidden; /* Prevent horizontal scrolling */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 `;
@@ -108,12 +108,25 @@ export const MobileBottomNav = styled.div`
 	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 	height: auto;
 	min-height: 64px;
+	position: relative;
 
-	@media (max-width: 768px) {
+	/* Extend background into bottom safe area */
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: calc(-1 * env(safe-area-inset-bottom));
+		left: 0;
+		right: 0;
+		height: env(safe-area-inset-bottom);
+		background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+		z-index: -1;
+	}
+
+	@media (max-width: 1024px) {
 		display: flex;
 	}
 
-	@media (min-width: 769px) {
+	@media (min-width: 1025px) {
 		display: none;
 	}
 `;
@@ -173,7 +186,7 @@ export const MenuSection = styled.div`
 	border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Divider added back above Favorites */
 	flex-shrink: 0; /* Prevent shrinking */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 20px;
 		border-right: none;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -193,7 +206,7 @@ export const MenuNav = styled.div`
 	flex-direction: column;
 	gap: 12px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 8px;
 	}
 `;
@@ -222,7 +235,7 @@ export const MenuItem = styled(Link)`
 		border-left-color: #22c55e;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 12px;
 		padding: 8px 10px;
 	}
@@ -245,7 +258,7 @@ export const Section = styled.div`
 		border-bottom: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 20px;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 		border-right: none;
@@ -283,7 +296,7 @@ export const SectionContent = styled.div`
 	overflow-y: auto; /* Enable scrolling if content exceeds height */
 	flex-shrink: 0; /* Prevent shrinking */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 10px;
 		font-size: 13px;
 		max-height: 150px;
@@ -304,7 +317,7 @@ export const BottomSections = styled.div`
 	padding: 20px;
 	flex-shrink: 0; /* Prevent shrinking */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 20px;
 		gap: 0;
 		margin-top: 0;

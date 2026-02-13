@@ -7,7 +7,7 @@ export const Wrapper = styled.div`
 	padding: 20px;
 	min-height: 100%;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		gap: 15px;
 	}
@@ -25,7 +25,7 @@ export const TaskGridSection = styled.div`
 	flex: 1;
 	min-height: clamp(240px, 35vh, 400px);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 `;
@@ -92,7 +92,7 @@ export const TaskGridTitle = styled.h2`
 	color: #1f2937;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 
@@ -207,7 +207,7 @@ export const Table = styled.table`
 		color: black;
 		font-size: 14px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 10px 12px;
 			font-size: 12px;
 		}
@@ -224,7 +224,7 @@ export const Table = styled.table`
 		color: black;
 		font-size: 14px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 10px 12px;
 			font-size: 12px;
 		}
@@ -246,7 +246,7 @@ export const BottomSectionsWrapper = styled.div`
 	gap: 20px;
 	flex-shrink: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 14px;
 	}
 
@@ -266,7 +266,7 @@ export const TopChartsContainer = styled.div`
 		gap: 16px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: none;
 	}
 `;
@@ -275,7 +275,7 @@ export const CarouselSection = styled.div`
 	width: 100%;
 	display: none;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		display: block;
 	}
 `;
@@ -294,12 +294,12 @@ export const Section = styled.div`
 	&.mobile-seasonal {
 		display: none;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			display: flex;
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		border-radius: 6px;
 		min-height: auto;
 		height: auto;
@@ -337,7 +337,7 @@ export const SectionTitle = styled.div`
 		text-overflow: ellipsis;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 		padding: 12px 16px;
 		height: 48px;
@@ -382,7 +382,7 @@ export const TempToggle = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 2px;
 
 		button {
@@ -404,7 +404,7 @@ export const SectionContent = styled.div`
 	overflow-y: auto;
 	min-height: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 12px;
 		padding: 12px 16px;
 	}
@@ -437,7 +437,7 @@ export const ZeroState = styled.div`
 		font-weight: 500;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 
 		svg {

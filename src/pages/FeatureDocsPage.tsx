@@ -40,7 +40,7 @@ const Header = styled.div`
 	margin-bottom: 50px;
 	box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 40px 20px;
 	}
 `;
@@ -51,7 +51,7 @@ const Title = styled.h2`
 	color: white;
 	font-weight: 800;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 1.8rem;
 	}
 `;

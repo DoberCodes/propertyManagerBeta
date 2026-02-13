@@ -12,7 +12,7 @@ export const Wrapper = styled.div`
 		width: 40%;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 60%;
 		padding: 8px;
 		min-height: calc(450px - ${nav_height});
@@ -33,7 +33,7 @@ export const ProfilePicture = styled.div`
 	background-color: #b0c4de;
 	border-bottom: solid 1px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 180px;
 	}
 
@@ -47,7 +47,7 @@ export const Image = styled.img`
 	width: 150px;
 	border-radius: 50%;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 130px;
 		width: 130px;
 	}
@@ -69,7 +69,7 @@ export const Stat = styled.div`
 	font-weight: 600;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		padding: 8px;
 	}

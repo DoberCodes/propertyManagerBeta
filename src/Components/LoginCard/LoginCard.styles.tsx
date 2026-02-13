@@ -15,7 +15,7 @@ export const Wrapper = styled.form`
 	position: relative;
 	z-index: 10;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 380px;
 		padding: 28px 20px;
 		border-radius: 10px;
@@ -41,7 +41,7 @@ export const Title = styled.h2`
 	background-clip: text;
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 		margin: 0 auto 24px auto;
 	}
@@ -75,7 +75,7 @@ export const Input = styled.input`
 		background-color: ${COLORS.bgWhite};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 13px;
 		font-size: 15px;
 		margin: 9px 0;
@@ -129,7 +129,7 @@ export const Submit = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 		padding: 10px 28px;
 		margin: 20px auto 0 auto;
@@ -160,7 +160,7 @@ export const RegisterWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 24px 0 0 0;
 		font-size: 14px;
 	}
@@ -183,7 +183,7 @@ export const PasswordInputWrapper = styled.div`
 		padding-right: 45px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 8px;
 	}
 
@@ -215,7 +215,7 @@ export const PasswordToggleButton = styled.button`
 		outline: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		right: 12px;
 		padding: 4px 8px;
@@ -246,7 +246,7 @@ export const CheckboxWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 14px 0 10px 0;
 		gap: 7px;
 
@@ -279,7 +279,7 @@ export const CheckboxLabel = styled.label`
 		color: ${COLORS.textPrimary};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 13px;
 	}
 
@@ -298,7 +298,7 @@ export const ErrorMessage = styled.div`
 	font-size: 14px;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px;
 		margin: 8px;
 		font-size: 13px;

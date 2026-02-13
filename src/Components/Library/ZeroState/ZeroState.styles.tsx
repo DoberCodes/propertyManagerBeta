@@ -13,7 +13,7 @@ export const ZeroStateContainer = styled.div`
 	border: 2px dashed ${COLORS.border};
 	min-height: 300px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 3rem 1.5rem;
 		min-height: 250px;
 	}
@@ -29,7 +29,7 @@ export const ZeroStateIcon = styled.div`
 	margin-bottom: 1.5rem;
 	opacity: 0.5;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 40px;
 		margin-bottom: 1rem;
 	}
@@ -45,7 +45,7 @@ export const ZeroStateTitle = styled.h3`
 	color: ${COLORS.textPrimary};
 	margin: 0 0 0.75rem 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 20px;
 	}
 
@@ -61,7 +61,7 @@ export const ZeroStateDescription = styled.p`
 	max-width: 500px;
 	line-height: 1.6;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 		margin-bottom: 1.5rem;
 	}

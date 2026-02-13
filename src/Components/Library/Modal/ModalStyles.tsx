@@ -62,7 +62,7 @@ export const ModalContainer = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 90%;
 		height: 75vh;
 		max-height: 85vh;
@@ -357,7 +357,7 @@ export const FormGrid = styled.div`
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 1.25rem 1.5rem;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: 1fr;
 	}
 `;

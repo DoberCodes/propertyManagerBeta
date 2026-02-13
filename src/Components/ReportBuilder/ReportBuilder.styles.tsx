@@ -8,7 +8,7 @@ export const Wrapper = styled.div`
 	min-height: 100%;
 	background-color: #fafafa;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		gap: 16px;
 	}
@@ -38,7 +38,7 @@ export const PageTitle = styled.h1`
 	margin: 0;
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 	}
 
@@ -66,7 +66,7 @@ export const ReportBuilderContainer = styled.div`
 		grid-template-columns: 1fr;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 16px;
 	}
 
@@ -84,7 +84,7 @@ export const Section = styled.div`
 	flex-direction: column;
 	gap: 16px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 12px;
 	}
@@ -143,7 +143,7 @@ export const ColumnsGrid = styled.div`
 	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	gap: 12px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 		gap: 10px;
 	}
@@ -271,7 +271,7 @@ export const PreviewSection = styled.div`
 	gap: 16px;
 	grid-column: 1 / -1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 16px;
 		gap: 12px;
 	}
@@ -320,7 +320,7 @@ export const Table = styled.table`
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 10px;
 			font-size: 11px;
 		}
@@ -337,7 +337,7 @@ export const Table = styled.table`
 		color: #4b5563;
 		font-size: 13px;
 
-		@media (max-width: 768px) {
+		@media (max-width: 1024px) {
 			padding: 10px;
 			font-size: 12px;
 		}
@@ -372,7 +372,7 @@ export const ActionButtons = styled.div`
 	padding-top: 12px;
 	border-top: 1px solid #e5e7eb;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 10px;
 	}
 

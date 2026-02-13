@@ -11,7 +11,7 @@ export const Wrapper = styled.div`
 		width: 40%;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: 60%;
 		padding: 8px;
 		height: calc(450px - ${nav_height});
@@ -28,7 +28,7 @@ export const Wrapper = styled.div`
 export const CardTitle = styled.h2`
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 18px;
 	}
 

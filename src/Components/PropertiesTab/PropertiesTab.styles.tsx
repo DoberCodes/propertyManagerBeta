@@ -8,7 +8,7 @@ export const Wrapper = styled.div`
 	min-height: 100%;
 	background-color: #fafafa; /* match TeamPage off-white */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 15px;
 		gap: 15px;
 	}
@@ -42,7 +42,7 @@ export const PageTitle = styled.h1`
 	color: #1f2937;
 	margin: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 24px;
 	}
 
@@ -76,7 +76,7 @@ export const GroupsContainer = styled.div`
 		gap: 30px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 30px;
 	}
 
@@ -113,7 +113,7 @@ export const GroupHeader = styled.div`
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	margin-bottom: 8px; /* breathing room before tiles */
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 16px;
 		gap: 12px;
 	}
@@ -141,7 +141,7 @@ export const GroupName = styled.h2`
 		background-color: rgba(0, 0, 0, 0.05);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 	}
 
@@ -166,7 +166,7 @@ export const GroupNameInput = styled.input`
 		border-color: #16a34a;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 	}
 
@@ -217,7 +217,7 @@ export const GroupActionButton = styled.button`
 		color: #22c55e;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		width: 28px;
 		height: 28px;
@@ -292,7 +292,7 @@ export const PropertiesGrid = styled.div<{
 				: ''}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 		gap: 18px;
 		justify-items: center;
@@ -342,7 +342,7 @@ export const PropertyTile = styled.div`
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 260px;
 	}
 
@@ -418,7 +418,7 @@ export const PropertyTitle = styled.a`
 		text-decoration: underline;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 	}
 

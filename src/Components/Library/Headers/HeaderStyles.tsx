@@ -15,7 +15,7 @@ export const GradientHeader = styled.div`
 	color: white;
 	flex-shrink: 0;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 22px 18px;
 	}
 
@@ -31,7 +31,7 @@ export const HeaderContent = styled.div`
 	flex-direction: column;
 	gap: 12px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 10px;
 	}
 
@@ -110,7 +110,7 @@ export const HeaderTitle = styled.h1`
 	font-weight: 600;
 	color: white;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 22px;
 	}
 

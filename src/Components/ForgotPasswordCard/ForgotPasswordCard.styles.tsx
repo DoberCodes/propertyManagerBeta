@@ -15,7 +15,7 @@ export const Wrapper = styled.div`
 	position: relative;
 	z-index: 10;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: 380px;
 		padding: 28px 20px;
 		border-radius: 10px;
@@ -41,7 +41,7 @@ export const Title = styled.h2`
 	background-clip: text;
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 		margin: 0 auto 24px auto;
 	}
@@ -68,7 +68,7 @@ export const Input = styled.input`
 		box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 12px 14px;
 		font-size: 15px;
 	}
@@ -111,7 +111,7 @@ export const Submit = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 		padding: 10px 28px;
 		margin: 20px auto 0 auto;
@@ -159,7 +159,7 @@ export const ErrorMessage = styled.div`
 	font-size: 14px;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px;
 		margin: 8px;
 		font-size: 13px;
@@ -182,7 +182,7 @@ export const SuccessMessage = styled.div`
 	font-size: 14px;
 	text-align: center;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px;
 		margin: 8px;
 		font-size: 13px;
@@ -211,7 +211,7 @@ export const RegisterWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 24px 0 0 0;
 		font-size: 14px;
 	}

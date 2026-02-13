@@ -20,7 +20,7 @@ export const Wrapper = styled.form<{ $wide?: boolean }>`
 		padding: ${(props) => (props.$wide ? '20px 28px' : '32px 24px')};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		max-width: ${(props) => (props.$wide ? '100%' : '380px')};
 		padding: ${(props) => (props.$wide ? '20px 20px' : '28px 20px')};
 		border-radius: 10px;
@@ -56,7 +56,7 @@ export const Title = styled.h2`
 	background-clip: text;
 	letter-spacing: 0.5px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 28px;
 		margin: 0 auto 24px auto;
 	}
@@ -90,7 +90,7 @@ export const Input = styled.input`
 		background-color: ${COLORS.bgWhite};
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 13px;
 		font-size: 15px;
 		margin: 9px 0;
@@ -135,7 +135,7 @@ export const Submit = styled.button`
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 15px;
 		padding: 10px 28px;
 		margin: 20px auto 0 auto;
@@ -207,7 +207,7 @@ export const RadioGrid = styled.div`
 	gap: 12px;
 	margin-top: 12px;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 10px;
 	}
 
@@ -250,7 +250,7 @@ export const RadioOption = styled.label`
 		cursor: pointer;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 11px 13px;
 		font-size: 13px;
 
@@ -327,7 +327,7 @@ export const RegisterWrapper = styled.div`
 		}
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 24px 0 0 0;
 		font-size: 14px;
 	}
@@ -349,7 +349,7 @@ export const ErrorMessage = styled.div`
 	width: 100%;
 	font-weight: 500;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		padding: 10px;
 		margin-bottom: 14px;
 		font-size: 13px;
@@ -395,7 +395,7 @@ export const PasswordInputWrapper = styled.div`
 		padding-right: 45px;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		margin: 8px 0;
 	}
 
@@ -426,7 +426,7 @@ export const PasswordToggleButton = styled.button`
 		outline: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 16px;
 		right: 10px;
 	}

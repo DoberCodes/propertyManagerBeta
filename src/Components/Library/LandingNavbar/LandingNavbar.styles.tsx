@@ -18,7 +18,7 @@ export const NavWrapper = styled.div`
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	z-index: 100;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		height: 90px;
 		padding: 10px 12px;
 		gap: 8px;
@@ -53,7 +53,7 @@ export const NavTitle = styled.div`
 		max-width: none;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		width: auto;
 		flex: 1;
 		max-height: 60px;
@@ -87,7 +87,7 @@ export const ButtonWrapper = styled.div`
 	gap: 8px;
 	flex: 1;
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		gap: 6px;
 		justify-content: center;
 	}
@@ -119,7 +119,7 @@ export const NavAnchor = styled(HashLink)`
 		transform: translateY(-2px);
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 		margin: 0px 8px 0px 8px;
 		padding: 6px 10px;
@@ -151,7 +151,7 @@ export const NavButton = styled(Link)`
 		color: white;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1024px) {
 		font-size: 14px;
 		margin: 0px 8px;
 		padding: 6px 12px;
