@@ -193,6 +193,12 @@ export interface Device {
 		description: string;
 		taskId?: string;
 	}>;
+	files?: Array<{
+		name: string;
+		url: string;
+		size: number;
+		type: string;
+	}>;
 	notes?: string;
 	createdAt?: string;
 	updatedAt?: string;
@@ -1933,10 +1939,13 @@ export const apiSlice = createApi({
 		}),
 
 		// Get all units across all properties (for reports)
-		getAllUnits: builder.query<Unit[], void>({
-			async queryFn() {
+		getAllUnits: builder.query<Unit[], string>({
+			async queryFn(userId: string) {
 				try {
-					const q = query(collection(db, 'units'));
+					const q = query(
+						collection(db, 'units'),
+						where('userId', '==', userId),
+					);
 					const querySnapshot = await getDocs(q);
 					const units = querySnapshot.docs.map(docToData);
 					return { data: units };
@@ -2048,10 +2057,13 @@ export const apiSlice = createApi({
 		}),
 
 		// Get all devices across all properties (for reports)
-		getAllDevices: builder.query<Device[], void>({
-			async queryFn() {
+		getAllDevices: builder.query<Device[], string>({
+			async queryFn(userId: string) {
 				try {
-					const q = query(collection(db, 'devices'));
+					const q = query(
+						collection(db, 'devices'),
+						where('userId', '==', userId),
+					);
 					const querySnapshot = await getDocs(q);
 					const devices = querySnapshot.docs
 						.map((doc) => docToData(doc) as Device)

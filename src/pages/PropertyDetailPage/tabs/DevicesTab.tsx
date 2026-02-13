@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faPlus,
 	faEdit,
 	faTrash,
 	faWrench,
+	faUpload,
+	faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../Redux/store';
 import { Property } from '../../../Redux/API/apiSlice';
+import { uploadDeviceFile } from '../../../utils/deviceFileUpload';
 import {
 	useGetDevicesQuery,
 	useCreateDeviceMutation,
@@ -40,6 +43,12 @@ interface DeviceFormData {
 		unitId?: string;
 		suiteId?: string;
 	};
+	files?: Array<{
+		name: string;
+		url: string;
+		size: number;
+		type: string;
+	}>;
 }
 
 interface DevicesTabProps {
@@ -59,7 +68,9 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 		location: {
 			propertyId: property.id,
 		},
+		files: [],
 	});
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const { data: devices = [], isLoading } = useGetDevicesQuery(property.id);
 	const { data: units = [] } = useGetUnitsQuery(property.id);
@@ -78,8 +89,12 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 			location: {
 				propertyId: property.id,
 			},
+			files: [],
 		});
 		setEditingDevice(null);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
 	};
 
 	const handleOpenCreateModal = () => {
@@ -95,6 +110,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 			installationDate: device.installationDate || '',
 			status: device.status || 'Active',
 			location: device.location || { propertyId: property.id },
+			files: device.files || [],
 		});
 		setEditingDevice(device);
 		setShowDeviceModal(true);
@@ -121,6 +137,48 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				[field]: value,
 			}));
 		}
+	};
+
+	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const files = e.target.files;
+		if (!files || files.length === 0) return;
+
+		try {
+			const fileArray = Array.from(files);
+			const uploadPromises = fileArray.map(async (file) => {
+				const uploadedFile = await uploadDeviceFile(
+					file,
+					property.id,
+					editingDevice?.id,
+				);
+				return uploadedFile;
+			});
+
+			const uploadedFiles = await Promise.all(uploadPromises);
+			setDeviceFormData((prev) => ({
+				...prev,
+				files: [...(prev.files || []), ...uploadedFiles],
+			}));
+
+			// Reset file input
+			if (fileInputRef.current) {
+				fileInputRef.current.value = '';
+			}
+		} catch (error) {
+			console.error('Error uploading files:', error);
+			alert(
+				error instanceof Error
+					? error.message
+					: 'Failed to upload files. Please try again.',
+			);
+		}
+	};
+
+	const handleRemoveFile = (index: number) => {
+		setDeviceFormData((prev) => ({
+			...prev,
+			files: prev.files?.filter((_, i) => i !== index) || [],
+		}));
 	};
 
 	const handleSubmit = async () => {
@@ -211,6 +269,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 								<th>Model</th>
 								<th>Status</th>
 								<th>Installation Date</th>
+								<th>Files</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
@@ -233,6 +292,36 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 										{device.installationDate
 											? new Date(device.installationDate).toLocaleDateString()
 											: 'N/A'}
+									</td>
+									<td>
+										{device.files && device.files.length > 0 ? (
+											<div style={{ display: 'flex', gap: '4px' }}>
+												{device.files.map((file, index) => (
+													<a
+														key={index}
+														href={file.url}
+														target='_blank'
+														rel='noopener noreferrer'
+														title={file.name}
+														style={{
+															padding: '4px 8px',
+															background: '#e0e7ff',
+															borderRadius: '4px',
+															fontSize: '12px',
+															textDecoration: 'none',
+															color: '#4f46e5',
+															whiteSpace: 'nowrap',
+														}}>
+														📄 {file.name.slice(0, 15)}
+														{file.name.length > 15 ? '...' : ''}
+													</a>
+												))}
+											</div>
+										) : (
+											<span style={{ color: '#999', fontSize: '12px' }}>
+												No files
+											</span>
+										)}
 									</td>
 									<td>
 										<ToolbarButton
@@ -396,6 +485,38 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 							/>
 						</div>
 
+						{property.propertyType === 'Multi-Family' && (
+							<div>
+								<label
+									style={{
+										display: 'block',
+										marginBottom: '4px',
+										fontWeight: 'bold',
+									}}>
+									Unit (Optional)
+								</label>
+								<select
+									value={deviceFormData.location.unitId || ''}
+									onChange={(e) =>
+										handleFormChange('location.unitId', e.target.value)
+									}
+									style={{
+										width: '100%',
+										padding: '8px',
+										border: '1px solid #ccc',
+										borderRadius: '4px',
+										fontSize: '14px',
+									}}>
+									<option value=''>Property Level (no specific unit)</option>
+									{units.map((unit: any) => (
+										<option key={unit.id} value={unit.id}>
+											{unit.name}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+
 						<div>
 							<label
 								style={{
@@ -403,27 +524,75 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 									marginBottom: '4px',
 									fontWeight: 'bold',
 								}}>
-								Unit (Optional)
+								Manuals & Documentation
 							</label>
-							<select
-								value={deviceFormData.location.unitId || ''}
-								onChange={(e) =>
-									handleFormChange('location.unitId', e.target.value)
-								}
+							<input
+								ref={fileInputRef}
+								type='file'
+								multiple
+								accept='.pdf,.doc,.docx,.txt,image/*'
+								onChange={handleFileUpload}
+								style={{ display: 'none' }}
+								id='device-file-upload'
+							/>
+							<button
+								type='button'
+								onClick={() => fileInputRef.current?.click()}
 								style={{
 									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
+									padding: '10px',
+									border: '2px dashed #ccc',
 									borderRadius: '4px',
+									background: '#f9f9f9',
+									cursor: 'pointer',
 									fontSize: '14px',
+									color: '#666',
 								}}>
-								<option value=''>Property Level (no specific unit)</option>
-								{units.map((unit: any) => (
-									<option key={unit.id} value={unit.id}>
-										{unit.name}
-									</option>
-								))}
-							</select>
+								<FontAwesomeIcon
+									icon={faUpload}
+									style={{ marginRight: '8px' }}
+								/>
+								Upload Files (Manuals, Warranties, etc.)
+							</button>
+							{deviceFormData.files && deviceFormData.files.length > 0 && (
+								<div style={{ marginTop: '8px' }}>
+									{deviceFormData.files.map((file, index) => (
+										<div
+											key={index}
+											style={{
+												display: 'flex',
+												justifyContent: 'space-between',
+												alignItems: 'center',
+												padding: '8px',
+												background: '#f0f0f0',
+												borderRadius: '4px',
+												marginBottom: '4px',
+											}}>
+											<span
+												style={{
+													fontSize: '13px',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													whiteSpace: 'nowrap',
+												}}>
+												{file.name} ({Math.round(file.size / 1024)} KB)
+											</span>
+											<button
+												type='button'
+												onClick={() => handleRemoveFile(index)}
+												style={{
+													background: 'transparent',
+													border: 'none',
+													cursor: 'pointer',
+													color: '#ef4444',
+													padding: '4px',
+												}}>
+												<FontAwesomeIcon icon={faTimes} />
+											</button>
+										</div>
+									))}
+								</div>
+							)}
 						</div>
 					</div>
 				</GenericModal>
