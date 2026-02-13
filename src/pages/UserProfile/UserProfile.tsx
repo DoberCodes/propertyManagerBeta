@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../../Redux/store';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
-import { useUpdateUserMutation } from '../../Redux/API/apiSlice';
+import { useUpdateUserMutation } from '../../Redux/API/userSlice';
 import { uploadToBase64, isValidImageFile } from '../../utils/base64Upload';
 import {
 	PageHeaderSection,

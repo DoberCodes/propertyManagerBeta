@@ -3,18 +3,20 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../Redux/store/store';
 import { canAccessReadOnlyFeatures } from '../../utils/subscriptionUtils';
 import {
-	useGetTasksQuery,
 	useGetPropertiesQuery,
-	useGetTeamMembersQuery,
-	useGetAllMaintenanceHistoryForUserQuery,
-	useGetPublicTenantProfilesQuery,
-	useGetAllPropertySharesForUserQuery,
-	useGetContractorsQuery,
-	useGetUnitsQuery,
-	useGetDevicesQuery,
 	useGetAllUnitsQuery,
+} from '../../Redux/API/propertySlice';
+import { useGetPublicTenantProfilesQuery } from '../../Redux/API/tenantSlice';
+import { useGetContractorsQuery } from '../../Redux/API/contractorSlice';
+import {
+	useGetDevicesQuery,
 	useGetAllDevicesQuery,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/deviceSlice';
+import {
+	useGetAllMaintenanceHistoryForUserQuery,
+	useGetAllPropertySharesForUserQuery,
+} from '../../Redux/API/userSlice';
+import { useGetUnitsQuery } from '../../Redux/API/propertySlice';
 import {
 	FormGroup as LibraryFormGroup,
 	FormLabel as LibraryLabel,
@@ -71,6 +73,8 @@ import {
 	EmployeeEfficiencyMetrics,
 	PropertySummaryMetrics,
 } from '../../utils/csvExport';
+import { useGetTasksQuery } from '../../Redux/API/taskSlice';
+import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
 
 // Alias Library components to match local naming convention
 const FormGroup = LibraryFormGroup;

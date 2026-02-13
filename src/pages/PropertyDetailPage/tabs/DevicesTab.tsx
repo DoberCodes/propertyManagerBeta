@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faPlus,
@@ -10,15 +10,14 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../Redux/store';
-import { Property } from '../../../Redux/API/apiSlice';
 import { uploadDeviceFile } from '../../../utils/deviceFileUpload';
 import {
 	useGetDevicesQuery,
 	useCreateDeviceMutation,
 	useUpdateDeviceMutation,
 	useDeleteDeviceMutation,
-	useGetUnitsQuery,
-} from '../../../Redux/API/apiSlice';
+} from '../../../Redux/API/deviceSlice';
+import { useGetUnitsQuery } from '../../../Redux/API/propertySlice';
 import { GenericModal } from '../../../Components/Library';
 import {
 	SectionContainer,
@@ -31,6 +30,73 @@ import {
 	GridTable,
 	EmptyState,
 } from '../PropertyDetailPage.styles';
+import styled from 'styled-components';
+import { DeviceModal } from '../../../Components/Library/Modal';
+import { Property } from '../../../types/Property.types';
+
+const DesktopTableWrapper = styled.div`
+	@media (max-width: 1024px) {
+		display: none;
+	}
+`;
+
+const MobileCarouselContainer = styled.div`
+	display: none;
+	@media (max-width: 1024px) {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 8px 0;
+	}
+`;
+
+const MobileCarouselViewport = styled.div`
+	width: 100%;
+	overflow: hidden;
+	border-radius: 8px;
+`;
+
+const MobileCarouselTrack = styled.div<{ index: number }>`
+	display: flex;
+	transition: transform 0.32s ease-out;
+	transform: translateX(calc(${(p) => p.index} * -100%));
+	user-select: none;
+`;
+
+const DeviceCard = styled.div`
+	min-width: 100%;
+	flex: 0 0 100%;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
+	padding: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+`;
+
+const DeviceRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+`;
+
+const MobileDots = styled.div`
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+`;
+
+const MobileDot = styled.button<{ active?: boolean }>`
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	border: none;
+	background: ${(props) => (props.active ? '#22c55e' : '#d1d5db')};
+	cursor: pointer;
+`;
 
 interface DeviceFormData {
 	type: string;
@@ -72,8 +138,19 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	});
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	// Mobile carousel index
+	const [carouselIndex, setCarouselIndex] = useState(0);
+
 	const { data: devices = [], isLoading } = useGetDevicesQuery(property.id);
 	const { data: units = [] } = useGetUnitsQuery(property.id);
+
+	// Reset/ clamp carousel index when device list changes
+	useEffect(() => {
+		if (carouselIndex > devices.length - 1) {
+			setCarouselIndex(Math.max(0, devices.length - 1));
+		}
+		if (devices.length === 0) setCarouselIndex(0);
+	}, [devices.length, carouselIndex]);
 	const [createDevice] = useCreateDeviceMutation();
 	const [updateDevice] = useUpdateDeviceMutation();
 	const [deleteDevice] = useDeleteDeviceMutation();
@@ -253,6 +330,101 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				</ToolbarButton>
 			</Toolbar>
 
+			{/* Mobile carousel (shows when viewport <= 1024px) */}
+			<MobileCarouselContainer>
+				<MobileCarouselViewport>
+					<MobileCarouselTrack index={carouselIndex}>
+						{devices.map((device) => (
+							<DeviceCard key={device.id}>
+								<div
+									style={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'center',
+									}}>
+									<div style={{ fontWeight: 700 }}>{device.type}</div>
+									<div style={{ fontSize: 12, color: '#6b7280' }}>
+										{device.brand}
+									</div>
+								</div>
+								<DeviceRow>
+									<div style={{ fontSize: 14 }}>{device.model || '—'}</div>
+									<div
+										style={{
+											fontSize: 12,
+											color: getStatusColor(device.status || 'Active'),
+											fontWeight: 700,
+										}}>
+										{device.status || 'Active'}
+									</div>
+								</DeviceRow>
+								<DeviceRow>
+									<div style={{ fontSize: 12, color: '#6b7280' }}>
+										{device.installationDate
+											? new Date(device.installationDate).toLocaleDateString()
+											: 'N/A'}
+									</div>
+									<div style={{ display: 'flex', gap: 8 }}>
+										<button
+											onClick={() => handleOpenEditModal(device)}
+											style={{
+												background: 'transparent',
+												border: 'none',
+												cursor: 'pointer',
+											}}>
+											<FontAwesomeIcon icon={faEdit} />
+										</button>
+										<button
+											onClick={() => handleDeleteDevice(device.id)}
+											style={{
+												background: 'transparent',
+												border: 'none',
+												cursor: 'pointer',
+												color: '#ef4444',
+											}}>
+											<FontAwesomeIcon icon={faTrash} />
+										</button>
+									</div>
+								</DeviceRow>
+								{device.files && device.files.length > 0 ? (
+									<div
+										style={{
+											marginTop: 8,
+											display: 'flex',
+											gap: 8,
+											flexWrap: 'wrap',
+										}}>
+										{device.files.map((file, i) => (
+											<a
+												key={i}
+												href={file.url}
+												target='_blank'
+												rel='noopener noreferrer'
+												style={{
+													fontSize: 12,
+													color: '#2563eb',
+													textDecoration: 'none',
+												}}>
+												{file.name}
+											</a>
+										))}
+									</div>
+								) : null}
+							</DeviceCard>
+						))}
+					</MobileCarouselTrack>
+				</MobileCarouselViewport>
+				<MobileDots>
+					{devices.map((_, i) => (
+						<MobileDot
+							key={i}
+							active={i === carouselIndex}
+							onClick={() => setCarouselIndex(i)}
+						/>
+					))}
+				</MobileDots>
+			</MobileCarouselContainer>
+
 			{devices.length === 0 ? (
 				<EmptyState>
 					<FontAwesomeIcon icon={faWrench} size='3x' color='#ccc' />
@@ -260,343 +432,100 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 					<p>Click "Add Device" to get started</p>
 				</EmptyState>
 			) : (
-				<GridContainer>
-					<GridTable>
-						<thead>
-							<tr>
-								<th>Type</th>
-								<th>Brand</th>
-								<th>Model</th>
-								<th>Status</th>
-								<th>Installation Date</th>
-								<th>Files</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							{devices.map((device) => (
-								<tr key={device.id}>
-									<td>{device.type}</td>
-									<td>{device.brand}</td>
-									<td>{device.model}</td>
-									<td>
-										<span
-											style={{
-												color: getStatusColor(device.status || 'Active'),
-												fontWeight: 'bold',
-											}}>
-											{device.status || 'Active'}
-										</span>
-									</td>
-									<td>
-										{device.installationDate
-											? new Date(device.installationDate).toLocaleDateString()
-											: 'N/A'}
-									</td>
-									<td>
-										{device.files && device.files.length > 0 ? (
-											<div style={{ display: 'flex', gap: '4px' }}>
-												{device.files.map((file, index) => (
-													<a
-														key={index}
-														href={file.url}
-														target='_blank'
-														rel='noopener noreferrer'
-														title={file.name}
-														style={{
-															padding: '4px 8px',
-															background: '#e0e7ff',
-															borderRadius: '4px',
-															fontSize: '12px',
-															textDecoration: 'none',
-															color: '#4f46e5',
-															whiteSpace: 'nowrap',
-														}}>
-														📄 {file.name.slice(0, 15)}
-														{file.name.length > 15 ? '...' : ''}
-													</a>
-												))}
-											</div>
-										) : (
-											<span style={{ color: '#999', fontSize: '12px' }}>
-												No files
-											</span>
-										)}
-									</td>
-									<td>
-										<ToolbarButton
-											onClick={() => handleOpenEditModal(device)}
-											style={{ marginRight: '8px' }}>
-											<FontAwesomeIcon icon={faEdit} />
-										</ToolbarButton>
-										<ToolbarButton
-											className='delete'
-											onClick={() => handleDeleteDevice(device.id)}>
-											<FontAwesomeIcon icon={faTrash} />
-										</ToolbarButton>
-									</td>
+				<DesktopTableWrapper>
+					<GridContainer>
+						<GridTable>
+							<thead>
+								<tr>
+									<th>Type</th>
+									<th>Brand</th>
+									<th>Model</th>
+									<th>Status</th>
+									<th>Installation Date</th>
+									<th>Files</th>
+									<th>Actions</th>
 								</tr>
-							))}
-						</tbody>
-					</GridTable>
-				</GridContainer>
-			)}
-
-			{/* Device Modal */}
-			{showDeviceModal && (
-				<GenericModal
-					isOpen={showDeviceModal}
-					onClose={handleCloseModal}
-					title={editingDevice ? 'Edit Device' : 'Add New Device'}
-					showActions={true}
-					onSubmit={handleSubmit}
-					primaryButtonLabel={
-						isSubmitting
-							? 'Saving...'
-							: editingDevice
-							? 'Update Device'
-							: 'Add Device'
-					}
-					primaryButtonDisabled={isSubmitting}
-					secondaryButtonLabel='Cancel'>
-					<div
-						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Device Type *
-							</label>
-							<input
-								type='text'
-								value={deviceFormData.type}
-								onChange={(e) => handleFormChange('type', e.target.value)}
-								placeholder='e.g., HVAC System, Water Heater'
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '14px',
-								}}
-								required
-							/>
-						</div>
-
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Brand
-							</label>
-							<input
-								type='text'
-								value={deviceFormData.brand}
-								onChange={(e) => handleFormChange('brand', e.target.value)}
-								placeholder='Brand name'
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '14px',
-								}}
-							/>
-						</div>
-
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Model
-							</label>
-							<input
-								type='text'
-								value={deviceFormData.model}
-								onChange={(e) => handleFormChange('model', e.target.value)}
-								placeholder='Model number'
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '14px',
-								}}
-							/>
-						</div>
-
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Status
-							</label>
-							<select
-								value={deviceFormData.status}
-								onChange={(e) => handleFormChange('status', e.target.value)}
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '14px',
-								}}>
-								<option value='Active'>Active</option>
-								<option value='Maintenance'>Maintenance</option>
-								<option value='Broken'>Broken</option>
-								<option value='Decommissioned'>Decommissioned</option>
-							</select>
-						</div>
-
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Installation Date
-							</label>
-							<input
-								type='date'
-								value={deviceFormData.installationDate}
-								onChange={(e) =>
-									handleFormChange('installationDate', e.target.value)
-								}
-								style={{
-									width: '100%',
-									padding: '8px',
-									border: '1px solid #ccc',
-									borderRadius: '4px',
-									fontSize: '14px',
-								}}
-							/>
-						</div>
-
-						{property.propertyType === 'Multi-Family' && (
-							<div>
-								<label
-									style={{
-										display: 'block',
-										marginBottom: '4px',
-										fontWeight: 'bold',
-									}}>
-									Unit (Optional)
-								</label>
-								<select
-									value={deviceFormData.location.unitId || ''}
-									onChange={(e) =>
-										handleFormChange('location.unitId', e.target.value)
-									}
-									style={{
-										width: '100%',
-										padding: '8px',
-										border: '1px solid #ccc',
-										borderRadius: '4px',
-										fontSize: '14px',
-									}}>
-									<option value=''>Property Level (no specific unit)</option>
-									{units.map((unit: any) => (
-										<option key={unit.id} value={unit.id}>
-											{unit.name}
-										</option>
-									))}
-								</select>
-							</div>
-						)}
-
-						<div>
-							<label
-								style={{
-									display: 'block',
-									marginBottom: '4px',
-									fontWeight: 'bold',
-								}}>
-								Manuals & Documentation
-							</label>
-							<input
-								ref={fileInputRef}
-								type='file'
-								multiple
-								accept='.pdf,.doc,.docx,.txt,image/*'
-								onChange={handleFileUpload}
-								style={{ display: 'none' }}
-								id='device-file-upload'
-							/>
-							<button
-								type='button'
-								onClick={() => fileInputRef.current?.click()}
-								style={{
-									width: '100%',
-									padding: '10px',
-									border: '2px dashed #ccc',
-									borderRadius: '4px',
-									background: '#f9f9f9',
-									cursor: 'pointer',
-									fontSize: '14px',
-									color: '#666',
-								}}>
-								<FontAwesomeIcon
-									icon={faUpload}
-									style={{ marginRight: '8px' }}
-								/>
-								Upload Files (Manuals, Warranties, etc.)
-							</button>
-							{deviceFormData.files && deviceFormData.files.length > 0 && (
-								<div style={{ marginTop: '8px' }}>
-									{deviceFormData.files.map((file, index) => (
-										<div
-											key={index}
-											style={{
-												display: 'flex',
-												justifyContent: 'space-between',
-												alignItems: 'center',
-												padding: '8px',
-												background: '#f0f0f0',
-												borderRadius: '4px',
-												marginBottom: '4px',
-											}}>
+							</thead>
+							<tbody>
+								{devices.map((device) => (
+									<tr key={device.id}>
+										<td>{device.type}</td>
+										<td>{device.brand}</td>
+										<td>{device.model}</td>
+										<td>
 											<span
 												style={{
-													fontSize: '13px',
-													overflow: 'hidden',
-													textOverflow: 'ellipsis',
-													whiteSpace: 'nowrap',
+													color: getStatusColor(device.status || 'Active'),
+													fontWeight: 'bold',
 												}}>
-												{file.name} ({Math.round(file.size / 1024)} KB)
+												{device.status || 'Active'}
 											</span>
-											<button
-												type='button'
-												onClick={() => handleRemoveFile(index)}
-												style={{
-													background: 'transparent',
-													border: 'none',
-													cursor: 'pointer',
-													color: '#ef4444',
-													padding: '4px',
-												}}>
-												<FontAwesomeIcon icon={faTimes} />
-											</button>
-										</div>
-									))}
-								</div>
-							)}
-						</div>
-					</div>
-				</GenericModal>
+										</td>
+										<td>
+											{device.installationDate
+												? new Date(device.installationDate).toLocaleDateString()
+												: 'N/A'}
+										</td>
+										<td>
+											{device.files && device.files.length > 0 ? (
+												<div style={{ display: 'flex', gap: '4px' }}>
+													{device.files.map((file, index) => (
+														<a
+															key={index}
+															href={file.url}
+															target='_blank'
+															rel='noopener noreferrer'
+															title={file.name}
+															style={{
+																padding: '4px 8px',
+																background: '#e0e7ff',
+																borderRadius: '4px',
+																fontSize: '12px',
+																textDecoration: 'none',
+																color: '#4f46e5',
+																whiteSpace: 'nowrap',
+															}}>
+															📄 {file.name.slice(0, 15)}
+															{file.name.length > 15 ? '...' : ''}
+														</a>
+													))}
+												</div>
+											) : (
+												<span style={{ color: '#999', fontSize: '12px' }}>
+													No files
+												</span>
+											)}
+										</td>
+										<td>
+											<ToolbarButton
+												onClick={() => handleOpenEditModal(device)}
+												style={{ marginRight: '8px' }}>
+												<FontAwesomeIcon icon={faEdit} />
+											</ToolbarButton>
+											<ToolbarButton
+												className='delete'
+												onClick={() => handleDeleteDevice(device.id)}>
+												<FontAwesomeIcon icon={faTrash} />
+											</ToolbarButton>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</GridTable>
+					</GridContainer>
+				</DesktopTableWrapper>
 			)}
+			{/* Device Modal */}
+			<DeviceModal
+				isOpen={showDeviceModal}
+				onClose={handleCloseModal}
+				onSubmit={handleSubmit}
+				deviceFormData={deviceFormData}
+				onFormChange={(e) =>
+					handleFormChange(e.currentTarget.name, e.currentTarget.value)
+				}
+				property={property}
+			/>
 		</SectionContainer>
 	);
 };

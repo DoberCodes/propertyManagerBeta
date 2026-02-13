@@ -6,7 +6,7 @@ import {
 	useGetTenantProfileQuery,
 	useCreateTenantProfileMutation,
 	useUpdateTenantProfileMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/tenantSlice';
 import {
 	PageHeaderSection,
 	PageTitle as StandardPageTitle,

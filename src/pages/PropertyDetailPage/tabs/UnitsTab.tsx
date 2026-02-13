@@ -10,7 +10,7 @@ import {
 	ToolbarButton,
 	EmptyState,
 } from '../PropertyDetailPage.styles';
-import { useGetUnitDevicesQuery } from '../../../Redux/API/apiSlice';
+import { useGetUnitDevicesQuery } from '../../../Redux/API/deviceSlice';
 
 const UnitCard: React.FC<{
 	unit: any;

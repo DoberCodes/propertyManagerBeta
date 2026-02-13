@@ -6,10 +6,7 @@ import {
 	rejectTaskCompletion,
 	CompletionFile,
 } from '../../Redux/Slices/propertyDataSlice';
-import {
-	useApproveTaskMutation,
-	useRejectTaskMutation,
-} from '../../Redux/API/apiSlice';
+import { useRejectTaskMutation } from '../../Redux/API/taskSlice';
 import { canApproveTaskCompletions } from '../../utils/permissions';
 import { UserRole } from '../../constants/roles';
 import { GenericModal, FormGroup } from '../Library';
@@ -24,6 +21,7 @@ import {
 	TextArea,
 	ErrorMessage,
 } from './TaskApprovalModal.styles';
+import { useApproveTaskMutation } from '../../Redux/API/taskSlice';
 
 interface TaskApprovalModalProps {
 	taskId: string;

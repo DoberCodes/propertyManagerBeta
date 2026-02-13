@@ -5,25 +5,18 @@ import {
 	submitTaskCompletion,
 	CompletionFile,
 } from '../../Redux/Slices/propertyDataSlice';
-import {
-	useSubmitTaskCompletionMutation,
-	useCreateTaskMutation,
-	useCreateNotificationMutation,
-} from '../../Redux/API/apiSlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { GenericModal, FormGroup } from '../Library';
 import { calculateNextDueDate } from '../../utils/recurringTaskUtils';
 import { Task } from '../../types/Task.types';
+import { Label, Input, ErrorMessage } from './TaskCompletionModal.styles';
+import { FileUploader } from '../Library/FileUploader';
 import {
-	Label,
-	Input,
-	FileUploadArea,
-	FileInput,
-	FileUploadLabel,
-	FileInfo,
-	ErrorMessage,
-} from './TaskCompletionModal.styles';
+	useCreateTaskMutation,
+	useSubmitTaskCompletionMutation,
+} from '../../Redux/API/taskSlice';
 
 interface TaskCompletionModalProps {
 	taskId: string;
@@ -221,10 +214,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 
 					await createTask(recurringTaskData).unwrap();
 
-					console.info(
-						`📅 New recurring task created: "${task.title}" due on ${nextDueDate}`,
-					);
-
 					// Create notification for the automatically generated recurring task
 					try {
 						const recurrenceText =
@@ -251,10 +240,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 							createdAt: new Date().toISOString(),
 							updatedAt: new Date().toISOString(),
 						}).unwrap();
-
-						console.info(
-							'📅 Recurring task notification sent for auto-generated task',
-						);
 					} catch (notifError) {
 						console.warn(
 							'Failed to create recurring task notification:',
@@ -351,44 +336,7 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 				/>
 			</FormGroup>
 
-			<FormGroup>
-				{' '}
-				<Label htmlFor='completionFile'>
-					Upload Completion Document <span style={{ color: '#e74c3c' }}>*</span>
-				</Label>
-				<FileUploadArea>
-					<FileInput
-						type='file'
-						id='completionFile'
-						onChange={handleFileChange}
-						accept='image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf'
-					/>
-					<FileUploadLabel htmlFor='completionFile'>
-						{selectedFile ? (
-							<FileInfo>
-								<strong>Selected File:</strong>
-								<br />
-								{selectedFile.name}
-								<br />
-								<span style={{ fontSize: '0.85rem', color: '#666' }}>
-									({(selectedFile.size / 1024).toFixed(1)} KB)
-								</span>
-							</FileInfo>
-						) : (
-							<>
-								<span style={{ fontSize: '2rem' }}>📎</span>
-								<br />
-								Click to upload or drag and drop
-								<br />
-								<span style={{ fontSize: '0.85rem', color: '#666' }}>
-									JPG, PNG, GIF, WEBP, PDF (max 25MB)
-								</span>
-							</>
-						)}
-					</FileUploadLabel>
-				</FileUploadArea>
-				{errors.file && <ErrorMessage>{errors.file}</ErrorMessage>}
-			</FormGroup>
+			<FileUploader setFile={setSelectedFile} />
 
 			{errors.general && (
 				<ErrorMessage style={{ marginBottom: '1rem' }}>

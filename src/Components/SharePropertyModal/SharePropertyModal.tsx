@@ -10,18 +10,18 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { GenericModal } from '../Library';
 import { COLORS } from '../../constants/colors';
+import { useGetPropertySharesQuery } from '../../Redux/API/userSlice';
 import {
-	useGetPropertySharesQuery,
 	useGetAllPropertyInvitationsQuery,
 	useSendInvitationMutation,
 	useUpdatePropertyShareMutation,
 	useDeletePropertyShareMutation,
 	useCancelInvitationMutation,
-	PropertyShare,
-	UserInvitation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/userSlice';
+import { UserInvitation } from '../../types/User.types';
 import { SHARE_PERMISSIONS } from '../../constants/roles';
 import { getSharePermissionLabel } from '../../utils/permissions';
+import { PropertyShare } from '../../types/Property.types';
 
 interface SharePropertyModalProps {
 	open: boolean;

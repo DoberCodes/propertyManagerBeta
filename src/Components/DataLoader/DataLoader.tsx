@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../Redux/store/store';
-import { useGetPropertyGroupsQuery } from '../../Redux/API/apiSlice';
+import { useGetPropertyGroupsQuery } from '../../Redux/API/propertySlice';
 import { setPropertyGroups } from '../../Redux/Slices/propertyDataSlice';
 
 /**

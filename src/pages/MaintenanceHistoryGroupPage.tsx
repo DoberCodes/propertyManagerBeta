@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 import { useDetailPageData } from '../Hooks/useDetailPageData';
 import {
 	useDeleteMaintenanceHistoryMutation,
-	useGetContractorsByPropertyQuery,
-	useGetPropertySharesQuery,
-	useGetTeamMembersQuery,
-} from '../Redux/API/apiSlice';
+	useGetMaintenanceHistoryByPropertyQuery,
+} from '../Redux/API/maintenanceSlice';
+import { useGetContractorsByPropertyQuery } from '../Redux/API/contractorSlice';
+import { useGetPropertySharesQuery } from '../Redux/API/userSlice';
 import { RootState } from '../Redux/store/store';
 import { getFamilyMembers } from '../services/authService';
 import {
@@ -19,6 +19,7 @@ import {
 	GridTable,
 	EmptyState,
 } from '../Components/Library/DataGrid/DataGridStyles';
+import { useGetTeamMembersQuery } from '../Redux/API/teamSlice';
 
 export const MaintenanceHistoryGroupPage: React.FC = () => {
 	const { slug, groupId } = useParams<{ slug: string; groupId: string }>();

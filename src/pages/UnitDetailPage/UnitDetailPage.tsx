@@ -21,10 +21,9 @@ import { AddTenantModal } from '../../Components/AddTenantModal';
 import { MaintenanceRequestModal } from '../../Components/MaintenanceRequestModal';
 import {
 	useCreateDeviceMutation,
-	useCreateTaskMutation,
 	useGetUnitDevicesQuery,
-	useUpdateMaintenanceHistoryMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/deviceSlice';
+import { useUpdateMaintenanceHistoryMutation } from '../../Redux/API/maintenanceSlice';
 import { getDeviceName } from '../../utils/detailPageUtils';
 import { TabConfig } from '../../types/DetailPage.types';
 import { addMaintenanceRequest } from '../../Redux/Slices/maintenanceRequestsSlice';
@@ -43,6 +42,8 @@ import {
 	GridTable,
 	EmptyState,
 } from '../../Components/Library/DataGrid/DataGridStyles';
+import { DeviceModal } from '../../Components/Library/Modal';
+import { useCreateTaskMutation } from '../../Redux/API/taskSlice';
 
 const Wrapper = styled.div`
 	display: flex;
@@ -515,57 +516,14 @@ export const UnitDetailPage: React.FC = () => {
 			)}
 
 			{showAddDeviceModal && (
-				<GenericModal
-					isOpen={showAddDeviceModal}
-					onClose={() => setShowAddDeviceModal(false)}
-					title='Add Device'
-					showActions={true}
-					onSubmit={async (e) => {
-						e.preventDefault();
-						const formData = new FormData(e.target as HTMLFormElement);
-						const data = {
-							name: formData.get('name') as string,
-							type: formData.get('type') as string,
-							userId: currentUser?.id || '',
-							location: {
-								propertyId: property?.id || '',
-								unitId: unit?.id || '',
-							},
-						};
-						try {
-							await createDevice(data).unwrap();
-							setShowAddDeviceModal(false);
-						} catch (error) {
-							console.error('Failed to create device:', error);
-						}
-					}}
-					primaryButtonLabel='Add Device'
-					secondaryButtonLabel='Cancel'>
-					<div
-						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-						<FormGroup>
-							<FormLabel>Device Name *</FormLabel>
-							<FormInput
-								type='text'
-								name='name'
-								placeholder='Enter device name'
-								required
-							/>
-						</FormGroup>
-
-						<FormGroup>
-							<FormLabel>Device Type *</FormLabel>
-							<FormSelect name='type' required>
-								<option value=''>Select device type</option>
-								<option value='thermostat'>Thermostat</option>
-								<option value='lock'>Smart Lock</option>
-								<option value='camera'>Security Camera</option>
-								<option value='sensor'>Sensor</option>
-								<option value='other'>Other</option>
-							</FormSelect>
-						</FormGroup>
-					</div>
-				</GenericModal>
+				<> </>
+				// <DeviceModel
+				// 	isOpen={showAddDeviceModal}
+				// 	onClose={() => setShowAddDeviceModal(false)}
+				// 	onSubmit={handleDeviceFormSubmit}
+				// 	onFormChange={handleDeviceFormChange}
+				// 	deviceFormData={deviceFormData}
+				// />
 			)}
 
 			{showCreateTaskModal && (

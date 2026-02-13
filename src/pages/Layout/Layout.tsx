@@ -7,10 +7,8 @@ import { OnboardingFlow } from '../../Components/OnboardingFlow';
 import LegalAgreementNotification from '../../Components/Library/LegalAgreementNotification';
 import { Wrapper, Main, Sidebar, Content } from './Layout.styles';
 import { Outlet } from 'react-router-dom';
-import {
-	useGetPropertiesQuery,
-	useUpdateUserMutation,
-} from '../../Redux/API/apiSlice';
+import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
+import { useUpdateUserMutation } from '../../Redux/API/userSlice';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
 
 export const Layout = () => {
@@ -28,11 +26,6 @@ export const Layout = () => {
 
 			// User has completed onboarding if either localStorage or user document indicates completion
 			const hasCompletedOnboarding = userDocumentCompleted === true;
-			console.info('Checking onboarding status for user', {
-				userId: currentUser.id,
-				userDocumentCompleted,
-				hasCompletedOnboarding,
-			});
 
 			// For testing, also show if user has no onboarding completed flag at all
 			const shouldShowOnboarding = !hasCompletedOnboarding; // Temporarily always show if not completed

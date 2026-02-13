@@ -61,11 +61,10 @@ export {
 	ModalFormContent,
 	WarningMessage,
 } from './Modal/ModalStyles';
-export { EditTaskModal } from './Modal/EditTaskModal';
+export { EditTaskModal } from './Modal/TaskModal';
 export { CreateUnitModal } from './Modal/CreateUnitModal';
 export { GenericModal } from './Modal/GenericModal';
 export { DeleteConfirmationModal } from './Modal/DeleteConfirmationModal';
-export { TaskDetailModal } from './Modal/TaskDetailModal';
 
 // Buttons
 export {

@@ -18,21 +18,23 @@ import {
 	Dot,
 	NoTasks,
 } from './MobileTaskCarousel.styles';
-import { Task } from '../../../Redux/API/apiSlice';
-import { TaskDetailModal } from '../Modal/TaskDetailModal';
+import EditTaskModal from '../Modal';
+
+import { Task, TaskHandlers } from '../../../types/Task.types';
 
 interface MobileTaskCarouselProps {
 	tasks: Task[];
 	onTaskUpdate?: (taskId: string, updates: Partial<Task>) => Promise<void>;
-	onTaskDelete?: (taskId: string) => Promise<void>;
 	onTaskComplete?: (taskId: string) => void;
+	// Optional shared task handlers (from useTaskHandlers)
+	taskHandlers?: TaskHandlers;
 }
 
 export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	tasks,
 	onTaskUpdate,
-	onTaskDelete,
 	onTaskComplete,
+	taskHandlers,
 }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isDragging, setIsDragging] = useState(false);
@@ -40,6 +42,9 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 	const [showDetailModal, setShowDetailModal] = useState(false);
 	const [isEditMode, setIsEditMode] = useState(false);
+
+	// EditTaskModal visibility (modal owns its own form state)
+	const [showEditModal, setShowEditModal] = useState(false);
 	const trackRef = useRef<HTMLDivElement>(null);
 
 	if (tasks.length === 0) {
@@ -129,14 +134,25 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 
 	const handleEditClick = () => {
 		setSelectedTask(currentTask);
+
+		// If shared task handlers are passed in, use them to show the app-wide modal
+		if (taskHandlers) {
+			const th = taskHandlers;
+			th.setEditingTaskId(currentTask.id);
+			th.setShowTaskDialog(true);
+			return;
+		}
+
+		// Fallback: open local modal (modal will initialize its own form state)
 		setIsEditMode(true);
-		setShowDetailModal(true);
+		setShowEditModal(true);
 	};
 
 	const handleDetailModalClose = () => {
 		setShowDetailModal(false);
 		setSelectedTask(null);
 		setIsEditMode(false);
+		setShowEditModal(false);
 	};
 
 	return (
@@ -254,14 +270,30 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 			</CarouselContainer>
 
 			{selectedTask && (
-				<TaskDetailModal
-					isOpen={showDetailModal}
-					task={selectedTask}
+				<EditTaskModal
+					isOpen={showEditModal}
+					isEditing={true}
+					initialTask={
+						{
+							...selectedTask,
+							assignedTo:
+								typeof selectedTask.assignedTo === 'string'
+									? selectedTask.assignedTo
+									: selectedTask.assignedTo?.id,
+						} as any
+					}
 					onClose={handleDetailModalClose}
-					onUpdate={onTaskUpdate}
-					onDelete={onTaskDelete}
-					onComplete={onTaskComplete}
-					initialEditMode={isEditMode}
+					onSaved={(updated) => {
+						handleDetailModalClose();
+						if (updated && onTaskUpdate) onTaskUpdate(updated.id, updated);
+					}}
+					statusOptions={[
+						'Pending',
+						'In Progress',
+						'Awaiting Approval',
+						'Completed',
+						'Rejected',
+					]}
 				/>
 			)}
 		</>

@@ -36,7 +36,7 @@ import {
 	uploadPropertyImage,
 	isValidPropertyImageFile,
 } from '../../utils/propertyImageUpload';
-import { useGetPropertySharesQuery } from '../../Redux/API/apiSlice';
+import { useGetPropertySharesQuery } from '../../Redux/API/userSlice';
 
 interface MaintenanceRecord {
 	date: string;

@@ -12,14 +12,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../Redux/store/store';
 import { PageHeaderSection } from '../../Components/Library/PageHeaders';
 import { ZeroState } from '../../Components/Library/ZeroState';
+import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
 import {
-	useGetTasksQuery,
-	useGetPropertiesQuery,
 	useGetSharedPropertiesForUserQuery,
 	useGetAllPropertySharesForUserQuery,
 	useGetAllMaintenanceHistoryForUserQuery,
-	useUpdateTaskMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/userSlice';
 import { UserRole } from '../../constants/roles';
 import { isTenant, getTenantPropertySlug } from '../../utils/permissions';
 import { filterTasksByRole } from '../../utils/dataFilters';
@@ -49,6 +47,11 @@ import {
 import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
 import { ReusableTable } from '../../Components/Library/ReusableTable';
 import { MobileTaskCarousel } from '../../Components/Library/MobileTaskCarousel/MobileTaskCarousel';
+import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
+import {
+	useGetTasksQuery,
+	useUpdateTaskMutation,
+} from '../../Redux/API/taskSlice';
 
 export const DashboardTab = () => {
 	const navigate = useNavigate();
@@ -81,6 +84,9 @@ export const DashboardTab = () => {
 
 	// Firebase mutations
 	const [updateTaskMutation] = useUpdateTaskMutation();
+
+	// Local task handlers for dashboard (used by MobileTaskCarousel)
+	const taskHandlers = useTaskHandlers({ updateTaskMutation });
 
 	// Pie chart data for efficiency
 	const efficiencyData = useMemo(() => {
@@ -183,8 +189,6 @@ export const DashboardTab = () => {
 		longitude: number;
 	} | null>(null);
 	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
-
-	console.info(tempUnit);
 
 	// Fetch all property shares for dropdown options
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
@@ -578,6 +582,13 @@ export const DashboardTab = () => {
 					<MobileTaskCarousel
 						tasks={carouselTasks}
 						onTaskComplete={handleTaskCompletion}
+						onTaskUpdate={async (taskId, updates) => {
+							try {
+								await updateTaskMutation({ id: taskId, updates }).unwrap();
+							} catch (error) {
+								console.error('Failed to update task from carousel', error);
+							}
+						}}
 					/>
 				</CarouselSection>
 

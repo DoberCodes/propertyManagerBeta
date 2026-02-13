@@ -24,7 +24,7 @@ import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
 import TitleName from '../../../../Assets/images/TitleName.png';
 import { GenericModal } from '../../Modal/GenericModal';
 import { NotificationPanel } from '../../NotificationPanel/NotificationPanel';
-import { useGetUserNotificationsQuery } from '../../../../Redux/API/apiSlice';
+import { useGetUserNotificationsQuery } from '../../../../Redux/API/notificationSlice';
 
 export const TopNav = () => {
 	const navigate = useNavigate();

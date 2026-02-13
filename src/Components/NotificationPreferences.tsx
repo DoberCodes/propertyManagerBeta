@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../Redux/store/store';
-import {
-	useUpdateUserMutation,
-	useGetTasksQuery,
-	useUpdateTaskMutation,
-} from '../Redux/API/apiSlice';
+import { useUpdateUserMutation } from '../Redux/API/userSlice';
 import { setCurrentUser } from '../Redux/Slices/userSlice';
 import { Task } from '../types/Task.types';
 import { GenericModal } from './Library';
+import {
+	useGetTasksQuery,
+	useUpdateTaskMutation,
+} from '../Redux/API/taskSlice';
 
 const NotificationSection = styled.div`
 	border: 1px solid #e5e7eb;

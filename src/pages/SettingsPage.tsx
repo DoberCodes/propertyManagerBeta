@@ -27,7 +27,7 @@ import {
 import { auth } from '../config/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../config/firebase';
-import { useUpdateUserMutation } from '../Redux/API/apiSlice';
+import { useUpdateUserMutation } from '../Redux/API/userSlice';
 import { setCurrentUser } from '../Redux/Slices/userSlice';
 import {
 	addFamilyMember,
@@ -540,7 +540,6 @@ const SettingsPage: React.FC = () => {
 
 	const handleDeleteAccount = async () => {
 		if (!currentUser) return;
-		console.info('Attempting to delete account for user:', currentUser);
 
 		setDeleteAccountError('');
 		setIsDeletingAccount(true);
@@ -573,8 +572,6 @@ const SettingsPage: React.FC = () => {
 			setIsDeletingAccount(false);
 		}
 	};
-
-	console.info(subscriptionError);
 
 	return (
 		<Container>

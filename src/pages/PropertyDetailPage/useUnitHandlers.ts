@@ -4,7 +4,7 @@ import { RootState } from '../../Redux/store/store';
 import {
 	useCreateUnitMutation,
 	useDeleteUnitMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/propertySlice';
 
 interface UnitFormData {
 	name: string;

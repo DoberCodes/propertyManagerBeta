@@ -6,7 +6,7 @@ import {
 	addTask,
 	updateTask,
 } from '../../Redux/Slices/propertyDataSlice';
-import { TaskHandlers, TaskFormData } from '../../types/Task.types';
+import { TaskHandlers, Task } from '../../types/Task.types';
 
 interface UseTaskHandlersProps {
 	onDeleteClick?: (taskIds: string[]) => void;
@@ -25,14 +25,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 	const [selectedAssignee, setSelectedAssignee] = useState<any>(null);
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
-	const [taskFormData, setTaskFormData] = useState<TaskFormData>({
-		title: '',
-		dueDate: '',
-		status: 'Pending' as const,
-		notes: '',
-		maintenanceGroupId: undefined,
-	});
-
 	const handleTaskCheckbox = (taskId: string) => {
 		setSelectedTasks((prev) =>
 			prev.includes(taskId)
@@ -43,15 +35,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 
 	const handleCreateTask = () => {
 		setEditingTaskId(null);
-		setTaskFormData({
-			title: '',
-			dueDate: '',
-			status: 'Pending',
-			notes: '',
-			enableNotifications: false,
-			notifications: [],
-			maintenanceGroupId: undefined,
-		});
 		setShowTaskDialog(true);
 	};
 
@@ -60,7 +43,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		setEditingTaskId(selectedTasks[0]);
 		setShowTaskDialog(true);
 	};
-
 	const handleDeleteTask = () => {
 		if (selectedTasks.length === 0) return;
 		if (props?.onDeleteClick) {
@@ -79,31 +61,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		if (selectedTasks.length === 1) {
 			setCompletingTaskId(selectedTasks[0]);
 			setShowTaskCompletionModal(true);
-		}
-	};
-
-	const handleTaskFormChange = (
-		e: React.ChangeEvent<
-			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-		>,
-	) => {
-		const { name, value, type, checked } = e.target as HTMLInputElement;
-		const target = e.target as HTMLSelectElement;
-
-		// Handle multi-select elements
-		if (target.multiple) {
-			const selectedOptions = Array.from(target.selectedOptions).map(
-				(option) => option.value,
-			);
-			setTaskFormData((prev: any) => ({
-				...prev,
-				[name]: selectedOptions,
-			}));
-		} else {
-			setTaskFormData((prev: any) => ({
-				...prev,
-				[name]: type === 'checkbox' ? checked : value,
-			}));
 		}
 	};
 
@@ -133,99 +90,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		setSelectedTasks([]);
 	};
 
-	const handleTaskFormSubmit = async (
-		e: React.FormEvent<HTMLFormElement>,
-		propertyId: string,
-	) => {
-		e.preventDefault();
-
-		if (!taskFormData.title || !taskFormData.dueDate) {
-			alert('Please fill in all required fields');
-			return;
-		}
-
-		const taskData = {
-			id: editingTaskId || `task-${Date.now()}`,
-			propertyId,
-			title: taskFormData.title,
-			dueDate: taskFormData.dueDate,
-			status: taskFormData.status,
-			notes: taskFormData.notes,
-			priority: taskFormData.priority,
-			assignedTo: undefined, // Cannot create proper assignedTo object without assignee data
-			devices: taskFormData.devices || [],
-			isRecurring: taskFormData.isRecurring,
-			recurrenceFrequency: taskFormData.recurrenceFrequency,
-			recurrenceInterval: taskFormData.recurrenceInterval,
-			recurrenceCustomUnit: taskFormData.recurrenceCustomUnit,
-		};
-
-		try {
-			if (editingTaskId) {
-				// Update existing task - only send updatable fields
-				const updates = {
-					propertyId,
-					title: taskFormData.title,
-					dueDate: taskFormData.dueDate,
-					status: taskFormData.status,
-					notes: taskFormData.notes,
-					priority: taskFormData.priority,
-					assignedTo: undefined, // Cannot create proper assignedTo object without assignee data
-					devices: taskFormData.devices || [],
-					isRecurring: taskFormData.isRecurring,
-					recurrenceFrequency: taskFormData.recurrenceFrequency,
-					recurrenceInterval: taskFormData.recurrenceInterval,
-					recurrenceCustomUnit: taskFormData.recurrenceCustomUnit,
-				};
-
-				// Filter out undefined values (Firestore doesn't allow them)
-				const cleanUpdates = Object.fromEntries(
-					Object.entries(updates).filter(([_, value]) => value !== undefined),
-				);
-
-				if (props?.updateTaskMutation) {
-					const updatedTask = await props
-						.updateTaskMutation({
-							id: editingTaskId,
-							updates: cleanUpdates,
-						})
-						.unwrap();
-					dispatch(updateTask(updatedTask));
-				} else {
-					dispatch(updateTask(taskData));
-				}
-			} else {
-				// Create new task
-				// Filter out undefined values (Firestore doesn't allow them)
-				const cleanTaskData = Object.fromEntries(
-					Object.entries(taskData).filter(([_, value]) => value !== undefined),
-				);
-
-				if (props?.createTaskMutation) {
-					const createdTask = await props
-						.createTaskMutation(cleanTaskData)
-						.unwrap();
-					dispatch(addTask(createdTask));
-				} else {
-					dispatch(addTask(taskData));
-				}
-			}
-
-			setShowTaskDialog(false);
-			setEditingTaskId(null);
-			setTaskFormData({
-				title: '',
-				dueDate: '',
-				status: 'Pending',
-				notes: '',
-				maintenanceGroupId: undefined,
-			});
-		} catch (error) {
-			console.error('Error saving task:', error);
-			alert('Error saving task. Please try again.');
-		}
-	};
-
 	return {
 		selectedTasks,
 		setSelectedTasks,
@@ -243,16 +107,12 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		setShowTaskCompletionModal,
 		completingTaskId,
 		setCompletingTaskId,
-		taskFormData,
-		setTaskFormData,
 		handleTaskCheckbox,
 		handleCreateTask,
 		handleEditTask,
 		handleDeleteTask,
 		handleAssignTask,
 		handleCompleteTask,
-		handleTaskFormChange,
-		handleTaskFormSubmit,
 		handleTaskCompletionSuccess,
 		confirmDeleteTask,
 	};

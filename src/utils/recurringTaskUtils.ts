@@ -79,7 +79,6 @@ export const calculateNextDueDate = (
 			throw new Error(`Unknown recurrence frequency: ${frequency}`);
 	}
 
-	console.log('Final next date:', nextDate);
 
 	// Return as YYYY-MM-DD format, ensuring we get the correct date regardless of timezone
 	const year = nextDate.getFullYear();

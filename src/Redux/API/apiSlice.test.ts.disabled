@@ -1,5 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from './apiSlice';
+import { propertySlice } from './propertySlice';
+import { taskSlice } from './taskSlice';
+import { contractorSlice } from './contractorSlice';
+import { maintenanceSlice } from './maintenanceSlice';
+import { Property, PropertyGroup } from '../Slices/propertyDataSlice';
 
 // Mock Firebase modules
 jest.mock('../../config/firebase', () => ({
@@ -177,11 +182,13 @@ describe('Family Account API Integration', () => {
 			mockGetDoc.mockResolvedValue(mockUserDoc);
 			mockAddDoc.mockResolvedValue({ id: 'new-property-id' });
 
-			const newProperty = {
+			const newProperty: Property = {
 				groupId: 'group-1',
 				title: 'New Family Property',
 				slug: 'new-family-property',
 				address: '123 Family St',
+				id: '',
+				userId: '',
 			};
 
 			const store = createTestStore();
@@ -214,11 +221,13 @@ describe('Family Account API Integration', () => {
 			mockGetDoc.mockResolvedValue(mockUserDoc);
 			mockAddDoc.mockResolvedValue({ id: 'new-property-id' });
 
-			const newProperty = {
+			const newProperty: Property = {
 				groupId: 'group-1',
 				title: 'New Owner Property',
 				slug: 'new-owner-property',
 				address: '123 Owner St',
+				id: '',
+				userId: '',
 			};
 
 			const store = createTestStore();
@@ -253,9 +262,10 @@ describe('Family Account API Integration', () => {
 			mockGetDoc.mockResolvedValue(mockUserDoc);
 			mockAddDoc.mockResolvedValue({ id: 'new-group-id' });
 
-			const newGroup = {
+			const newGroup: PropertyGroup = {
 				name: 'Family Properties',
 				userId: 'account-owner-id',
+				id: '',
 			};
 
 			const store = createTestStore();
@@ -325,7 +335,7 @@ describe('Family Account API Integration', () => {
 				.mockResolvedValueOnce({ docs: mockTaskDocs }); // Tasks
 
 			const store = createTestStore();
-			await store.dispatch(apiSlice.endpoints.getTasks.initiate());
+			await store.dispatch(taskSlice.endpoints.getTasks.initiate());
 
 			expect(mockGetDocs.mock.calls.length).toBeGreaterThanOrEqual(3);
 			// Should query for account-owner-id groups, then properties, then tasks

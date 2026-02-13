@@ -1,9 +1,10 @@
 import { Property, PropertyGroup } from '../Redux/Slices/propertyDataSlice';
-import { Task, PropertyShare } from '../Redux/API/apiSlice';
 import { TeamMember, TeamGroup } from '../Redux/Slices/teamSlice';
 import { User } from '../Redux/Slices/userSlice';
 import { hasFullAccess, hasLimitedAccess } from './permissions';
 import { UserRole, USER_ROLES } from '../constants/roles';
+import { PropertyShare } from '../types/Property.types';
+import { Task } from '../types/Task.types';
 
 /**
  * Filter properties based on user role and assignments

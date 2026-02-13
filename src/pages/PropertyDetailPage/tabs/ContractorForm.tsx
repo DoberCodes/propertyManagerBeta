@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
 	useCreateContractorMutation,
 	useUpdateContractorMutation,
-} from '../../../Redux/API/apiSlice';
+} from '../../../Redux/API/contractorSlice';
 import {
 	Contractor,
 	ContractorCategory,
@@ -457,8 +457,8 @@ export const ContractorForm: React.FC<ContractorFormProps> = ({
 							{isLoading
 								? 'Saving...'
 								: contractor
-									? 'Update Contractor'
-									: 'Add Contractor'}
+								? 'Update Contractor'
+								: 'Add Contractor'}
 						</Button>
 					</ButtonGroup>
 				</form>

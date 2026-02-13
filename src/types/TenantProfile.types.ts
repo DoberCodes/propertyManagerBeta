@@ -113,3 +113,20 @@ export interface TenantProfile {
 	isPublic: boolean; // Whether landlords can view this profile
 	profileCompleteness: number; // Percentage of fields completed
 }
+
+export interface TenantInvitationCode {
+	id: string;
+	code: string;
+	codeLower: string;
+	status: 'active' | 'redeemed' | 'revoked';
+	createdByUserId: string;
+	createdByEmail?: string;
+	propertyId?: string;
+	tenantEmail?: string;
+	redeemedByUserId?: string;
+	redeemedByEmail?: string;
+	createdAt: string;
+	updatedAt: string;
+	redeemedAt?: string;
+	revokedAt?: string;
+}

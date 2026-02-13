@@ -13,10 +13,14 @@ import {
 	useGetUserNotificationsQuery,
 	useUpdateNotificationMutation,
 	useDeleteNotificationMutation,
+} from '../../../Redux/API/notificationSlice';
+import {
 	useAcceptInvitationMutation,
-	useUpdateUserMutation,
-	Notification,
-} from '../../../Redux/API/apiSlice';
+	useRejectInvitationMutation,
+	useGetUserInvitationsQuery,
+} from '../../../Redux/API/userSlice';
+import { useUpdateUserMutation } from '../../../Redux/API/userSlice';
+import { Notification } from '../../../types/Notification.types';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import { GenericModal } from '../Modal/GenericModal';
 import DocumentViewer from '../../DocumentViewer';

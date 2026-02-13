@@ -192,17 +192,7 @@ export const filterMaintenanceRequests = (
 /**
  * Get assignee display name from task
  */
-export const getAssigneeName = (task: Task): string => {
+export const getAssigneeName = (task: Task) => {
 	// Check new assignedTo object format first
-	if (task.assignedTo?.name) {
-		return task.assignedTo.name;
-	}
-
-	// Fall back to old individual fields
-	return (
-		task.assignee ||
-		task.assigneeEmail ||
-		task.assigneeFirstName ||
-		'Unassigned'
-	);
+	return task.assignedTo?.name;
 };

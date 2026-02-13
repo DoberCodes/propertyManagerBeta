@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { useGetUnitsQuery } from '../../Redux/API/propertySlice';
 import {
 	useAddTenantMutation,
 	useCreateTenantInvitationCodeMutation,
-	useGetUnitsQuery,
 	useRevokeTenantInvitationCodeMutation,
 	useUpdateTenantMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/tenantSlice';
 import { GenericModal, FormGroup, FormLabel, FormInput } from '../Library';
 import { COLORS } from '../../constants/colors';
 

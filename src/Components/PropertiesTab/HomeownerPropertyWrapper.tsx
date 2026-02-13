@@ -8,7 +8,7 @@ import {
 	useCreatePropertyMutation,
 	useCreatePropertyGroupMutation,
 	useCreateUnitMutation,
-} from '../../Redux/API/apiSlice';
+} from '../../Redux/API/propertySlice';
 
 /**
  * Wrapper for homeowner property view.
@@ -33,10 +33,6 @@ const HomeownerPropertyWrapper: React.FC = () => {
 
 	// Only allow one property for homeowners
 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
-	console.info('HomeownerPropertyWrapper: checking homeowner access', {
-		isHomeowner,
-		propertiesCount: allProperties.length,
-	});
 
 	if (!isHomeowner) {
 		// Fallback: not a homeowner, show error
@@ -139,10 +135,7 @@ const HomeownerPropertyWrapper: React.FC = () => {
 
 	// Homeowner with a property: redirect directly to their property details page
 	const propertySlug = allProperties[0].slug;
-	console.info(
-		'HomeownerPropertyWrapper: redirecting to property',
-		propertySlug,
-	);
+
 	return <Navigate to={`/property/${propertySlug}`} replace />;
 };
 

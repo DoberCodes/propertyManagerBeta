@@ -19,12 +19,15 @@ import {
 	useCreatePropertyGroupMutation,
 	useUpdatePropertyGroupMutation,
 	useDeletePropertyGroupMutation,
-	useCreateNotificationMutation,
 	useCreateUnitMutation,
-	useUpdateUserMutation,
+} from '../../Redux/API/propertySlice';
+import { useGetAllPropertySharesForUserQuery } from '../../Redux/API/userSlice';
+import {
 	useDeletePropertyShareMutation,
-	useGetAllPropertySharesForUserQuery,
-} from '../../Redux/API/apiSlice';
+	useCreatePropertyShareMutation,
+} from '../../Redux/API/userSlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
+import { useUpdateUserMutation } from '../../Redux/API/userSlice';
 import { db } from '../../config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import {
@@ -60,6 +63,7 @@ import {
 	GroupActions,
 	GroupActionButton,
 } from './PropertiesTab.styles';
+import { Property } from '../../types/Property.types';
 
 export const Properties = () => {
 	const navigate = useNavigate();
@@ -822,7 +826,7 @@ export const Properties = () => {
 						<PropertiesGrid
 							$isHomeowner={currentUser?.subscription?.plan === 'homeowner'}
 							$singleProperty={(group.properties || []).length === 1}>
-							{(group.properties || []).map((property) => (
+							{(group.properties || []).map((property: Property) => (
 								<PropertyTile
 									key={property.id}
 									onClick={() => {

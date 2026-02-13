@@ -5,6 +5,7 @@ import propertyDataReducer from '../Slices/propertyDataSlice';
 import teamReducer from '../Slices/teamSlice';
 import maintenanceRequestsReducer from '../Slices/maintenanceRequestsSlice';
 import { apiSlice } from '../API/apiSlice';
+import { taskSlice } from '../API/taskSlice';
 
 export const store = configureStore({
 	reducer: {

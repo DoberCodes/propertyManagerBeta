@@ -187,7 +187,6 @@ export const SeasonalMaintenance = ({
 	};
 
 	const [tempUnitState, setTempUnitState] = useState<'C' | 'F'>('F');
-	console.info('Temp Unit in SeasonalMaintenance:', tempUnit);
 	useEffect(() => {
 		setTempUnitState(tempUnit);
 	}, [tempUnit]);

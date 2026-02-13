@@ -6,10 +6,8 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../Redux/store/store';
-import {
-	useGetMaintenanceHistoryByPropertyQuery,
-	useGetUnitsQuery,
-} from '../Redux/API/apiSlice';
+import { useGetMaintenanceHistoryByPropertyQuery } from '../Redux/API/maintenanceSlice';
+import { useGetUnitsQuery } from '../Redux/API/propertySlice';
 import { Property } from '../types/Property.types';
 import { Task } from '../types/Task.types';
 import { MaintenanceRequestItem } from '../types/MaintenanceRequest.types';

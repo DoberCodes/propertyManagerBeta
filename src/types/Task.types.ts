@@ -51,49 +51,58 @@ export interface TaskNotification {
 
 export interface Task {
 	id: string;
-	userId?: string;
+	userId: string; // Owner of the task
 	propertyId: string;
-	suiteId?: string;
-	unitId?: string;
-	devices?: string[];
+	enableNotifications?: boolean;
+	notifications?: TaskNotification[];
+	suiteId?: string; // Optional: for tasks specific to a suite
+	unitId?: string; // Optional: for tasks specific to a unit
+	devices?: string[]; // Optional: device IDs related to this task
 	title: string;
 	dueDate: string;
-	status: ReduxTaskStatus;
-	priority?: TaskPriority;
+	status:
+		| 'Pending'
+		| 'In Progress'
+		| 'Awaiting Approval'
+		| 'Completed'
+		| 'Rejected'
+		| 'Overdue'
+		| 'Hold';
+	property: string;
+	propertyTitle?: string; // Optional: denormalized property title for easier access
+	notes?: string;
+	priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
 	assignee?: string;
-	assigneeEmail?: string;
-	assigneeFirstName?: string;
-	assigneeLastName?: string;
+
 	assignedTo?: {
 		id: string;
 		name: string;
 		email?: string;
-	}; // New assignee object format
-	submittedBy?: string;
-	submittedByEmail?: string;
-	notes?: string;
-	createdAt?: string;
-	updatedAt?: string;
-	completionFiles?: CompletionFile[];
-	completionNotes?: string;
-	completionDate?: string;
-	property?: string;
-	completionFile?: CompletionFile;
-	completedBy?: string;
-	approvedBy?: string;
-	approvedAt?: string;
-	rejectionReason?: string;
-	maintenanceGroupId?: string;
+	}; // Assignee object
 	// Recurring task fields
 	isRecurring?: boolean;
-	recurrenceFrequency?: RecurrenceFrequency;
-	recurrenceInterval?: number; // e.g., every X days/weeks/months
-	recurrenceCustomUnit?: RecurrenceCustomUnit; // Unit for 'custom' frequency
-	parentTaskId?: string; // Reference to original recurring task (if this is a copy)
-	lastRecurrenceDate?: string; // Last date this recurring task was auto-created
-	// Notification fields
-	enableNotifications?: boolean;
-	notifications?: TaskNotification[];
+	recurrenceFrequency?:
+		| 'daily'
+		| 'weekly'
+		| 'biweekly'
+		| 'monthly'
+		| 'quarterly'
+		| 'yearly'
+		| 'custom';
+	recurrenceInterval?: number;
+	recurrenceCustomUnit?: 'days' | 'weeks' | 'months' | 'years';
+	parentTaskId?: string;
+	lastRecurrenceDate?: string;
+	completionDate?: string;
+	completionFile?: CompletionFile;
+	completedBy?: string; // User ID who completed the task
+	approvedBy?: string; // Admin/Lead ID who approved
+	approvedAt?: string;
+	rejectionReason?: string;
+	completionNotes?: string;
+	maintenanceGroupId?: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 export interface CompletionFile {
@@ -140,23 +149,12 @@ export interface TaskHandlers {
 	setShowTaskCompletionModal: (show: boolean) => void;
 	completingTaskId: string | null;
 	setCompletingTaskId: (id: string | null) => void;
-	taskFormData: TaskFormData;
-	setTaskFormData: (data: TaskFormData) => void;
 	handleTaskCheckbox: (taskId: string) => void;
 	handleCreateTask: () => void;
 	handleEditTask: () => void;
 	handleDeleteTask: () => void;
 	handleAssignTask: () => void;
 	handleCompleteTask: () => void;
-	handleTaskFormChange: (
-		e: React.ChangeEvent<
-			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-		>,
-	) => void;
-	handleTaskFormSubmit: (
-		e: React.FormEvent<HTMLFormElement>,
-		propertyId: string,
-	) => void;
 	handleTaskCompletionSuccess: () => void;
 	confirmDeleteTask: () => void;
 }

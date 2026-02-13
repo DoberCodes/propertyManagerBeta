@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { GenericModal } from './GenericModal';
 import {
 	FormGroup,
@@ -18,6 +19,12 @@ import {
 	getDefaultTaskNotifications,
 	getDefaultNotificationMessage,
 } from '../../../utils/taskNotificationUtils';
+import {
+	useCreateTaskMutation,
+	useUpdateTaskMutation,
+	useGetTasksQuery,
+} from '../../../Redux/API/taskSlice';
+import { addTask, updateTask } from '../../../Redux/Slices/propertyDataSlice';
 
 interface TaskFormData {
 	title: string;
@@ -39,47 +46,31 @@ interface TaskFormData {
 interface EditTaskModalProps {
 	isOpen: boolean;
 	isEditing: boolean;
-	formData: TaskFormData;
+	// optional: when editing inside a page you can pass the task id or the whole task
+	editingTaskId?: string | null;
+	initialTask?: Partial<TaskFormData> | null;
+	propertyId?: string | null;
 	onClose: () => void;
-	onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-	onChange: (
-		e: React.ChangeEvent<
-			HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-		>,
-	) => void;
+	onSaved?: (updatedTask?: any) => void; // called after successful create/update
 	statusOptions?: string[];
 	priorityOptions?: string[];
 	assigneeOptions?: { label: string; value: string }[];
 	deviceOptions?: { label: string; value: string }[];
 	maintenanceHistoryOptions?: { label: string; value: string }[];
-	onDevicesChange?: (devices: string[]) => void;
-	taskTitlePlaceholder?: string;
 	currentUser?: { id: string; firstName?: string; lastName?: string } | null;
+	// new/optional callbacks and placeholders
+	taskTitlePlaceholder?: string;
+	onDevicesChange?: (devices: string[]) => void;
 }
 
-/**
- * Reusable Edit Task Modal Component
- * Handles both creating new tasks and editing existing ones
- * Features tabbed interface for recurring task scheduling
- *
- * @example
- * <EditTaskModal
- *   isOpen={showTaskDialog}
- *   isEditing={Boolean(editingTaskId)}
- *   formData={taskFormData}
- *   onClose={() => setShowTaskDialog(false)}
- *   onSubmit={handleTaskFormSubmit}
- *   onChange={handleTaskFormChange}
- *   statusOptions={['Pending', 'In Progress', 'Completed']}
- * />
- */
 export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	isOpen,
 	isEditing,
-	formData,
+	editingTaskId = null,
+	initialTask = null,
+	propertyId = null,
 	onClose,
-	onSubmit,
-	onChange,
+	onSaved,
 	statusOptions = [
 		'Pending',
 		'In Progress',
@@ -91,57 +82,110 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	assigneeOptions = [],
 	deviceOptions = [],
 	maintenanceHistoryOptions = [],
-	onDevicesChange,
-	taskTitlePlaceholder = 'Enter task name',
 	currentUser = null,
+	taskTitlePlaceholder = 'Task title',
+	onDevicesChange,
 }) => {
+	// modal-owned form state (defaults)
+	const defaultForm: TaskFormData = {
+		title: '',
+		dueDate: '',
+		status: 'Pending',
+		notes: '',
+		devices: [],
+		isRecurring: false,
+		recurrenceFrequency: undefined,
+		recurrenceInterval: undefined,
+		recurrenceCustomUnit: undefined,
+		enableNotifications: false,
+		notifications: [],
+		linkedMaintenanceHistoryIds: [],
+	};
+
+	const dispatch = useDispatch();
+	const { data: allTasks = [] } = useGetTasksQuery();
+	const [createTask] = useCreateTaskMutation();
+	const [updateTaskApi] = useUpdateTaskMutation();
+
+	const [formState, setFormState] = useState<TaskFormData>(defaultForm);
+
+	// initialize form when modal opens or when editingTaskId/initialTask changes
+	useEffect(() => {
+		if (!isOpen) return;
+
+		if (editingTaskId) {
+			const task = allTasks.find((t: any) => t.id === editingTaskId);
+			if (task) {
+				setFormState({
+					title: task.title || '',
+					dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
+					status: task.status || 'Pending',
+					notes: task.notes || '',
+					priority: task.priority,
+					assignedTo: task.assignedTo?.id || task.assignee || '',
+					devices: task.devices || [],
+					isRecurring: task.isRecurring || false,
+					recurrenceFrequency: task.recurrenceFrequency,
+					recurrenceInterval: task.recurrenceInterval,
+					recurrenceCustomUnit: task.recurrenceCustomUnit,
+					enableNotifications: (task as any).enableNotifications || false,
+					notifications: (task as any).notifications || [],
+					linkedMaintenanceHistoryIds:
+						(task as any).linkedMaintenanceHistoryIds || [],
+				});
+				return;
+			}
+		}
+
+		setFormState(defaultForm);
+	}, [isOpen, editingTaskId, initialTask, allTasks]);
+
+	const handleChange = (e: React.ChangeEvent<any>) => {
+		const { name, value, type, checked } = e.target as any;
+		setFormState((prev) => ({
+			...prev,
+			[name]: type === 'checkbox' ? checked : value,
+		}));
+	};
+
+	// keep legacy `onChange` variable name for backward-compatible internal usage
+	const onChange = handleChange;
+	// keep legacy `fd` variable name for backwards-compatibility inside this component
+	const fd = formState;
+
 	const [activeTab, setActiveTab] = useState<
 		'details' | 'schedule' | 'notifications'
 	>('details');
 	const [showLinkHistoryModal, setShowLinkHistoryModal] = useState(false);
 	const [pendingLinkedHistoryIds, setPendingLinkedHistoryIds] = useState<
 		string[]
-	>(formData.linkedMaintenanceHistoryIds || []);
+	>(fd.linkedMaintenanceHistoryIds || []);
 	const wantsRecurrence = Boolean(
-		formData.recurrenceFrequency ||
-			formData.recurrenceInterval ||
-			formData.recurrenceCustomUnit,
+		formState.recurrenceFrequency ||
+			formState.recurrenceInterval ||
+			formState.recurrenceCustomUnit,
 	);
 	const hasSchedule = Boolean(
-		formData.recurrenceFrequency &&
-			(formData.recurrenceFrequency === 'custom'
-				? formData.recurrenceInterval && formData.recurrenceCustomUnit
+		formState.recurrenceFrequency &&
+			(formState.recurrenceFrequency === 'custom'
+				? formState.recurrenceInterval && formState.recurrenceCustomUnit
 				: true), // For non-custom frequencies, just need the frequency
 	);
 
 	useEffect(() => {
-		if (hasSchedule && !formData.isRecurring) {
-			onChange({
-				target: {
-					name: 'isRecurring',
-					value: 'true',
-					checked: true,
-					type: 'checkbox',
-				},
-			} as React.ChangeEvent<HTMLInputElement>);
+		if (hasSchedule && !formState.isRecurring) {
+			setFormState((prev) => ({ ...prev, isRecurring: true }));
 		}
 
-		if (!hasSchedule && formData.isRecurring) {
-			onChange({
-				target: {
-					name: 'isRecurring',
-					value: 'false',
-					checked: false,
-					type: 'checkbox',
-				},
-			} as React.ChangeEvent<HTMLInputElement>);
+		if (!hasSchedule && formState.isRecurring) {
+			setFormState((prev) => ({ ...prev, isRecurring: false }));
 		}
-	}, [hasSchedule, formData.isRecurring, onChange]);
+	}, [hasSchedule, formState.isRecurring]);
 
 	useEffect(() => {
 		if (!showLinkHistoryModal) return;
-		setPendingLinkedHistoryIds(formData.linkedMaintenanceHistoryIds || []);
-	}, [showLinkHistoryModal, formData.linkedMaintenanceHistoryIds]);
+		setPendingLinkedHistoryIds(formState.linkedMaintenanceHistoryIds || []);
+	}, [showLinkHistoryModal, formState.linkedMaintenanceHistoryIds]);
 
 	const handleToggleHistory = (historyId: string) => {
 		setPendingLinkedHistoryIds((prev) =>
@@ -163,13 +207,55 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 		setShowLinkHistoryModal(false);
 	};
 
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!formState.title || !formState.dueDate) {
+			alert('Please fill in all required fields');
+			return;
+		}
+
+		try {
+			if (isEditing && editingTaskId) {
+				const updatesRaw: any = { ...formState };
+				const updates = Object.fromEntries(
+					Object.entries(updatesRaw).filter(([, value]) => value !== undefined),
+				);
+
+				const updated = await updateTaskApi({
+					id: editingTaskId,
+					updates,
+				}).unwrap();
+				dispatch(updateTask(updated));
+				onSaved?.(updated);
+				onClose();
+			} else {
+				const newTask: any = {
+					id: `task-${Date.now()}`,
+					propertyId: propertyId || undefined,
+					...formState,
+					userId: '',
+					property: '',
+				};
+
+				const created = await createTask(newTask).unwrap();
+				dispatch(addTask(created));
+				onSaved?.(created);
+				onClose();
+			}
+		} catch (error) {
+			console.error('Error saving task:', error);
+			alert('Failed to save task. Please try again.');
+		}
+	};
+
 	return (
 		<>
 			<GenericModal
 				isOpen={isOpen}
 				title={isEditing ? 'Edit Task' : 'Create New Task'}
 				onClose={onClose}
-				onSubmit={onSubmit}
+				onSubmit={handleSubmit}
 				showActions={true}
 				primaryButtonLabel={isEditing ? 'Update Task' : 'Create Task'}
 				secondaryButtonLabel='Cancel'>
@@ -201,8 +287,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormInput
 								type='text'
 								name='title'
-								value={formData.title}
-								onChange={onChange}
+								value={formState.title}
+								onChange={handleChange}
 								placeholder={taskTitlePlaceholder}
 								required
 							/>
@@ -213,7 +299,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormInput
 								type='date'
 								name='dueDate'
-								value={formData.dueDate}
+								value={formState.dueDate}
 								onChange={onChange}
 								required
 							/>
@@ -223,8 +309,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormLabel>Status *</FormLabel>
 							<FormSelect
 								name='status'
-								value={formData.status}
-								onChange={onChange}>
+								value={formState.status}
+								onChange={handleChange}>
 								<option value=''>Select a status...</option>
 								{statusOptions.map((status) => (
 									<option key={status} value={status}>
@@ -238,7 +324,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormLabel>Priority *</FormLabel>
 							<FormSelect
 								name='priority'
-								value={formData.priority}
+								value={formState.priority}
 								onChange={onChange}>
 								<option value=''>Select a priority...</option>
 								{priorityOptions.map((priority) => (
@@ -254,10 +340,10 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 								<FormLabel>Assigned To</FormLabel>
 								<FormSelect
 									name='assignedTo'
-									value={formData.assignedTo || ''}
+									value={formState.assignedTo || ''}
 									onChange={onChange}>
 									<option value=''>Unassigned</option>
-									{currentUser && formData.assignedTo === currentUser.id && (
+									{currentUser && formState.assignedTo === currentUser.id && (
 										<option value=''>Unassign me</option>
 									)}
 									{assigneeOptions.map((option) => (
@@ -274,8 +360,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 								<FormLabel>Connected Devices</FormLabel>
 								<MultiSelect
 									options={deviceOptions}
-									value={formData.devices || []}
-									onChange={onDevicesChange || (() => {})}
+									value={formState.devices || []}
+									onChange={(devices: string[]) => {
+										setFormState((prev) => ({ ...prev, devices }));
+										onDevicesChange?.(devices);
+									}}
 									placeholder='Select devices for this task...'
 								/>
 							</FormGroup>
@@ -299,11 +388,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 											fontSize: '14px',
 										}}>
 										🔗 Link Maintenance History (
-										{formData.linkedMaintenanceHistoryIds?.length || 0})
+										{formState.linkedMaintenanceHistoryIds?.length || 0})
 									</button>
-									{(formData.linkedMaintenanceHistoryIds?.length || 0) > 0 && (
+									{(formState.linkedMaintenanceHistoryIds?.length || 0) > 0 && (
 										<span style={{ fontSize: '12px', color: '#6b7280' }}>
-											{formData.linkedMaintenanceHistoryIds?.length} linked
+											{fd.linkedMaintenanceHistoryIds?.length} linked
 										</span>
 									)}
 								</div>
@@ -314,7 +403,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormLabel>Notes</FormLabel>
 							<FormTextarea
 								name='notes'
-								value={formData.notes}
+								value={formState.notes}
 								onChange={onChange}
 								placeholder='Add any notes about this task...'
 							/>
@@ -328,7 +417,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							<FormLabel>Recurrence Frequency *</FormLabel>
 							<FormSelect
 								name='recurrenceFrequency'
-								value={formData.recurrenceFrequency || ''}
+								value={formState.recurrenceFrequency || ''}
 								onChange={onChange}
 								required={wantsRecurrence}>
 								<option value=''>Select frequency...</option>
@@ -342,33 +431,33 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							</FormSelect>
 						</FormGroup>
 
-						{formData.recurrenceFrequency === 'custom' && (
+						{formState.recurrenceFrequency === 'custom' && (
 							<FormGroup>
 								<FormLabel>Interval *</FormLabel>
 								<FormInput
 									type='number'
 									name='recurrenceInterval'
-									value={formData.recurrenceInterval || 1}
+									value={formState.recurrenceInterval || 1}
 									onChange={onChange}
 									min='1'
 									max='365'
 									required={
-										formData.recurrenceFrequency === 'custom' && wantsRecurrence
+										fd.recurrenceFrequency === 'custom' && wantsRecurrence
 									}
 									placeholder='e.g., 3 for every 3 days'
 								/>
 							</FormGroup>
 						)}
 
-						{formData.recurrenceFrequency === 'custom' && (
+						{fd.recurrenceFrequency === 'custom' && (
 							<FormGroup>
 								<FormLabel>Time Unit *</FormLabel>
 								<FormSelect
 									name='recurrenceCustomUnit'
-									value={formData.recurrenceCustomUnit || ''}
+									value={formState.recurrenceCustomUnit || ''}
 									onChange={onChange}
 									required={
-										formData.recurrenceFrequency === 'custom' && wantsRecurrence
+										fd.recurrenceFrequency === 'custom' && wantsRecurrence
 									}>
 									<option value=''>Select unit...</option>
 									<option value='days'>Days</option>
@@ -397,7 +486,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 									type='checkbox'
 									id='enableNotifications'
 									name='enableNotifications'
-									checked={formData.enableNotifications || false}
+									checked={fd.enableNotifications || false}
 									onChange={(e) => {
 										const isChecked = e.target.checked;
 										onChange({
@@ -412,8 +501,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 										// If enabling notifications and no notifications exist, set defaults
 										if (
 											isChecked &&
-											(!formData.notifications ||
-												formData.notifications.length === 0)
+											(!fd.notifications || fd.notifications.length === 0)
 										) {
 											const defaultNotifications =
 												getDefaultTaskNotifications();
@@ -436,7 +524,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							</small>
 						</FormGroupFull>
 
-						{formData.enableNotifications && (
+						{fd.enableNotifications && (
 							<>
 								<FormGroupFull>
 									<FormLabel>Notification Schedule</FormLabel>
@@ -446,62 +534,58 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 											flexDirection: 'column',
 											gap: '12px',
 										}}>
-										{(formData.notifications || []).map(
-											(notification, index) => (
-												<div
-													key={notification.id}
-													style={{
-														display: 'flex',
-														alignItems: 'center',
-														gap: '12px',
-														padding: '12px',
-														border: '1px solid #e5e7eb',
-														borderRadius: '6px',
-														backgroundColor: '#f9fafb',
-													}}>
-													<input
-														type='checkbox'
-														id={`notification-${index}`}
-														checked={notification.enabled}
-														onChange={(e) => {
-															const updatedNotifications = [
-																...(formData.notifications || []),
-															];
-															updatedNotifications[index] = {
-																...updatedNotifications[index],
-																enabled: e.target.checked,
-															};
-															onChange({
-																target: {
-																	name: 'notifications',
-																	value: updatedNotifications,
-																	type: 'custom',
-																},
-															} as any);
-														}}
-													/>
-													<div style={{ flex: 1 }}>
-														<div
-															style={{ fontWeight: '500', color: '#374151' }}>
-															{notification.type === 'reminder'
-																? notification.daysBeforeDue === 1
-																	? '1 day before due'
-																	: `${notification.daysBeforeDue} days before due`
-																: `Week ${
-																		Math.abs(notification.daysBeforeDue || 0) /
-																		7
-																  } overdue`}
-														</div>
-														<div style={{ fontSize: '14px', color: '#6b7280' }}>
-															{getDefaultNotificationMessage(
-																notification,
-																formData.title || 'Task',
-															)}
-														</div>
+										{(fd.notifications || []).map((notification, index) => (
+											<div
+												key={notification.id}
+												style={{
+													display: 'flex',
+													alignItems: 'center',
+													gap: '12px',
+													padding: '12px',
+													border: '1px solid #e5e7eb',
+													borderRadius: '6px',
+													backgroundColor: '#f9fafb',
+												}}>
+												<input
+													type='checkbox'
+													id={`notification-${index}`}
+													checked={notification.enabled}
+													onChange={(e) => {
+														const updatedNotifications = [
+															...(fd.notifications || []),
+														];
+														updatedNotifications[index] = {
+															...updatedNotifications[index],
+															enabled: e.target.checked,
+														};
+														onChange({
+															target: {
+																name: 'notifications',
+																value: updatedNotifications,
+																type: 'custom',
+															},
+														} as any);
+													}}
+												/>
+												<div style={{ flex: 1 }}>
+													<div style={{ fontWeight: '500', color: '#374151' }}>
+														{notification.type === 'reminder'
+															? notification.daysBeforeDue === 1
+																? '1 day before due'
+																: `${notification.daysBeforeDue} days before due`
+															: `Week ${
+																	Math.abs(notification.daysBeforeDue || 0) / 7
+															  } overdue`}
+													</div>
+													<div style={{ fontSize: '14px', color: '#6b7280' }}>
+														{getDefaultNotificationMessage(
+															notification,
+															fd.title || 'Task',
+														)}
 													</div>
 												</div>
-											),
-										)}
+											</div>
+										))}
 									</div>
 								</FormGroupFull>
 

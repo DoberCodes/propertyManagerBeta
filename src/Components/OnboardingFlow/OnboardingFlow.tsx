@@ -5,12 +5,9 @@ import { RootState } from '../../Redux/store/store';
 import styled from 'styled-components';
 import { COLORS } from '../../constants/colors';
 import { SUBSCRIPTION_PLANS } from '../../constants/subscriptions';
-import {
-	useGetPropertiesQuery,
-	useGetTasksQuery,
-} from '../../Redux/API/apiSlice';
-import { on } from 'events';
+import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
 import TermsAcceptanceStep from './TermsAcceptanceStep';
+import { useGetTasksQuery } from '../../Redux/API/taskSlice';
 
 const OnboardingOverlay = styled.div`
 	position: fixed;
@@ -434,8 +431,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 	// Fetch data for real-time validation
 	const { data: properties = [] } = useGetPropertiesQuery();
 	const { data: tasks = [] } = useGetTasksQuery();
-
-	console.info(tasks);
 
 	const [currentStepIndex, setCurrentStepIndex] = useState(0);
 	const [showCelebration, setShowCelebration] = useState(false);

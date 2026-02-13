@@ -1,0 +1,123 @@
+import {
+	addDoc,
+	collection,
+	deleteDoc,
+	doc,
+	getDoc,
+	getDocs,
+	orderBy,
+	query,
+	updateDoc,
+	where,
+} from '@firebase/firestore';
+import { Notification } from '../../types/Notification.types';
+import { apiSlice } from './apiSlice';
+import { auth, db } from '../../config/firebase';
+
+const NotificationSlice = apiSlice.injectEndpoints({
+	endpoints: (builder) => ({
+		// Notifications
+		getUserNotifications: builder.query<Notification[], string | undefined>({
+			async queryFn(userId) {
+				try {
+					if (!userId) {
+						return { data: [] };
+					}
+
+					const q = query(
+						collection(db, 'notifications'),
+						where('userId', '==', userId),
+						orderBy('createdAt', 'desc'),
+					);
+					const querySnapshot = await getDocs(q);
+					const notifications = querySnapshot.docs
+						.map((doc) => doc.data() as Notification)
+						.filter(Boolean) as Notification[];
+					return { data: notifications };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			providesTags: ['Notifications'],
+			// Force refetch when component mounts to avoid stale data
+			keepUnusedDataFor: 0,
+		}),
+
+		createNotification: builder.mutation<
+			Notification,
+			Omit<Notification, 'id'>
+		>({
+			async queryFn(notificationData) {
+				try {
+					const resolvedUserId =
+						notificationData.userId || auth.currentUser?.uid;
+					if (!resolvedUserId) {
+						return { error: 'Notification userId is missing' };
+					}
+					const notificationRef = collection(db, 'notifications');
+					const docRef = await addDoc(notificationRef, {
+						...notificationData,
+						userId: resolvedUserId,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					});
+
+					return {
+						data: {
+							id: docRef.id,
+							...notificationData,
+							userId: resolvedUserId,
+							createdAt: new Date().toISOString(),
+							updatedAt: new Date().toISOString(),
+						} as Notification,
+					};
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['Notifications'],
+		}),
+
+		updateNotification: builder.mutation<
+			Notification,
+			{ id: string; updates: Partial<Notification> }
+		>({
+			async queryFn({ id, updates }) {
+				try {
+					const notificationRef = doc(db, 'notifications', id);
+					await updateDoc(notificationRef, {
+						...updates,
+						updatedAt: new Date().toISOString(),
+					});
+
+					const updatedDoc = await getDoc(notificationRef);
+					const data = updatedDoc.data() as Notification;
+					return { data };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['Notifications'],
+		}),
+
+		deleteNotification: builder.mutation<void, string>({
+			async queryFn(notificationId) {
+				try {
+					await deleteDoc(doc(db, 'notifications', notificationId));
+					return { data: undefined };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+			invalidatesTags: ['Notifications'],
+		}),
+	}),
+});
+
+export const {
+	useGetUserNotificationsQuery,
+	useCreateNotificationMutation,
+	useUpdateNotificationMutation,
+	useDeleteNotificationMutation,
+    
+} = NotificationSlice;

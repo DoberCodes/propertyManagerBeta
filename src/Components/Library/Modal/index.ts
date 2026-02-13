@@ -1,6 +1,6 @@
 export * from './ModalStyles';
-export { EditTaskModal, default } from './EditTaskModal';
+export { EditTaskModal, default } from './TaskModal';
 export { CreateUnitModal } from './CreateUnitModal';
 export { GenericModal } from './GenericModal';
 export { DeleteConfirmationModal } from './DeleteConfirmationModal';
-export { TaskDetailModal } from './TaskDetailModal';
+export { DeviceModal } from './DeviceModal';

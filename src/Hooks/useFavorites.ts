@@ -4,7 +4,7 @@ import {
 	useGetFavoritesQuery,
 	useAddFavoriteMutation,
 	useRemoveFavoriteMutation,
-} from '../Redux/API/apiSlice';
+} from '../Redux/API/userSlice';
 
 interface FavoriteProperty {
 	id: string;

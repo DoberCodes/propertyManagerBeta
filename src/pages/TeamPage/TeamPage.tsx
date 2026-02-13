@@ -18,21 +18,8 @@ import {
 	TeamMember,
 	TeamGroup,
 } from '../../Redux/Slices/teamSlice';
-import {
-	useGetTeamGroupsQuery,
-	useGetTeamMembersQuery,
-	useGetPropertiesQuery,
-	useCreateTeamGroupMutation,
-	useUpdateTeamGroupMutation,
-	useDeleteTeamGroupMutation,
-	useCreateTeamMemberMutation,
-	useUpdateTeamMemberMutation,
-	useDeleteTeamMemberMutation,
-	useCreateNotificationMutation,
-	useCreateTeamMemberInvitationCodeMutation,
-	useRedeemTeamMemberInvitationCodeMutation,
-	useRevokeTeamMemberInvitationCodeMutation,
-} from '../../Redux/API/apiSlice';
+import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import {
 	PageHeaderSection,
 	PageTitle as StandardPageTitle,
@@ -92,6 +79,19 @@ import {
 	SaveButton,
 } from './TeamPage.styles';
 import { WarningDialog } from '../../Components/Library/WarningDialog';
+import {
+	useCreateTeamGroupMutation,
+	useCreateTeamMemberInvitationCodeMutation,
+	useCreateTeamMemberMutation,
+	useDeleteTeamGroupMutation,
+	useDeleteTeamMemberMutation,
+	useGetTeamGroupsQuery,
+	useGetTeamMembersQuery,
+	useRedeemTeamMemberInvitationCodeMutation,
+	useRevokeTeamMemberInvitationCodeMutation,
+	useUpdateTeamGroupMutation,
+	useUpdateTeamMemberMutation,
+} from '../../Redux/API/teamSlice';
 
 const ROLE_OPTIONS = [
 	{ value: 'property_manager', label: 'Property Manager' },
@@ -340,18 +340,6 @@ export default function TeamPage() {
 				? prev.linkedProperties.filter((id) => id !== propertyId)
 				: [...prev.linkedProperties, propertyId],
 		}));
-	};
-
-	// Generate a unique invitation code for a team member
-	const generateTeamMemberPromoCode = (
-		firstName: string,
-		lastName: string,
-	): string => {
-		const namePart = `${firstName.charAt(0)}${lastName.charAt(
-			0,
-		)}`.toUpperCase();
-		const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-		return `TEAM-${namePart}${randomPart}`;
 	};
 
 	const handleSaveTeamMember = async () => {

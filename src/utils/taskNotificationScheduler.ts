@@ -25,7 +25,6 @@ import {
  */
 export const processTaskNotifications = async (): Promise<void> => {
 	try {
-		console.log('🔄 Processing task notifications...');
 
 		// Get all tasks that have notifications enabled
 		const tasksQuery = query(
@@ -39,7 +38,6 @@ export const processTaskNotifications = async (): Promise<void> => {
 			...doc.data(),
 		})) as Task[];
 
-		console.log(`📋 Found ${tasks.length} tasks with notifications enabled`);
 
 		const currentDate = new Date();
 		let notificationsCreated = 0;
@@ -76,7 +74,6 @@ export const processTaskNotifications = async (): Promise<void> => {
 			}
 		}
 
-		console.log(`✅ Created ${notificationsCreated} task notifications`);
 	} catch (error) {
 		console.error('❌ Error processing task notifications:', error);
 	}

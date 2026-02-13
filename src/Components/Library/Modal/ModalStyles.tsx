@@ -393,6 +393,12 @@ export const FormInput = styled.input`
 	&:hover:not(:focus) {
 		border-color: ${COLORS.gray400};
 	}
+
+	/* compact controls on tablet/mobile after breakpoint change */
+	@media (max-width: 1024px) {
+		padding: 0.5rem;
+		font-size: 13px;
+	}
 `;
 
 export const FormSelect = styled.select`
@@ -415,6 +421,12 @@ export const FormSelect = styled.select`
 
 	&:hover:not(:focus) {
 		border-color: ${COLORS.gray400};
+	}
+
+	/* slightly smaller on tablet/mobile so native pickers don't feel oversized */
+	@media (max-width: 1024px) {
+		padding: 0.5rem;
+		font-size: 13px;
 	}
 `;
 

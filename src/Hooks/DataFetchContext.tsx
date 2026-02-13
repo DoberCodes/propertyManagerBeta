@@ -7,15 +7,15 @@ import React, {
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../Redux/store/store';
-import {
-	useGetPropertyGroupsQuery,
-	useGetPropertiesQuery,
-	useGetTasksQuery,
-	useGetTeamGroupsQuery,
-	useGetTeamMembersQuery,
-} from '../Redux/API/apiSlice';
+import { useGetPropertiesQuery } from '../Redux/API/propertySlice';
+import { useGetPropertyGroupsQuery } from '../Redux/API/propertySlice';
 import { setPropertyGroups, setTasks } from '../Redux/Slices/propertyDataSlice';
 import { setTeamGroups } from '../Redux/Slices/teamSlice';
+import { useGetTasksQuery } from '../Redux/API/taskSlice';
+import {
+	useGetTeamGroupsQuery,
+	useGetTeamMembersQuery,
+} from '../Redux/API/teamSlice';
 
 interface DataFetchContextType {
 	isInitialLoadComplete: boolean;

@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from 'react';
  * Provides consistent form field styling and layout
  */
 
-export const FormGroup = styled.div`
+export const FormGroup = styled.form`
 	margin-bottom: 1.25rem;
 	width: 100%;
 `;
@@ -95,6 +95,12 @@ export const FormSelect = styled.select`
 		cursor: not-allowed;
 		opacity: 0.6;
 	}
+
+	/* make selects a bit more compact on tablet/mobile after breakpoint update */
+	@media (max-width: 1024px) {
+		padding: 0.5rem;
+		font-size: 13px;
+	}
 `;
 
 export const MultiSelectContainer = styled.div`
@@ -123,6 +129,12 @@ export const MultiSelectInput = styled.div`
 
 	&:hover {
 		border-color: #ccc;
+	}
+
+	@media (max-width: 1024px) {
+		min-height: 36px;
+		padding: 0.4rem 0.6rem;
+		font-size: 13px;
 	}
 `;
 

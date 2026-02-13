@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
 	useGetContractorsByPropertyQuery,
 	useDeleteContractorMutation,
-} from '../../../Redux/API/apiSlice';
+} from '../../../Redux/API/contractorSlice';
 import {
 	Contractor,
 	ContractorCategory,

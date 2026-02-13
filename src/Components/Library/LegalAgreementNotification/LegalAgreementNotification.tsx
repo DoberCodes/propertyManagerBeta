@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../Redux/store/store';
-import { useUpdateUserMutation } from '../../../Redux/API/apiSlice';
+import { useUpdateUserMutation } from '../../../Redux/API/userSlice';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import DocumentViewer from '../../DocumentViewer';
 import { COLORS } from '../../../constants/colors';

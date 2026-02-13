@@ -10,8 +10,8 @@ import {
 	useGetUserInvitationsQuery,
 	useAcceptInvitationMutation,
 	useRejectInvitationMutation,
-	UserInvitation,
-} from '../../../Redux/API/apiSlice';
+} from '../../../Redux/API/userSlice';
+import { UserInvitation } from '../../../types/User.types';
 import { getSharePermissionLabel } from '../../../utils/permissions';
 
 interface InvitationsPanelProps {

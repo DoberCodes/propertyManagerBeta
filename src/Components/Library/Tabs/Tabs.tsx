@@ -81,7 +81,6 @@ const Tabs: React.FC<TabsProps> = ({
 	// Contractors tab always available
 	tabsForProperty.push({ label: 'Contractors', value: 'contractors' });
 
-	console.info(currentUser);
 
 	const tabs = tabsForProperty;
 
