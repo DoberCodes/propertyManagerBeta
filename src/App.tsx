@@ -37,13 +37,13 @@ const LoadingContainer = styled.div`
 	}
 `;
 
-const RefreshSpinner = styled.div<{ isVisible: boolean }>`
+const RefreshSpinner = styled.div<{ $isVisible: boolean }>`
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	z-index: 9999;
-	display: ${(props) => (props.isVisible ? 'flex' : 'none')};
+	display: ${(props) => (props.$isVisible ? 'flex' : 'none')};
 	justify-content: center;
 	align-items: center;
 	padding: 20px;
@@ -229,7 +229,7 @@ export const App = () => {
 
 	return (
 		<DataFetchProvider>
-			<RefreshSpinner isVisible={isRefreshing}>
+			<RefreshSpinner $isVisible={isRefreshing}>
 				<div className='spinner'></div>
 				Refreshing...
 			</RefreshSpinner>

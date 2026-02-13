@@ -1,17 +1,14 @@
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
+import { faEdit, faEye, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { TenantsTabProps } from '../../../types/PropertyDetailPage.types';
 import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
 import { SmallButton as AddButton } from '../../../Components/Library/Buttons/ButtonStyles';
-import {
-	GridContainer,
-	GridTable,
-	EmptyState,
-	ToolbarButton,
-} from '../PropertyDetailPage.styles';
+import { GridContainer, EmptyState } from '../PropertyDetailPage.styles';
+import { ReusableTable } from '../../../Components/Library/ReusableTable';
 import { UserRole } from '../../../constants/roles';
 import { isTenant } from '../../../utils/permissions';
 import {
@@ -65,6 +62,66 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 	}, [property.tenants, filters]);
 	const canManageTenants =
 		currentUser && !isTenant(currentUser.role as UserRole);
+
+	// Table configuration
+	const columns = [
+		{
+			header: 'Name',
+			accessor: 'fullName',
+		},
+		{
+			header: 'Unit',
+			accessor: 'unitDisplay',
+		},
+		{
+			header: 'Email',
+			accessor: 'email',
+		},
+		{
+			header: 'Phone',
+			accessor: 'phone',
+		},
+		{
+			header: 'Lease Start',
+			accessor: 'leaseStartDisplay',
+		},
+		{
+			header: 'Lease End',
+			accessor: 'leaseEndDisplay',
+		},
+	];
+
+	const actions = canManageTenants
+		? [
+				{
+					label: 'Edit',
+					icon: faEdit,
+					onClick: (tenant: any) => onEditTenant(tenant),
+				},
+				{
+					label: 'View Promo',
+					icon: faEye,
+					onClick: (tenant: any) => onViewTenantPromo(tenant),
+				},
+				{
+					label: 'Delete',
+					icon: faTrash,
+					onClick: (tenant: any) => onDeleteTenant(tenant),
+					className: 'delete',
+				},
+		  ]
+		: [];
+
+	// Transform tenant data for the table
+	const tableData = useMemo(() => {
+		return filteredTenants.map((tenant: any) => ({
+			...tenant,
+			fullName: `${tenant.firstName} ${tenant.lastName}`,
+			unitDisplay: tenant.unit || 'N/A',
+			leaseStartDisplay: tenant.leaseStart || 'N/A',
+			leaseEndDisplay: tenant.leaseEnd || 'N/A',
+		}));
+	}, [filteredTenants]);
 
 	return (
 		<SectionContainer>
@@ -128,51 +185,12 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 
 			{filteredTenants && filteredTenants.length > 0 ? (
 				<GridContainer>
-					<GridTable>
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Unit</th>
-								<th>Email</th>
-								<th>Phone</th>
-								<th>Lease Start</th>
-								<th>Lease End</th>
-								{canManageTenants && <th>Actions</th>}
-							</tr>
-						</thead>
-						<tbody>
-							{filteredTenants.map((tenant: any) => (
-								<tr key={tenant.id}>
-									<td>
-										{tenant.firstName} {tenant.lastName}
-									</td>
-									<td>{tenant.unit || 'N/A'}</td>
-									<td>{tenant.email}</td>
-									<td>{tenant.phone}</td>
-									<td>{tenant.leaseStart || 'N/A'}</td>
-									<td>{tenant.leaseEnd || 'N/A'}</td>
-									{canManageTenants && (
-										<td>
-											<ActionRow>
-												<ToolbarButton onClick={() => onEditTenant(tenant)}>
-													Edit
-												</ToolbarButton>
-												<ToolbarButton
-													onClick={() => onViewTenantPromo(tenant)}>
-													View Promo
-												</ToolbarButton>
-												<ToolbarButton
-													className='delete'
-													onClick={() => onDeleteTenant(tenant)}>
-													Delete
-												</ToolbarButton>
-											</ActionRow>
-										</td>
-									)}
-								</tr>
-							))}
-						</tbody>
-					</GridTable>
+					<ReusableTable
+						columns={columns}
+						rowData={tableData}
+						actions={actions}
+						showCheckbox={false}
+					/>
 				</GridContainer>
 			) : (
 				<EmptyState>
@@ -182,9 +200,3 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 		</SectionContainer>
 	);
 };
-
-const ActionRow = styled.div`
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-`;

@@ -1,73 +1,29 @@
 import React from 'react';
-import styled from 'styled-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import {
+	TableContainer,
+	StyledTable,
+	ActionButton,
+	EmptyState,
+} from './ReusableTable.styles';
 
-const TableContainer = styled.div`
-	overflow-x: auto;
-	border: 1px solid #e0e0e0;
-	border-radius: 4px;
-	background-color: #fff;
-`;
-
-const StyledTable = styled.table`
-	width: 100%;
-	border-collapse: collapse;
-
-	thead {
-		background-color: #f3f4f6;
-	}
-
-	th,
-	td {
-		padding: 12px;
-		text-align: left;
-		border-bottom: 1px solid #e5e7eb;
-	}
-
-	th {
-		text-align: left;
-	}
-
-	tbody tr:hover {
-		background-color: #f9fafb;
-	}
-
-	select {
-		width: auto;
-		max-width: 100%;
-		padding: 6px 8px;
-		border: 1px solid #d1d5db;
-		border-radius: 4px;
-		font-size: 14px;
-		background-color: #fff;
-		cursor: pointer;
-
-		&:focus {
-			outline: none;
-			border-color: #3b82f6;
-			box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-		}
-	}
-`;
-
-const EmptyState = styled.div`
-	text-align: center;
-	padding: 40px 20px;
-	color: #6b7280;
-
-	p {
-		margin: 0;
-		font-size: 14px;
-	}
-`;
-
-interface Column {
+export interface Column {
 	header: string;
 	accessor: string;
 	type?: 'text' | 'dropdown' | 'date';
 	options?: string[] | ((row: any) => string[]);
 }
 
-interface ReusableTableProps {
+export interface Action {
+	label: string;
+	icon: IconDefinition;
+	onClick: (row: any, index: number) => void;
+	className?: string;
+	disabled?: (row: any) => boolean;
+}
+
+export interface ReusableTableProps {
 	columns: Column[];
 	rowData: any[];
 	onRowSelect?: (selectedRowIds: Set<string>) => void;
@@ -77,6 +33,9 @@ interface ReusableTableProps {
 	onSelectAll?: (checked: boolean, selectedRowIds: string[]) => void;
 	onRowUpdate?: (updatedRow: any) => void;
 	showCheckbox?: boolean;
+	actions?: Action[];
+	showActionsColumn?: boolean;
+	emptyMessage?: string;
 }
 
 export const ReusableTable: React.FC<ReusableTableProps> = ({
@@ -89,6 +48,9 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 	onSelectAll,
 	onRowUpdate,
 	showCheckbox = true,
+	actions = [],
+	showActionsColumn = true,
+	emptyMessage = 'No data available',
 }) => {
 	const handleRowSelect = (rowId: string) => {
 		const updatedSelection = new Set(selectedRows);
@@ -111,7 +73,7 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 		<TableContainer>
 			{rowData.length === 0 ? (
 				<EmptyState>
-					<p>No data available</p>
+					<p>{emptyMessage}</p>
 				</EmptyState>
 			) : (
 				<StyledTable>
@@ -137,6 +99,7 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 							{columns.map((col, index) => (
 								<th key={index}>{col.header}</th>
 							))}
+							{showActionsColumn && actions.length > 0 && <th>Actions</th>}
 						</tr>
 					</thead>
 					<tbody>
@@ -192,6 +155,25 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 										</td>
 									);
 								})}
+								{showActionsColumn && actions.length > 0 && (
+									<td>
+										<div style={{ display: 'flex', gap: '8px' }}>
+											{actions.map((action, actionIndex) => {
+												const isDisabled = action.disabled?.(row) || false;
+												return (
+													<ActionButton
+														key={actionIndex}
+														onClick={() => action.onClick(row, index)}
+														className={action.className}
+														disabled={isDisabled}
+														title={action.label}>
+														<FontAwesomeIcon icon={action.icon} />
+													</ActionButton>
+												);
+											})}
+										</div>
+									</td>
+								)}
 							</tr>
 						))}
 					</tbody>

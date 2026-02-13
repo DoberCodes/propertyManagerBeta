@@ -8,7 +8,6 @@ export { DetailPageLayout } from './DetailPageLayout';
 export { Breadcrumb } from './Breadcrumb';
 
 // Data Display
-export { TasksTable } from './TasksTable';
 export { ReusableTable } from './ReusableTable';
 export { MobileTaskCarousel } from './MobileTaskCarousel/MobileTaskCarousel';
 export { MobileCarousel } from './MobileCarousel/MobileCarousel';

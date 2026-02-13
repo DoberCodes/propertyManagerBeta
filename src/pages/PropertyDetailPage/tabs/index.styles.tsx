@@ -1,0 +1,548 @@
+import { styled } from 'styled-components';
+import { ContractorCategory } from '../../../types/Contractor.types';
+
+export const HeaderContainer = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+	gap: 1rem;
+
+	h2 {
+		margin: 0;
+		font-size: 1.5rem;
+		color: #333;
+	}
+
+	@media (max-width: 480px) {
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.75rem;
+
+		h2 {
+			font-size: 1.25rem;
+			flex-basis: 100%;
+			text-align: center;
+		}
+	}
+`;
+
+export const CategoryBadge = styled.span<{ category: ContractorCategory }>`
+	display: inline-block;
+	padding: 0.25rem 0.75rem;
+	border-radius: 12px;
+	font-size: 0.85rem;
+	font-weight: 500;
+	background-color: ${(props) => {
+		const colors: Record<ContractorCategory, string> = {
+			Landscaper: '#E8F5E9',
+			Contractor: '#E3F2FD',
+			'Pest Control': '#FFF3E0',
+			Plumber: '#FCE4EC',
+			Electrician: '#F3E5F5',
+			HVAC: '#E0F2F1',
+			Roofer: '#EFEBE9',
+			Painter: '#FBE9E7',
+			'Cleaning Service': '#F1F8E9',
+			Handyman: '#E8EAF6',
+			Other: '#EEEEEE',
+		};
+		return colors[props.category] || '#EEEEEE';
+	}};
+	color: ${(props) => {
+		const colors: Record<ContractorCategory, string> = {
+			Landscaper: '#1B5E20',
+			Contractor: '#0D47A1',
+			'Pest Control': '#E65100',
+			Plumber: '#880E4F',
+			Electrician: '#4A148C',
+			HVAC: '#004D40',
+			Roofer: '#3E2723',
+			Painter: '#BF360C',
+			'Cleaning Service': '#33691E',
+			Handyman: '#311B92',
+			Other: '#424242',
+		};
+		return colors[props.category] || '#424242';
+	}};
+`;
+
+export const EmptyState = styled.div`
+	text-align: center;
+	padding: 2rem;
+	color: #666;
+
+	p {
+		margin: 0 0 1rem 0;
+		font-size: 1rem;
+	}
+`;
+
+export const LoadingSpinner = styled.div`
+	text-align: center;
+	padding: 2rem;
+	color: #666;
+`;
+
+export const Overlay = styled.div`
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+
+	@media (max-width: 480px) {
+		padding: 0.5rem;
+		align-items: flex-start;
+		padding-top: 2rem;
+	}
+`;
+
+export const FormContainer = styled.div`
+	background: white;
+	border-radius: 8px;
+	padding: 2rem;
+	max-width: 500px;
+	width: 90%;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	max-height: 90vh;
+	overflow-y: auto;
+
+	@media (max-width: 1024px) {
+		max-width: 90%;
+		padding: 1.5rem;
+	}
+
+	@media (max-width: 480px) {
+		max-width: 95%;
+		padding: 1rem;
+		border-radius: 6px;
+		margin-top: 1rem;
+		max-height: 85vh;
+	}
+`;
+
+export const Title = styled.h2`
+	margin: 0 0 1.5rem 0;
+	font-size: 1.5rem;
+	color: #333;
+
+	@media (max-width: 480px) {
+		font-size: 1.25rem;
+		margin-bottom: 1rem;
+	}
+`;
+
+export const FormGroup = styled.div`
+	margin-bottom: 1.25rem;
+	display: flex;
+	flex-direction: column;
+`;
+
+export const Label = styled.label`
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+	color: #333;
+	font-size: 0.95rem;
+
+	span {
+		color: #e74c3c;
+	}
+`;
+
+export const Input = styled.input`
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-family: inherit;
+
+	&:focus {
+		outline: none;
+		border-color: #3498db;
+		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+	}
+`;
+
+export const Select = styled.select`
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-family: inherit;
+	background-color: white;
+
+	&:focus {
+		outline: none;
+		border-color: #3498db;
+		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+	}
+`;
+
+export const Textarea = styled.textarea`
+	padding: 0.75rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-family: inherit;
+	resize: vertical;
+	min-height: 80px;
+
+	&:focus {
+		outline: none;
+		border-color: #3498db;
+		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+	}
+`;
+
+export const ButtonGroup = styled.div`
+	display: flex;
+	gap: 1rem;
+	justify-content: flex-end;
+	margin-top: 2rem;
+
+	@media (max-width: 480px) {
+		flex-direction: column-reverse;
+		gap: 0.5rem;
+	}
+`;
+
+export const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 4px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s;
+
+	background-color: ${(props) =>
+		props.variant === 'secondary' ? '#95a5a6' : '#27ae60'};
+	color: white;
+
+	&:hover {
+		background-color: ${(props) =>
+			props.variant === 'secondary' ? '#7f8c8d' : '#229954'};
+	}
+
+	&:disabled {
+		background-color: #bdc3c7;
+		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		width: 100%;
+	}
+`;
+
+export const ErrorMessage = styled.div`
+	background-color: #f8d7da;
+	color: #721c24;
+	padding: 0.75rem;
+	border-radius: 4px;
+	margin-bottom: 1rem;
+	font-size: 0.9rem;
+`;
+
+export const SuccessMessage = styled.div`
+	background-color: #d4edda;
+	color: #155724;
+	padding: 0.75rem;
+	border-radius: 4px;
+	margin-bottom: 1rem;
+	font-size: 0.9rem;
+`;
+
+export const DesktopTableWrapper = styled.div`
+	@media (max-width: 1024px) {
+		display: none;
+	}
+`;
+
+export const MobileCarouselContainer = styled.div`
+	display: none;
+	@media (max-width: 1024px) {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 8px 0;
+	}
+`;
+
+export const MobileCarouselViewport = styled.div`
+	width: 100%;
+	overflow: hidden;
+	border-radius: 8px;
+`;
+
+export const MobileCarouselTrack = styled.div<{ index: number }>`
+	display: flex;
+	transition: transform 0.32s ease-out;
+	transform: translateX(calc(${(p) => p.index} * -100%));
+	user-select: none;
+`;
+
+export const DeviceCard = styled.div`
+	min-width: 100%;
+	flex: 0 0 100%;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
+	padding: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+`;
+
+export const DeviceRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+`;
+
+export const MobileDots = styled.div`
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+`;
+
+export const MobileDot = styled.button<{ active?: boolean }>`
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	border: none;
+	background: ${(props) => (props.active ? '#22c55e' : '#d1d5db')};
+	cursor: pointer;
+`;
+
+export const ViewMoreButton = styled.button`
+	background-color: #6b7280;
+	color: white;
+	border: none;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.8rem;
+	font-weight: 500;
+
+	&:hover {
+		background-color: #4b5563;
+	}
+`;
+
+export const TaskDetailRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid #e5e7eb;
+	flex-direction: column;
+	gap: 0.25rem;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	@media (min-width: 1025px) {
+		flex-direction: row;
+		align-items: center;
+		gap: 1rem;
+	}
+`;
+
+export const TaskDetailLabel = styled.span`
+	font-weight: 600;
+	color: #374151;
+	font-size: 14px;
+
+	@media (min-width: 1025px) {
+		min-width: 100px;
+		font-size: 14px;
+	}
+`;
+
+export const TaskDetailValue = styled.span`
+	color: #6b7280;
+	font-size: 14px;
+	word-break: break-word;
+
+	@media (min-width: 1025px) {
+		flex: 1;
+		text-align: right;
+	}
+`;
+
+export const ModalActions = styled.div`
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 1.5rem;
+	flex-direction: column;
+
+	@media (min-width: 1025px) {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	& > * {
+		flex: 1;
+		min-width: fit-content;
+
+		@media (min-width: 1025px) {
+			flex: none;
+		}
+	}
+`;
+
+export const MobileTaskCard = styled.div<{ $isSelected: boolean }>`
+	display: none;
+	background: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 16px;
+	margin-bottom: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+	cursor: pointer;
+
+	${({ $isSelected }) =>
+		$isSelected &&
+		`
+        background: #f0fdf4;
+        border-color: #22c55e;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+    `}
+
+	&:hover {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		transform: translateY(-1px);
+	}
+
+	@media (max-width: 1024px) {
+		display: block;
+	}
+
+	@media (max-width: 480px) {
+		padding: 14px;
+		margin-bottom: 10px;
+	}
+`;
+
+export const MobileTaskHeader = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 12px;
+`;
+
+export const MobileTaskTitle = styled.h3`
+	font-size: 16px;
+	font-weight: 600;
+	color: #1f2937;
+	margin: 0;
+	line-height: 1.3;
+	flex: 1;
+	margin-right: 12px;
+
+	@media (max-width: 480px) {
+		font-size: 15px;
+	}
+`;
+
+export const MobileTaskCheckbox = styled.input.attrs({ type: 'checkbox' })`
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	accent-color: #22c55e;
+	flex-shrink: 0;
+	margin-top: 2px;
+`;
+
+export const MobileTaskMeta = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+`;
+
+export const MobileTaskRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+`;
+
+export const MobileTaskLabel = styled.span`
+	font-size: 12px;
+	font-weight: 600;
+	color: #6b7280;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+`;
+
+export const MobileTaskValue = styled.span`
+	font-size: 14px;
+	color: #374151;
+	font-weight: 500;
+`;
+
+export const MobileTaskActions = styled.div`
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	padding-top: 8px;
+	border-top: 1px solid #f3f4f6;
+`;
+
+export const MobileActionButton = styled.button<{
+	variant?: 'primary' | 'secondary' | 'danger';
+}>`
+	padding: 8px 12px;
+	border-radius: 6px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: 1px solid transparent;
+	min-width: fit-content;
+
+	${({ variant }) => {
+		switch (variant) {
+			case 'primary':
+				return `
+                    background: #22c55e;
+                    color: white;
+                    &:hover {
+                        background: #16a34a;
+                    }
+                `;
+			case 'danger':
+				return `
+                    background: #ef4444;
+                    color: white;
+                    &:hover {
+                        background: #dc2626;
+                    }
+                `;
+			default:
+				return `
+                    background: #f3f4f6;
+                    color: #374151;
+                    border-color: #d1d5db;
+                    &:hover {
+                        background: #e5e7eb;
+                    }
+                `;
+		}
+	}}
+
+	@media (max-width: 480px) {
+		padding: 6px 10px;
+		font-size: 12px;
+	}
+`;

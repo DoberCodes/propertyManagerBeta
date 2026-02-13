@@ -183,10 +183,10 @@ export const MultiSelectDropdown = styled.div<{ isOpen: boolean }>`
 	display: ${(props) => (props.isOpen ? 'block' : 'none')};
 `;
 
-export const MultiSelectOption = styled.div<{ isSelected: boolean }>`
+export const MultiSelectOption = styled.div<{ $isSelected: boolean }>`
 	padding: 0.5rem 0.75rem;
 	cursor: pointer;
-	background-color: ${(props) => (props.isSelected ? '#f3f4f6' : 'white')};
+	background-color: ${(props) => (props.$isSelected ? '#f3f4f6' : 'white')};
 	color: #374151;
 	font-size: 14px;
 
@@ -265,7 +265,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 				{options.map((option) => (
 					<MultiSelectOption
 						key={option.value}
-						isSelected={value.includes(option.value)}
+						$isSelected={value.includes(option.value)}
 						onClick={() => handleToggleOption(option.value)}>
 						{option.label}
 					</MultiSelectOption>

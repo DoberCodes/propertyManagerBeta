@@ -26,11 +26,7 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 	const handleTaskCheckbox = (taskId: string) => {
-		setSelectedTasks((prev) =>
-			prev.includes(taskId)
-				? prev.filter((id) => id !== taskId)
-				: [...prev, taskId],
-		);
+		setSelectedTasks([taskId]);
 	};
 
 	const handleCreateTask = () => {
