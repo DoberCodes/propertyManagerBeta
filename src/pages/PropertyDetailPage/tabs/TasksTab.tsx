@@ -5,14 +5,8 @@ import {
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
 import {
-	Toolbar,
-	ToolbarButton,
 	GridContainer,
-	GridTable,
-	TaskCheckbox,
-	TaskStatus,
-	EmptyState,
-} from '../PropertyDetailPage.styles';
+} from './index.styles';
 import { GenericModal } from '../../../Components/Library/Modal/GenericModal';
 import { getDeviceNames } from '../../../utils/detailPageUtils';
 import {
@@ -40,6 +34,10 @@ import {
 	TaskDetailLabel,
 	TaskDetailValue,
 	ModalActions,
+	Toolbar,
+	ToolbarButton,
+	TaskStatus,
+	EmptyState,
 } from './index.styles';
 
 export const TasksTab: React.FC<TasksTabProps> = ({
@@ -64,11 +62,21 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 	const [processedTasks, setProcessedTasks] = useState<any[]>([]);
 
 	const columns: Column[] = [
-		{ header: 'Title', accessor: 'title' },
-		{ header: 'Status', accessor: 'status' },
-		{ header: 'Priority', accessor: 'priority' },
-		{ header: 'Assigned To', accessor: 'assignedTo' },
-		{ header: 'Due Date', accessor: 'dueDate' },
+		{ header: 'Title', key: 'title' },
+		{
+			header: 'Status',
+			key: 'status',
+			render: (status: string) => (
+				<TaskStatus status={status}>{status}</TaskStatus>
+			),
+		},
+		{ header: 'Priority', key: 'priority' },
+		{
+			header: 'Assigned To',
+			key: 'assignedTo',
+			render: (_unused: any, task: any) => getAssigneeName(task),
+		},
+		{ header: 'Due Date', key: 'dueDate' },
 	];
 
 	// Utility function to resolve assignee name from task data

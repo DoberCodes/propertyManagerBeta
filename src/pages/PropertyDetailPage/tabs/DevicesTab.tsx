@@ -20,17 +20,10 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import {
-	Toolbar,
-	ToolbarButton,
-	GridContainer,
-	GridTable,
-	EmptyState,
-	DeviceCard,
-} from '../PropertyDetailPage.styles';
 import { DeviceModal } from '../../../Components/Library/Modal';
 import { Property } from '../../../types/Property.types';
 import {
+	GridContainer,
 	MobileCarouselContainer,
 	MobileCarouselViewport,
 	MobileCarouselTrack,
@@ -38,6 +31,11 @@ import {
 	MobileDots,
 	MobileDot,
 	DesktopTableWrapper,
+	Toolbar,
+	ToolbarButton,
+	DeviceCard,
+	DeviceStatus,
+	EmptyState,
 } from './index.styles';
 import { ReusableTable } from '../../../Components/Library';
 import { Column } from '../../../Components/Library/ReusableTable';
@@ -89,21 +87,36 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const { data: units = [] } = useGetUnitsQuery(property.id);
 
 	const columns: Column[] = [
-		{ header: 'Type', accessor: 'type' },
-		{ header: 'Brand', accessor: 'brand' },
-		{ header: 'Model', accessor: 'model' },
-		{ header: 'Installation Date', accessor: 'installationDate', type: 'date' },
-		{ header: 'Status', accessor: 'status' },
+		{ header: 'Type', key: 'type' },
+		{ header: 'Brand', key: 'brand' },
+		{ header: 'Model', key: 'model' },
+		{ header: 'Installation Date', key: 'installationDate', type: 'date' },
+		{
+			header: 'Status',
+			key: 'status',
+			render: (status: string) => (
+				<DeviceStatus status={status}>{status}</DeviceStatus>
+			),
+		},
 		{
 			header: 'Location',
-			accessor: 'location.unitId',
+			key: 'location.unitId',
 			type: 'dropdown',
 			options: (row) => {
 				const unit = units.find((u) => u.id === row.location.unitId);
 				return unit ? [unit.name] : [];
 			},
+			render: (value: string) => {
+				const unit = units.find((u) => u.id === value);
+				return unit ? unit.name : 'Property';
+			},
 		},
-		{ header: 'Files', accessor: 'files', type: 'text' },
+		{
+			header: 'Files',
+			key: 'files',
+			render: (files: any[]) =>
+				files && files.length > 0 ? `${files.length} file(s)` : 'None',
+		},
 	];
 
 	// Reset/ clamp carousel index when device list changes
@@ -257,21 +270,6 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 		}
 	};
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case 'Active':
-				return '#22c55e';
-			case 'Maintenance':
-				return '#f59e0b';
-			case 'Broken':
-				return '#ef4444';
-			case 'Decommissioned':
-				return '#6b7280';
-			default:
-				return '#6b7280';
-		}
-	};
-
 	if (isLoading) {
 		return (
 			<SectionContainer>
@@ -311,14 +309,9 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 								</div>
 								<DeviceRow>
 									<div style={{ fontSize: 14 }}>{device.model || '—'}</div>
-									<div
-										style={{
-											fontSize: 12,
-											color: getStatusColor(device.status || 'Active'),
-											fontWeight: 700,
-										}}>
+									<DeviceStatus status={device.status || 'Active'}>
 										{device.status || 'Active'}
-									</div>
+									</DeviceStatus>
 								</DeviceRow>
 								<DeviceRow>
 									<div style={{ fontSize: 12, color: '#6b7280' }}>

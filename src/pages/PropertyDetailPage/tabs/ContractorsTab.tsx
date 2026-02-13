@@ -12,13 +12,22 @@ import {
 	FilterValues,
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
-import { Toolbar, ToolbarButton } from '../PropertyDetailPage.styles';
 import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import { ReusableTable } from '../../../Components/Library/ReusableTable';
-import { CategoryBadge, EmptyState, LoadingSpinner } from './index.styles';
+import {
+	Action,
+	Column,
+	ReusableTable,
+} from '../../../Components/Library/ReusableTable';
+import {
+	CategoryBadge,
+	EmptyState,
+	LoadingSpinner,
+	Toolbar,
+	ToolbarButton,
+} from './index.styles';
 
 interface ContractorsTabProps {
 	propertyId: string;
@@ -114,11 +123,11 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	};
 
 	// Table configuration for contractors
-	const contractorColumns: any[] = [
+	const contractorColumns: Column[] = [
 		{
 			key: 'company',
 			header: 'Company',
-			render: (contractor) => <strong>{contractor.company}</strong>,
+			render: (value: string) => <strong>{value}</strong>,
 		},
 		{
 			key: 'name',
@@ -127,38 +136,33 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 		{
 			key: 'phone',
 			header: 'Phone',
-			render: (contractor) => (
-				<a href={`tel:${contractor.phone}`}>{contractor.phone}</a>
-			),
+			render: (value: string) => <a href={`tel:${value}`}>{value}</a>,
 		},
 		{
 			key: 'category',
 			header: 'Category',
-			render: (contractor) => (
-				<CategoryBadge category={contractor.category}>
-					{contractor.category}
-				</CategoryBadge>
+			render: (value: string, contractor: any) => (
+				<CategoryBadge category={contractor.category}>{value}</CategoryBadge>
 			),
 		},
 		{
 			key: 'address',
 			header: 'Address',
-			render: (contractor) => contractor.address || '—',
+			render: (value: string) => value || '—',
 		},
 	];
 
-	const contractorActions: any[] = [
+	const contractorActions: Action[] = [
 		{
 			label: 'Edit',
 			icon: faEdit,
-			onClick: handleEdit,
-			variant: 'primary',
+			onClick: (contractor: any) => handleEdit(contractor),
 		},
 		{
 			label: 'Delete',
 			icon: faTrash,
-			onClick: handleDeleteClick,
-			variant: 'danger',
+			onClick: (contractor: any) => handleDeleteClick(contractor),
+			className: 'delete',
 		},
 	];
 

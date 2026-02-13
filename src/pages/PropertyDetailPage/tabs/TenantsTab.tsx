@@ -1,13 +1,10 @@
-import React, { useMemo } from 'react';
-import styled from 'styled-components';
+import React, { useMemo, useState } from 'react';
 import { faEdit, faEye, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { TenantsTabProps } from '../../../types/PropertyDetailPage.types';
 import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import { SmallButton as AddButton } from '../../../Components/Library/Buttons/ButtonStyles';
-import { GridContainer, EmptyState } from '../PropertyDetailPage.styles';
 import { ReusableTable } from '../../../Components/Library/ReusableTable';
 import { UserRole } from '../../../constants/roles';
 import { isTenant } from '../../../utils/permissions';
@@ -17,7 +14,7 @@ import {
 	FilterValues,
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
-import { useState } from 'react';
+import { EmptyState, GridContainer, Toolbar, ToolbarButton } from './index.styles';
 
 export const TenantsTab: React.FC<TenantsTabProps> = ({
 	property,
@@ -67,27 +64,27 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 	const columns = [
 		{
 			header: 'Name',
-			accessor: 'fullName',
+			key: 'fullName',
 		},
 		{
 			header: 'Unit',
-			accessor: 'unitDisplay',
+			key: 'unitDisplay',
 		},
 		{
 			header: 'Email',
-			accessor: 'email',
+			key: 'email',
 		},
 		{
 			header: 'Phone',
-			accessor: 'phone',
+			key: 'phone',
 		},
 		{
 			header: 'Lease Start',
-			accessor: 'leaseStartDisplay',
+			key: 'leaseStartDisplay',
 		},
 		{
 			header: 'Lease End',
-			accessor: 'leaseEndDisplay',
+			key: 'leaseEndDisplay',
 		},
 	];
 
@@ -125,14 +122,14 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 
 	return (
 		<SectionContainer>
-			<SectionHeader>
-				Property Tenants
-				{canManageTenants && (
-					<AddButton onClick={() => setShowAddTenantModal(true)}>
+			<SectionHeader>Property Tenants</SectionHeader>
+			{canManageTenants && (
+				<Toolbar>
+					<ToolbarButton onClick={() => setShowAddTenantModal(true)}>
 						+ Add Tenant
-					</AddButton>
-				)}
-			</SectionHeader>
+					</ToolbarButton>
+				</Toolbar>
+			)}
 
 			{/* Collapsable Filter Section */}
 			<div style={{ marginBottom: '16px' }}>

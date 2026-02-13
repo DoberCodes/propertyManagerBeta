@@ -367,30 +367,30 @@ export const DashboardTab = () => {
 		() => [
 			{
 				header: 'Title',
-				accessor: 'title',
+				key: 'title',
 			},
 			{
 				header: 'Property',
-				accessor: 'propertyTitle',
+				key: 'propertyTitle',
 			},
 			{
 				header: 'Assigned To',
-				accessor: 'assignedToNames',
+				key: 'assignedToNames',
 			},
 			{
 				header: 'Due Date',
-				accessor: 'dueDate',
+				key: 'dueDate',
 				type: 'date' as const,
 			},
 			{
 				header: 'Priority',
-				accessor: 'priority',
+				key: 'priority',
 				type: 'dropdown' as const,
 				options: TASK_PRIORITIES,
 			},
 			{
 				header: 'Status',
-				accessor: 'status',
+				key: 'status',
 				type: 'dropdown' as const,
 				options: TASK_STATUSES,
 			},

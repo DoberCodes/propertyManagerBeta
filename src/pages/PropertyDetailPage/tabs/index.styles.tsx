@@ -67,6 +67,145 @@ export const CategoryBadge = styled.span<{ category: ContractorCategory }>`
 	}};
 `;
 
+export const Toolbar = styled.div`
+	display: flex;
+	gap: 12px;
+	margin-bottom: 20px;
+	align-items: center;
+	flex-wrap: wrap;
+
+	@media (max-width: 480px) {
+		gap: 8px;
+		justify-content: center;
+		margin-bottom: 16px;
+	}
+`;
+
+export const ToolbarButton = styled.button`
+	background-color: #22c55e;
+	color: white;
+	border: none;
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+	white-space: nowrap;
+
+	&:hover:not(:disabled) {
+		background-color: #16a34a;
+	}
+
+	&:disabled {
+		background-color: #9ca3af !important;
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	&.delete {
+		background-color: #ef4444;
+		&:hover:not(:disabled) {
+			background-color: #dc2626;
+		}
+	}
+
+	@media (max-width: 480px) {
+		padding: 6px 10px;
+		font-size: 11px;
+	}
+`;
+
+export const TaskStatus = styled.span<{ status: string }>`
+	display: inline-block;
+	padding: 4px 10px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	width: fit-content;
+	background-color: ${(props) => {
+		switch (props.status) {
+			case 'Completed':
+				return 'rgba(34, 197, 94, 0.1)';
+			case 'In Progress':
+				return 'rgba(59, 130, 246, 0.1)';
+			case 'Pending':
+				return 'rgba(245, 158, 11, 0.1)';
+			case 'Overdue':
+				return 'rgba(239, 68, 68, 0.1)';
+			case 'Urgent':
+				return 'rgba(239, 68, 68, 0.1)';
+			case 'High':
+				return 'rgba(249, 115, 22, 0.1)';
+			case 'Medium':
+				return 'rgba(245, 158, 11, 0.1)';
+			case 'Low':
+				return 'rgba(34, 197, 94, 0.1)';
+			default:
+				return 'rgba(0, 0, 0, 0.05)';
+		}
+	}};
+	color: ${(props) => {
+		switch (props.status) {
+			case 'Completed':
+				return '#22c55e';
+			case 'In Progress':
+				return '#3b82f6';
+			case 'Pending':
+				return '#f59e0b';
+			case 'Overdue':
+				return '#ef4444';
+			case 'Urgent':
+				return '#ef4444';
+			case 'High':
+				return '#f97316';
+			case 'Medium':
+				return '#f59e0b';
+			case 'Low':
+				return '#22c55e';
+			default:
+				return '#666666';
+		}
+	}};
+`;
+
+export const DeviceStatus = styled.span<{ status: string }>`
+	display: inline-block;
+	padding: 4px 10px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	width: fit-content;
+	background-color: ${(props) => {
+		switch (props.status) {
+			case 'Active':
+				return 'rgba(34, 197, 94, 0.1)';
+			case 'Maintenance':
+				return 'rgba(245, 158, 11, 0.1)';
+			case 'Broken':
+				return 'rgba(239, 68, 68, 0.1)';
+			case 'Decommissioned':
+				return 'rgba(107, 114, 128, 0.1)';
+			default:
+				return 'rgba(0, 0, 0, 0.05)';
+		}
+	}};
+	color: ${(props) => {
+		switch (props.status) {
+			case 'Active':
+				return '#22c55e';
+			case 'Maintenance':
+				return '#f59e0b';
+			case 'Broken':
+				return '#ef4444';
+			case 'Decommissioned':
+				return '#6b7280';
+			default:
+				return '#666666';
+		}
+	}};
+`;
+
 export const EmptyState = styled.div`
 	text-align: center;
 	padding: 2rem;
@@ -261,6 +400,73 @@ export const SuccessMessage = styled.div`
 export const DesktopTableWrapper = styled.div`
 	@media (max-width: 1024px) {
 		display: none;
+	}
+`;
+
+export const GridContainer = styled.div`
+	width: 100%;
+	overflow-x: auto;
+	border: 1px solid #e0e0e0;
+	border-radius: 6px;
+
+	@media (max-width: 1024px) {
+		overflow-x: auto;
+	}
+`;
+
+export const GridTable = styled.table`
+	width: 100%;
+	border-collapse: collapse;
+	background-color: white;
+
+	thead {
+		background-color: #f9fafb;
+		border-bottom: 2px solid #e5e7eb;
+	}
+
+	th {
+		padding: 12px 16px;
+		text-align: left;
+		font-size: 12px;
+		font-weight: 600;
+		color: #374151;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+
+		@media (max-width: 1024px) {
+			padding: 8px 12px;
+			font-size: 11px;
+		}
+
+		@media (max-width: 480px) {
+			padding: 6px 8px;
+			font-size: 10px;
+		}
+	}
+
+	td {
+		padding: 12px 16px;
+		border-bottom: 1px solid #f0f0f0;
+		font-size: 14px;
+		color: #333;
+
+		@media (max-width: 1024px) {
+			padding: 8px 12px;
+			font-size: 12px;
+		}
+
+		@media (max-width: 480px) {
+			padding: 6px 8px;
+			font-size: 11px;
+		}
+	}
+
+	tbody tr:hover {
+		background-color: #f9fafb;
+	}
+
+	tbody tr:last-child td {
+		border-bottom: none;
 	}
 `;
 

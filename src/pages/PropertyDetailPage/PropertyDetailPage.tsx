@@ -89,10 +89,8 @@ import {
 import { DeviceModal } from '../../Components/Library/Modal';
 import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
 import {
-	useCreateTaskMutation,
 	useDeleteTaskMutation,
 	useGetTasksQuery,
-	useUpdateTaskMutation,
 } from '../../Redux/API/taskSlice';
 import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
 

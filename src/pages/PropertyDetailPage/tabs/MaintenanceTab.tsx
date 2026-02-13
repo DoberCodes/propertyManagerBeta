@@ -13,12 +13,12 @@ import {
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
 import {
-	GridContainer,
-	GridTable,
-	EmptyState,
 	Toolbar,
 	ToolbarButton,
-} from '../PropertyDetailPage.styles';
+	EmptyState,
+	GridContainer,
+	GridTable,
+} from './index.styles';
 import { getDeviceNameUtil } from '../PropertyDetailPage.utils';
 import {
 	FilterBar,

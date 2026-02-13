@@ -388,23 +388,23 @@ export const UnitDetailPage: React.FC = () => {
 								columns={[
 									{
 										header: 'Task',
-										accessor: 'title',
+										key: 'title',
 									},
 									{
 										header: 'Assignee',
-										accessor: 'assignedToNames',
+										key: 'assignedToNames',
 									},
 									{
 										header: 'Due Date',
-										accessor: 'dueDate',
+										key: 'dueDate',
 									},
 									{
 										header: 'Status',
-										accessor: 'status',
+										key: 'status',
 									},
 									{
 										header: 'Notes',
-										accessor: 'notes',
+										key: 'notes',
 									},
 								]}
 								onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}

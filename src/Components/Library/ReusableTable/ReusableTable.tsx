@@ -8,37 +8,43 @@ import {
 	EmptyState,
 } from './ReusableTable.styles';
 
-export interface Column {
+export interface Column<T = any> {
 	header: string;
-	accessor: string;
+	key: keyof T | string;
 	type?: 'text' | 'dropdown' | 'date';
-	options?: string[] | ((row: any) => string[]);
+	options?: string[] | ((row: T) => string[]);
+	render?: (value: any, row: T, index: number) => React.ReactNode;
 }
 
-export interface Action {
+export interface Action<T = any> {
 	label: string;
 	icon: IconDefinition;
-	onClick: (row: any, index: number) => void;
+	onClick: (row: T, index: number) => void;
 	className?: string;
-	disabled?: (row: any) => boolean;
+	disabled?: (row: T) => boolean;
 }
 
-export interface ReusableTableProps {
-	columns: Column[];
-	rowData: any[];
+export interface ReusableTableProps<T = any> {
+	columns: Column<T>[];
+	rowData: T[];
 	onRowSelect?: (selectedRowIds: Set<string>) => void;
-	onRowEdit?: (rowIndex: number, updatedRow: any) => void;
+	onRowEdit?: (rowIndex: number, updatedRow: T) => void;
 	onRowDoubleClick?: (rowId: string) => void;
 	selectedRows?: Set<string>;
 	onSelectAll?: (checked: boolean, selectedRowIds: string[]) => void;
-	onRowUpdate?: (updatedRow: any) => void;
+	onRowUpdate?: (updatedRow: T) => void;
 	showCheckbox?: boolean;
-	actions?: Action[];
+	actions?: Action<T>[];
 	showActionsColumn?: boolean;
 	emptyMessage?: string;
 }
 
-export const ReusableTable: React.FC<ReusableTableProps> = ({
+// Helper to get nested value
+const getNestedValue = (obj: any, path: string) => {
+	return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+};
+
+export const ReusableTable = <T extends { id: string }>({
 	columns,
 	rowData,
 	onRowSelect,
@@ -51,7 +57,7 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 	actions = [],
 	showActionsColumn = true,
 	emptyMessage = 'No data available',
-}) => {
+}: ReusableTableProps<T>) => {
 	const handleRowSelect = (rowId: string) => {
 		const updatedSelection = new Set(selectedRows);
 		if (updatedSelection.has(rowId)) {
@@ -121,15 +127,20 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 											: col.options
 										: [];
 
+									const value = getNestedValue(row, col.key as string);
+
 									return (
 										<td key={colIndex}>
-											{col.type === 'dropdown' && columnOptions.length > 0 ? (
+											{col.render ? (
+												col.render(value, row, index)
+											) : col.type === 'dropdown' &&
+											  columnOptions.length > 0 ? (
 												<select
-													value={row[col.accessor] || ''}
+													value={value || ''}
 													onChange={(e) =>
 														handleRowEdit(index, {
 															...row,
-															[col.accessor]: e.target.value,
+															[col.key]: e.target.value,
 														})
 													}>
 													<option value=''>-- Select --</option>
@@ -146,10 +157,12 @@ export const ReusableTable: React.FC<ReusableTableProps> = ({
 													onBlur={(e) =>
 														handleRowEdit(index, {
 															...row,
-															[col.accessor]: e.currentTarget.textContent,
+															[col.key]: e.currentTarget.textContent,
 														})
 													}>
-													{row[col.accessor]}
+													{typeof value === 'object' && value !== null
+														? JSON.stringify(value)
+														: value}
 												</div>
 											)}
 										</td>
