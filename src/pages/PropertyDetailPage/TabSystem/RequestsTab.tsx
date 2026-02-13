@@ -4,8 +4,12 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import { ReusableTable, Column, Action } from '../../../Components/Library/ReusableTable';
-import { TaskStatus, EmptyState } from './index.styles';
+import {
+	ReusableTable,
+	Column,
+	Action,
+} from '../../../Components/Library/ReusableTable';
+import { StatusBadge, EmptyState } from './index.styles';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import {
 	getRequestStatusUtil,
@@ -25,9 +29,9 @@ export const RequestsTab: React.FC<RequestsTabProps> = ({
 			header: 'Status',
 			key: 'status',
 			render: (status: string, request: any) => (
-				<TaskStatus status={getRequestStatusUtil(request.status)}>
+				<StatusBadge status={getRequestStatusUtil(request.status)}>
 					{status}
-				</TaskStatus>
+				</StatusBadge>
 			),
 		},
 		{

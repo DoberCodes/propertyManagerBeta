@@ -24,6 +24,8 @@ import {
 	useUpdateTaskMutation,
 	useGetTasksQuery,
 } from '../../../Redux/API/taskSlice';
+import { useGetAllDevicesQuery } from '../../../Redux/API/deviceSlice';
+import { useGetAllMaintenanceHistoryForUserQuery } from '../../../Redux/API/userSlice';
 import { addTask, updateTask } from '../../../Redux/Slices/propertyDataSlice';
 
 interface TaskFormData {
@@ -48,6 +50,7 @@ interface EditTaskModalProps {
 	isEditing: boolean;
 	// optional: when editing inside a page you can pass the task id or the whole task
 	editingTaskId?: string | null;
+	editingTask?: any | null; // full task object for editing
 	initialTask?: Partial<TaskFormData> | null;
 	propertyId?: string | null;
 	onClose: () => void;
@@ -55,18 +58,17 @@ interface EditTaskModalProps {
 	statusOptions?: string[];
 	priorityOptions?: string[];
 	assigneeOptions?: { label: string; value: string }[];
-	deviceOptions?: { label: string; value: string }[];
-	maintenanceHistoryOptions?: { label: string; value: string }[];
 	currentUser?: { id: string; firstName?: string; lastName?: string } | null;
 	// new/optional callbacks and placeholders
 	taskTitlePlaceholder?: string;
 	onDevicesChange?: (devices: string[]) => void;
 }
 
-export const EditTaskModal: React.FC<EditTaskModalProps> = ({
+export const TaskModal: React.FC<EditTaskModalProps> = ({
 	isOpen,
 	isEditing,
 	editingTaskId = null,
+	editingTask = null,
 	initialTask = null,
 	propertyId = null,
 	onClose,
@@ -80,12 +82,18 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	],
 	priorityOptions = ['Low', 'Medium', 'High', 'Urgent'],
 	assigneeOptions = [],
-	deviceOptions = [],
-	maintenanceHistoryOptions = [],
 	currentUser = null,
 	taskTitlePlaceholder = 'Task title',
 	onDevicesChange,
 }) => {
+	console.log(
+		'EditTaskModal: props - isOpen:',
+		isOpen,
+		'isEditing:',
+		isEditing,
+		'editingTaskId:',
+		editingTaskId,
+	);
 	// modal-owned form state (defaults)
 	const defaultForm: TaskFormData = {
 		title: '',
@@ -104,8 +112,38 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
 	const dispatch = useDispatch();
 	const { data: allTasks = [] } = useGetTasksQuery();
+	const { data: allDevices = [] } = useGetAllDevicesQuery();
+	const { data: allMaintenanceHistory = [] } =
+		useGetAllMaintenanceHistoryForUserQuery();
 	const [createTask] = useCreateTaskMutation();
 	const [updateTaskApi] = useUpdateTaskMutation();
+
+	// Device options for task linking
+	const internalDeviceOptions = React.useMemo(() => {
+		return allDevices.map((device) => {
+			const displayName =
+				device.brand && device.model
+					? `${device.brand} ${device.model}`
+					: device.type || 'Unknown Device';
+			return {
+				label: `${displayName} (${device.type || 'Unknown Type'})`,
+				value: device.id,
+			};
+		});
+	}, [allDevices]);
+
+	// Maintenance history options for task linking
+	const internalMaintenanceHistoryOptions = React.useMemo(() => {
+		return allMaintenanceHistory.map((record) => {
+			const dateLabel = record.completionDate
+				? new Date(record.completionDate).toLocaleDateString()
+				: 'No date';
+			return {
+				label: `${record.title || 'Maintenance'} - ${dateLabel}`,
+				value: record.id,
+			};
+		});
+	}, [allMaintenanceHistory]);
 
 	const [formState, setFormState] = useState<TaskFormData>(defaultForm);
 
@@ -113,8 +151,37 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 	useEffect(() => {
 		if (!isOpen) return;
 
+		if (editingTask) {
+			console.log('EditTaskModal: Using editingTask:', editingTask);
+			setFormState({
+				title: editingTask.title || '',
+				dueDate: editingTask.dueDate ? editingTask.dueDate.split('T')[0] : '',
+				status: editingTask.status || 'Pending',
+				notes: editingTask.notes || '',
+				priority: editingTask.priority,
+				assignedTo: editingTask.assignedTo?.id || editingTask.assignee || '',
+				devices: editingTask.devices || [],
+				isRecurring: editingTask.isRecurring || false,
+				recurrenceFrequency: editingTask.recurrenceFrequency,
+				recurrenceInterval: editingTask.recurrenceInterval,
+				recurrenceCustomUnit: editingTask.recurrenceCustomUnit,
+				enableNotifications: (editingTask as any).enableNotifications || false,
+				notifications: (editingTask as any).notifications || [],
+				linkedMaintenanceHistoryIds:
+					(editingTask as any).linkedMaintenanceHistoryIds || [],
+			});
+			return;
+		}
+
 		if (editingTaskId) {
+			console.log('EditTaskModal: Looking for task with ID:', editingTaskId);
+			console.log('EditTaskModal: Available tasks count:', allTasks.length);
+			console.log(
+				'EditTaskModal: Available task IDs:',
+				allTasks.map((t) => t.id),
+			);
 			const task = allTasks.find((t: any) => t.id === editingTaskId);
+			console.log('EditTaskModal: Found task:', task);
 			if (task) {
 				setFormState({
 					title: task.title || '',
@@ -138,7 +205,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 		}
 
 		setFormState(defaultForm);
-	}, [isOpen, editingTaskId, initialTask, allTasks]);
+	}, [isOpen, editingTaskId, editingTask, initialTask, allTasks, defaultForm]);
 
 	const handleChange = (e: React.ChangeEvent<any>) => {
 		const { name, value, type, checked } = e.target as any;
@@ -355,11 +422,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							</FormGroup>
 						)}
 
-						{deviceOptions.length > 0 && (
+						{internalDeviceOptions.length > 0 && (
 							<FormGroup>
 								<FormLabel>Connected Devices</FormLabel>
 								<MultiSelect
-									options={deviceOptions}
+									options={internalDeviceOptions}
 									value={formState.devices || []}
 									onChange={(devices: string[]) => {
 										setFormState((prev) => ({ ...prev, devices }));
@@ -370,7 +437,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 							</FormGroup>
 						)}
 
-						{maintenanceHistoryOptions.length > 0 && (
+						{internalMaintenanceHistoryOptions.length > 0 && (
 							<FormGroup>
 								<FormLabel>Maintenance History</FormLabel>
 								<div
@@ -612,8 +679,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 					primaryButtonLabel='Link History'
 					secondaryButtonLabel='Cancel'>
 					<div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-						{maintenanceHistoryOptions.length > 0 ? (
-							maintenanceHistoryOptions.map((option) => (
+						{internalMaintenanceHistoryOptions.length > 0 ? (
+							internalMaintenanceHistoryOptions.map((option) => (
 								<label
 									key={option.value}
 									style={{
@@ -641,5 +708,3 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 		</>
 	);
 };
-
-export default EditTaskModal;

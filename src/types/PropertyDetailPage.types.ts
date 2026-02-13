@@ -42,28 +42,13 @@ export interface PropertyEditHandlers {
 
 // Tab component props
 export interface DetailsTabProps {
-	isEditMode: boolean;
-	setIsEditMode: (value: boolean) => void;
 	property: Property;
-	getPropertyFieldValue: (field: string) => any;
-	handlePropertyFieldChange: (field: string, value: any) => void;
 	teamMembers: any[];
 }
 
 export interface TasksTabProps {
 	propertyTasks: any[];
-	selectedTasks: string[];
-	setSelectedTasks: (tasks: string[]) => void;
-	handleTaskCheckbox: (taskId: string) => void;
-	handleCreateTask: () => void;
-	handleEditTask: () => void;
-	handleAssignTask: () => void;
-	handleCompleteTask: () => void;
-	handleDeleteTask: () => void;
-	propertyDevices?: any[];
-	teamMembers?: any[];
-	contractors?: any[];
-	sharedUsers?: any[];
+	property: any;
 	currentUser?: any;
 }
 
@@ -120,10 +105,7 @@ export interface RequestsTabProps {
 
 // Property Detail Section Props
 export interface PropertyDetailSectionProps {
-	isEditMode: boolean;
 	property: Property;
-	getPropertyFieldValue: (field: string) => any;
-	handlePropertyFieldChange: (field: string, value: any) => void;
 	teamMembers: any[];
 }
 

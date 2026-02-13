@@ -133,17 +133,11 @@ export const ReportBuilder: React.FC = () => {
 		useGetContractorsQuery();
 
 	// Get all units and devices across all properties
-	const { data: allUnits = [], isLoading: unitsLoading } = useGetAllUnitsQuery(
-		currentUser?.id || '',
-		{
-			skip: !currentUser?.id,
-		},
-	);
+	const { data: allUnits = [], isLoading: unitsLoading } =
+		useGetAllUnitsQuery();
 
 	const { data: allDevices = [], isLoading: devicesLoading } =
-		useGetAllDevicesQuery(currentUser?.id || '', {
-			skip: !currentUser?.id,
-		});
+		useGetAllDevicesQuery();
 	const suitesData = useMemo(() => {
 		const allSuites: any[] = [];
 		properties.forEach((property: any) => {

@@ -34,11 +34,11 @@ import {
 	Toolbar,
 	ToolbarButton,
 	DeviceCard,
-	DeviceStatus,
+	StatusBadge,
 	EmptyState,
 } from './index.styles';
 import { ReusableTable } from '../../../Components/Library';
-import { Column } from '../../../Components/Library/ReusableTable';
+import { Column, Action } from '../../../Components/Library/ReusableTable';
 
 interface DeviceFormData {
 	type: string;
@@ -64,6 +64,7 @@ interface DevicesTabProps {
 }
 
 export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
+	console.log('DevicesTab rendered with property:', property);
 	const [showDeviceModal, setShowDeviceModal] = useState(false);
 	const [editingDevice, setEditingDevice] = useState<any>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,6 +85,11 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const [carouselIndex, setCarouselIndex] = useState(0);
 
 	const { data: devices = [], isLoading } = useGetDevicesQuery(property.id);
+	console.log('DevicesTab query result:', {
+		devices,
+		isLoading,
+		propertyId: property.id,
+	});
 	const { data: units = [] } = useGetUnitsQuery(property.id);
 
 	const columns: Column[] = [
@@ -95,7 +101,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 			header: 'Status',
 			key: 'status',
 			render: (status: string) => (
-				<DeviceStatus status={status}>{status}</DeviceStatus>
+				<StatusBadge status={status}>{status}</StatusBadge>
 			),
 		},
 		{
@@ -116,6 +122,20 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 			key: 'files',
 			render: (files: any[]) =>
 				files && files.length > 0 ? `${files.length} file(s)` : 'None',
+		},
+	];
+
+	const deviceActions: Action[] = [
+		{
+			label: 'Edit',
+			icon: faEdit,
+			onClick: (device: any) => handleOpenEditModal(device),
+		},
+		{
+			label: 'Delete',
+			icon: faTrash,
+			onClick: (device: any) => handleDeleteDevice(device.id),
+			className: 'delete',
 		},
 	];
 
@@ -309,9 +329,9 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 								</div>
 								<DeviceRow>
 									<div style={{ fontSize: 14 }}>{device.model || '—'}</div>
-									<DeviceStatus status={device.status || 'Active'}>
+									<StatusBadge status={device.status || 'Active'}>
 										{device.status || 'Active'}
-									</DeviceStatus>
+									</StatusBadge>
 								</DeviceRow>
 								<DeviceRow>
 									<div style={{ fontSize: 12, color: '#6b7280' }}>
@@ -388,7 +408,11 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				</EmptyState>
 			) : (
 				<DesktopTableWrapper>
-					<ReusableTable columns={columns} rowData={devices}></ReusableTable>
+					<ReusableTable
+						columns={columns}
+						rowData={devices}
+						actions={deviceActions}
+					/>
 				</DesktopTableWrapper>
 			)}
 			{/* Device Modal */}

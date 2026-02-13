@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Tabs from './Tabs';
+import { TabController } from './TabController';
 
 const makeProps = (overrides: any = {}) => ({
 	property: overrides.property || {},
@@ -18,14 +18,16 @@ const makeProps = (overrides: any = {}) => ({
 describe('Tabs component', () => {
 	test('shows Units for Multi-Family properties', () => {
 		render(
-			<Tabs {...makeProps({ property: { propertyType: 'Multi-Family' } })} />,
+			<TabController
+				{...makeProps({ property: { propertyType: 'Multi-Family' } })}
+			/>,
 		);
 		expect(screen.getByText('Units')).toBeInTheDocument();
 	});
 
 	test('does not show Suites for Commercial properties (temporarily hidden)', () => {
 		render(
-			<Tabs
+			<TabController
 				{...makeProps({
 					property: { propertyType: 'Commercial' },
 				})}
@@ -36,7 +38,7 @@ describe('Tabs component', () => {
 
 	test('shows Tenants and Requests for rental properties for non-homeowner users', () => {
 		render(
-			<Tabs
+			<TabController
 				{...makeProps({
 					property: { isRental: true, propertyType: 'Single Family' },
 					propertyMaintenanceRequests: [{ id: 'r1', status: 'pending' }],
@@ -52,7 +54,7 @@ describe('Tabs component', () => {
 
 	test('does not show Tenants/Requests for homeowner plan even if isRental is true', () => {
 		render(
-			<Tabs
+			<TabController
 				{...makeProps({
 					property: { isRental: true },
 					currentUser: {

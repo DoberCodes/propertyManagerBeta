@@ -20,25 +20,30 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 	const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 	const [showTaskDialog, setShowTaskDialog] = useState(false);
 	const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+	const [editingTask, setEditingTask] = useState<any | null>(null);
 	const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false);
 	const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
 	const [selectedAssignee, setSelectedAssignee] = useState<any>(null);
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+
 	const handleTaskCheckbox = (taskId: string) => {
 		setSelectedTasks([taskId]);
 	};
 
 	const handleCreateTask = () => {
 		setEditingTaskId(null);
+		setEditingTask(null);
 		setShowTaskDialog(true);
 	};
 
-	const handleEditTask = () => {
-		if (selectedTasks.length !== 1) return;
-		setEditingTaskId(selectedTasks[0]);
+	const handleEditTask = (task?: any) => {
+		if (task?.length !== 1) return;
+		console.log('useTaskHandlers: Setting editingTaskId to:', task[0]);
+		setEditingTaskId(task[0]);
 		setShowTaskDialog(true);
 	};
+
 	const handleDeleteTask = () => {
 		if (selectedTasks.length === 0) return;
 		if (props?.onDeleteClick) {

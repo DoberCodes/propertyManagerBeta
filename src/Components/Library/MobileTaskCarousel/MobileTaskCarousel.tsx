@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	CarouselContainer,
 	CarouselViewport,
@@ -18,14 +20,15 @@ import {
 	Dot,
 	NoTasks,
 } from './MobileTaskCarousel.styles';
-import EditTaskModal from '../Modal';
 
 import { Task, TaskHandlers } from '../../../types/Task.types';
+import { TaskModal } from '../Modal';
 
 interface MobileTaskCarouselProps {
 	tasks: Task[];
 	onTaskUpdate?: (taskId: string, updates: Partial<Task>) => Promise<void>;
 	onTaskComplete?: (taskId: string) => void;
+	onTaskAssign?: (taskId: string) => void;
 	// Optional shared task handlers (from useTaskHandlers)
 	taskHandlers?: TaskHandlers;
 }
@@ -34,6 +37,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	tasks,
 	onTaskUpdate,
 	onTaskComplete,
+	onTaskAssign,
 	taskHandlers,
 }) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -148,6 +152,17 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 		setShowEditModal(true);
 	};
 
+	const handleAssignClick = () => {
+		// If shared task handlers are passed in, use them
+		if (taskHandlers && taskHandlers.handleAssignTask) {
+			taskHandlers.handleAssignTask();
+			return;
+		}
+
+		// Fallback: use the onTaskAssign prop
+		onTaskAssign?.(currentTask.id);
+	};
+
 	const handleDetailModalClose = () => {
 		setShowDetailModal(false);
 		setSelectedTask(null);
@@ -213,7 +228,11 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 										{task.assignedTo && (
 											<MetaItem>
 												<MetaLabel>Assigned</MetaLabel>
-												<MetaValue>{task.assignedTo.name}</MetaValue>
+												<MetaValue>
+													{typeof task.assignedTo === 'object'
+														? task.assignedTo.name
+														: task.assignedTo || 'Unassigned'}
+												</MetaValue>
 											</MetaItem>
 										)}
 									</CardMeta>
@@ -250,6 +269,18 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 										style={{ backgroundColor: '#3b82f6', color: 'white' }}>
 										Edit
 									</ActionButton>
+									<ActionButton
+										onClick={(e) => {
+											e.stopPropagation();
+											handleAssignClick();
+										}}
+										style={{ backgroundColor: '#8b5cf6', color: 'white' }}>
+										<FontAwesomeIcon
+											icon={faUserPlus}
+											style={{ marginRight: '4px' }}
+										/>
+										Assign
+									</ActionButton>
 								</CardActions>
 							</TaskCard>
 						))}
@@ -270,7 +301,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 			</CarouselContainer>
 
 			{selectedTask && (
-				<EditTaskModal
+				<TaskModal
 					isOpen={showEditModal}
 					isEditing={true}
 					initialTask={

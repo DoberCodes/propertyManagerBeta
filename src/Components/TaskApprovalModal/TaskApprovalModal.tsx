@@ -5,6 +5,7 @@ import {
 	approveTaskCompletion,
 	rejectTaskCompletion,
 	CompletionFile,
+	Task,
 } from '../../Redux/Slices/propertyDataSlice';
 import { useRejectTaskMutation } from '../../Redux/API/taskSlice';
 import { canApproveTaskCompletions } from '../../utils/permissions';
@@ -24,9 +25,8 @@ import {
 import { useApproveTaskMutation } from '../../Redux/API/taskSlice';
 
 interface TaskApprovalModalProps {
-	taskId: string;
-	taskTitle: string;
-	taskProperty: string;
+	isOpen: boolean;
+	task: Task;
 	completionDate: string;
 	completionFile: CompletionFile;
 	completedBy: string;
@@ -35,9 +35,8 @@ interface TaskApprovalModalProps {
 }
 
 export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
-	taskId,
-	taskTitle,
-	taskProperty,
+	isOpen,
+	task,
 	completionDate,
 	completionFile,
 	completedBy,
@@ -63,7 +62,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 	if (!hasApprovalPermission) {
 		return (
 			<GenericModal
-				isOpen={true}
+				isOpen={isOpen}
 				onClose={onClose}
 				title='Access Denied'
 				showActions={true}
@@ -86,7 +85,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			// Update Redux state
 			dispatch(
 				approveTaskCompletion({
-					taskId,
+					taskId: task.id,
 					approvedBy: currentUser!.id,
 				}),
 			);
@@ -94,7 +93,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			// Update Firebase (optional)
 			try {
 				await approveTask({
-					taskId: taskId.toString(),
+					taskId: task.id.toString(),
 					approvedBy: currentUser!.id,
 				}).unwrap();
 			} catch (firebaseError) {
@@ -127,7 +126,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			// Update Redux state
 			dispatch(
 				rejectTaskCompletion({
-					taskId,
+					taskId: task.id,
 					rejectionReason,
 				}),
 			);
@@ -135,7 +134,7 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			// Update Firebase (optional)
 			try {
 				await rejectTask({
-					taskId: taskId.toString(),
+					taskId: task.id.toString(),
 					rejectionReason,
 				}).unwrap();
 			} catch (firebaseError) {
@@ -198,11 +197,11 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			<InfoSection>
 				<InfoRow>
 					<InfoLabel>Task:</InfoLabel>
-					<InfoValue>{taskTitle}</InfoValue>
+					<InfoValue>{task.title}</InfoValue>
 				</InfoRow>
 				<InfoRow>
 					<InfoLabel>Property:</InfoLabel>
-					<InfoValue>{taskProperty}</InfoValue>
+					<InfoValue>{task.property}</InfoValue>
 				</InfoRow>
 				<InfoRow>
 					<InfoLabel>Completed By:</InfoLabel>

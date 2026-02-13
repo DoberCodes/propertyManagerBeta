@@ -76,14 +76,6 @@ export const HeaderContent = styled.div`
 	}
 `;
 
-export const TabContainer = styled.div`
-	display: flex;
-	border-bottom: 2px solid #e0e0e0;
-	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-	flex-shrink: 0;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-`;
-
 export const TabButton = styled.button<{ isActive: boolean }>`
 	background: none;
 	border: none;
@@ -468,39 +460,6 @@ export const TaskCard = styled.div`
 	}
 `;
 
-export const TaskStatus = styled.span<{ status: string }>`
-	display: inline-block;
-	padding: 4px 10px;
-	border-radius: 4px;
-	font-size: 12px;
-	font-weight: 600;
-	width: fit-content;
-	background-color: ${(props) => {
-		switch (props.status) {
-			case 'Completed':
-				return 'rgba(34, 197, 94, 0.1)';
-			case 'In Progress':
-				return 'rgba(59, 130, 246, 0.1)';
-			case 'Pending':
-				return 'rgba(245, 158, 11, 0.1)';
-			default:
-				return 'rgba(0, 0, 0, 0.05)';
-		}
-	}};
-	color: ${(props) => {
-		switch (props.status) {
-			case 'Completed':
-				return '#22c55e';
-			case 'In Progress':
-				return '#10b981';
-			case 'Pending':
-				return '#f59e0b';
-			default:
-				return '#666666';
-		}
-	}};
-`;
-
 export const EmptyState = styled.div`
 	background: linear-gradient(
 		135deg,
@@ -622,18 +581,6 @@ export const PencilIcon = styled.button`
 		padding: 4px 6px;
 		font-size: 12px;
 	}
-`;
-
-// Tab controls
-export const TabControlsContainer = styled.div`
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	background-color: #ffffff;
-	border-bottom: 2px solid #e0e0e0;
-	margin-top: 10px;
-	padding: 0 24px;
-	flex-shrink: 0;
 `;
 
 export const TabButtonsWrapper = styled.div`
@@ -862,21 +809,4 @@ export const InfoValue = styled.span`
 	color: #1e293b;
 	word-break: break-word;
 	line-height: 1.4;
-`;
-
-export const TabContentContainer = styled.div`
-	padding: 1.5rem;
-	flex: 1;
-	min-height: 0;
-
-	@media (max-width: 1024px) {
-		padding: 1rem;
-	}
-
-	@media (max-width: 480px) {
-		padding: 0.75rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
 `;

@@ -10,7 +10,6 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../Redux/store/store';
-import { PageHeaderSection } from '../../Components/Library/PageHeaders';
 import { ZeroState } from '../../Components/Library/ZeroState';
 import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
 import {
@@ -48,6 +47,11 @@ import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
 import { ReusableTable } from '../../Components/Library/ReusableTable';
 import { MobileTaskCarousel } from '../../Components/Library/MobileTaskCarousel/MobileTaskCarousel';
 import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
+import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import { Column, Action } from '../../Components/Library/ReusableTable';
+import { StatusBadge } from '../PropertyDetailPage/TabSystem/index.styles';
+import { TaskModal } from '../../Components/Library';
+import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
 import {
 	useGetTasksQuery,
 	useUpdateTaskMutation,
@@ -67,14 +71,9 @@ export const DashboardTab = () => {
 	// Fetch tasks and properties from Firebase
 	const { data: allTasks = [] } = useGetTasksQuery();
 	const { data: ownedProperties = [] } = useGetPropertiesQuery();
-	const { data: sharedProperties = [] } = useGetSharedPropertiesForUserQuery(
-		currentUser?.id || '',
-		{ skip: !currentUser?.id },
-	);
+	const { data: sharedProperties = [] } = useGetSharedPropertiesForUserQuery();
 	const { data: allMaintenanceHistory = [] } =
-		useGetAllMaintenanceHistoryForUserQuery();
-
-	// Combine owned and shared properties for task assignment
+		useGetAllMaintenanceHistoryForUserQuery(); // Combine owned and shared properties for task assignment
 	const allProperties = useMemo(() => {
 		const combined = [...ownedProperties, ...sharedProperties];
 		// Filter out properties hidden from dashboard
@@ -190,6 +189,13 @@ export const DashboardTab = () => {
 	} | null>(null);
 	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
 
+	// Task modal states
+	const [showTaskDialog, setShowTaskDialog] = useState(false);
+	const [isEditMode, setIsEditMode] = useState(false);
+	const [editingTask, setEditingTask] = useState<any>(null);
+	const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false);
+	const [assigningTask, setAssigningTask] = useState<any>(null);
+
 	// Fetch all property shares for dropdown options
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
 
@@ -238,7 +244,7 @@ export const DashboardTab = () => {
 			return priorityB - priorityA;
 		});
 
-		console.log('Carousel tasks:', sorted.length, sorted);
+		console.log('Carousel tasks count:', sorted.length);
 		return sorted;
 	}, [
 		allTasks,
@@ -273,135 +279,60 @@ export const DashboardTab = () => {
 		return filtered.filter((task) => task.status !== 'Completed').length;
 	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
 
-	// Task statuses based on Task.types.ts
-	const TASK_STATUSES = useMemo(
-		() => [
-			'Pending',
-			'In Progress',
-			'Awaiting Approval',
-			'Completed',
-			'Rejected',
-		],
-		[],
-	);
-
-	// Task priorities based on Task.types.ts
-	const TASK_PRIORITIES = useMemo(
-		() => ['Low', 'Medium', 'High', 'Urgent'],
-		[],
-	);
-
-	// Generate Assigned To options based on current user role and property
-	const getAssigneeOptions = useCallback(
-		(task: any): string[] => {
-			const assignees: string[] = [];
-			const currentUserType = currentUser?.subscription?.plan || 'landlord';
-			const taskProperty = allProperties.find(
-				(p) => p.title === task.propertyTitle,
-			);
-
-			if (!taskProperty) return assignees;
-
-			// Get owner name from property or current user
-			const ownerName =
-				taskProperty.owner ||
-				`${currentUser?.firstName} ${currentUser?.lastName}`;
-
-			// For homeowners: owner + people shared with property
-			if (currentUserType === 'homeowner') {
-				// Add owner
-				if (ownerName) {
-					assignees.push(ownerName);
-				}
-
-				// Add shared users for this property
-				const sharedUsers = (propertyShares as any[]).filter(
-					(share) => share.propertyId === taskProperty.id,
-				);
-				sharedUsers.forEach((share) => {
-					const fullName =
-						share.sharedWithFirstName && share.sharedWithLastName
-							? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
-							: share.sharedWithEmail?.split('@')[0] || 'Shared User';
-					assignees.push(fullName);
-				});
-			} else {
-				// For landlords: owner + people shared with property + team assigned to property
-				// Add owner
-				if (ownerName) {
-					assignees.push(ownerName);
-				}
-
-				// Add shared users for this property
-				const sharedUsers = (propertyShares as any[]).filter(
-					(share) => share.propertyId === taskProperty.id,
-				);
-				sharedUsers.forEach((share) => {
-					const fullName =
-						share.sharedWithFirstName && share.sharedWithLastName
-							? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
-							: share.sharedWithEmail?.split('@')[0] || 'Shared User';
-					assignees.push(fullName);
-				});
-
-				// Add team members assigned to this property
-				teamMembers.forEach((member) => {
-					if (
-						member.linkedProperties?.includes(taskProperty.id) &&
-						member.firstName &&
-						member.lastName
-					) {
-						assignees.push(`${member.firstName} ${member.lastName}`);
-					}
-				});
-			}
-
-			// Remove duplicates
-			return [...new Set(assignees)];
-		},
-		[currentUser, allProperties, propertyShares, teamMembers],
-	);
-
 	// Table columns definition
-	const columns = useMemo(
-		() => [
-			{
-				header: 'Title',
-				key: 'title',
+	const columns: Column[] = [
+		{ header: 'Title', key: 'title' },
+		{
+			header: 'Status',
+			key: 'status',
+			render: (status: string) => (
+				<StatusBadge status={status}>{status}</StatusBadge>
+			),
+		},
+		{ header: 'Priority', key: 'priority' },
+		{
+			header: 'Assigned To',
+			key: 'assignedTo',
+			render: (_unused: any, task: any) =>
+				typeof task.assignedTo === 'object'
+					? task.assignedTo.name
+					: task.assignedTo || 'Unassigned',
+		},
+		{ header: 'Due Date', key: 'dueDate' },
+	];
+
+	const taskActions: Action[] = [
+		{
+			label: 'Edit',
+			icon: faEdit,
+			onClick: (task: any) => {
+				setIsEditMode(true);
+				setEditingTask(task);
+				setShowTaskDialog(true);
 			},
-			{
-				header: 'Property',
-				key: 'propertyTitle',
+		},
+		{
+			label: 'Assign',
+			icon: faUserPlus,
+			onClick: (task: any) => {
+				setAssigningTask(task);
+				setShowTaskAssignDialog(true);
 			},
-			{
-				header: 'Assigned To',
-				key: 'assignedToNames',
+		},
+		{
+			label: 'Delete',
+			icon: faTrash,
+			onClick: (_task: any) => {
+				if (window.confirm('Are you sure you want to delete this task?')) {
+					// Handle delete logic here
+				}
 			},
-			{
-				header: 'Due Date',
-				key: 'dueDate',
-				type: 'date' as const,
-			},
-			{
-				header: 'Priority',
-				key: 'priority',
-				type: 'dropdown' as const,
-				options: TASK_PRIORITIES,
-			},
-			{
-				header: 'Status',
-				key: 'status',
-				type: 'dropdown' as const,
-				options: TASK_STATUSES,
-			},
-		],
-		[TASK_STATUSES, TASK_PRIORITIES, getAssigneeOptions],
-	);
+			className: 'delete',
+		},
+	];
 
 	const handleTaskCompletion = (taskId: string) => {
-		console.log('🎯 handleTaskCompletion called for taskId:', taskId);
 		const task = allTasks.find((t) => t.id === taskId);
-		console.log('🎯 Task data:', task);
 		setCompletingTaskId(taskId);
 		setShowTaskCompletionModal(true);
 	};
@@ -464,10 +395,10 @@ export const DashboardTab = () => {
 					<ReusableTable
 						rowData={filteredTasks}
 						columns={columns}
+						actions={taskActions}
 						onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
 						onRowSelect={(selectedRows) => {
 							setSelectedRows(new Set(selectedRows));
-							console.log('Selected rows:', Array.from(selectedRows)); // Log selected rows
 						}}
 						selectedRows={selectedRows}
 						onSelectAll={(_, selectedRowIds) => {
@@ -475,7 +406,6 @@ export const DashboardTab = () => {
 						}}
 						showCheckbox={false}
 						onRowUpdate={(updatedRow) => {
-							console.log('🔄 onRowUpdate called with:', updatedRow); // Log updated row
 							// Prepare updates for Firebase
 							const updates: any = {};
 
@@ -589,6 +519,7 @@ export const DashboardTab = () => {
 								console.error('Failed to update task from carousel', error);
 							}
 						}}
+						taskHandlers={taskHandlers}
 					/>
 				</CarouselSection>
 
@@ -628,6 +559,24 @@ export const DashboardTab = () => {
 					onSuccess={handleTaskCompletionSuccess}
 				/>
 			)}
+
+			<TaskModal
+				isOpen={showTaskDialog}
+				onClose={() => {
+					setShowTaskDialog(false);
+					setIsEditMode(false);
+				}}
+				editingTask={editingTask}
+				isEditing={isEditMode}
+			/>
+
+			<TaskAssignModal
+				isOpen={showTaskAssignDialog}
+				task={assigningTask}
+				propertyId={''}
+				onClose={() => setShowTaskAssignDialog(false)}
+				selectedAssignee={assigningTask?.assignedTo}
+			/>
 		</Wrapper>
 	);
 };

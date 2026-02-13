@@ -268,10 +268,13 @@ const propertySlice = apiSlice.injectEndpoints({
 		// Property endpoints
 		getProperties: builder.query<Property[], void>({
 			async queryFn() {
+				console.log('getProperties query called');
 				try {
 					// Get authenticated user from Firebase Auth
 					const currentUser = auth.currentUser;
+					console.log('getProperties: currentUser:', currentUser);
 					if (!currentUser) {
+						console.log('getProperties: User not authenticated');
 						return { error: 'User not authenticated' };
 					}
 					const userId = currentUser.uid;
@@ -309,7 +312,7 @@ const propertySlice = apiSlice.injectEndpoints({
 							);
 							const propertiesSnapshot = await getDocs(propertiesQuery);
 							const properties = propertiesSnapshot.docs
-								.map((doc) => doc.data() as Property)
+								.map((doc) => docToData(doc) as Property)
 								.filter(Boolean) as Property[];
 							ownedProperties.push(...properties);
 						}
@@ -408,6 +411,20 @@ const propertySlice = apiSlice.injectEndpoints({
 					];
 					const uniqueProperties = Array.from(
 						new Map(allProperties.map((p) => [p.id, p])).values(),
+					);
+
+					console.log(
+						'getProperties: returning',
+						uniqueProperties.length,
+						'properties',
+					);
+					console.log(
+						'getProperties: properties:',
+						uniqueProperties.map((p) => ({
+							id: p.id,
+							title: p.title,
+							slug: p.slug,
+						})),
 					);
 
 					return { data: uniqueProperties };
@@ -676,9 +693,16 @@ const propertySlice = apiSlice.injectEndpoints({
 		}),
 
 		// Get all units across all properties (for reports)
-		getAllUnits: builder.query<Unit[], string>({
-			async queryFn(userId: string) {
+		getAllUnits: builder.query<Unit[], void>({
+			async queryFn() {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					const q = query(
 						collection(db, 'units'),
 						where('userId', '==', userId),

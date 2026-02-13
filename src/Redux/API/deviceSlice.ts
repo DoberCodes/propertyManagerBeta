@@ -9,6 +9,7 @@ import {
 	updateDoc,
 	deleteDoc,
 } from 'firebase/firestore';
+import { auth } from '../../config/firebase';
 import { db } from '../../config/firebase';
 import { Device } from '../../types/Property.types';
 import { apiSlice, docToData } from './apiSlice';
@@ -19,12 +20,18 @@ const deviceSlice = apiSlice.injectEndpoints({
 		// Device endpoints
 		getDevices: builder.query<Device[], string>({
 			async queryFn(propertyId: string) {
+				console.log('getDevices query called with propertyId:', propertyId);
 				try {
 					const q = query(
 						collection(db, 'devices'),
 						where('location.propertyId', '==', propertyId),
 					);
 					const querySnapshot = await getDocs(q);
+					console.log(
+						'getDevices query result:',
+						querySnapshot.size,
+						'documents',
+					);
 					const devices = querySnapshot.docs
 						.map((doc) => docToData(doc) as Device)
 						.filter(Boolean) as Device[];
@@ -117,9 +124,16 @@ const deviceSlice = apiSlice.injectEndpoints({
 		}),
 
 		// Get all devices across all properties (for reports)
-		getAllDevices: builder.query<Device[], string>({
-			async queryFn(userId: string) {
+		getAllDevices: builder.query<Device[], void>({
+			async queryFn() {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					const q = query(
 						collection(db, 'devices'),
 						where('userId', '==', userId),

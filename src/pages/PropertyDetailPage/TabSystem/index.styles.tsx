@@ -116,7 +116,7 @@ export const ToolbarButton = styled.button`
 	}
 `;
 
-export const TaskStatus = styled.span<{ status: string }>`
+export const StatusBadge = styled.span<{ status: string }>`
 	display: inline-block;
 	padding: 4px 10px;
 	border-radius: 4px;
@@ -125,59 +125,20 @@ export const TaskStatus = styled.span<{ status: string }>`
 	width: fit-content;
 	background-color: ${(props) => {
 		switch (props.status) {
+			// Task statuses
 			case 'Completed':
+			case 'Low':
 				return 'rgba(34, 197, 94, 0.1)';
 			case 'In Progress':
 				return 'rgba(59, 130, 246, 0.1)';
 			case 'Pending':
-				return 'rgba(245, 158, 11, 0.1)';
-			case 'Overdue':
-				return 'rgba(239, 68, 68, 0.1)';
-			case 'Urgent':
-				return 'rgba(239, 68, 68, 0.1)';
-			case 'High':
-				return 'rgba(249, 115, 22, 0.1)';
 			case 'Medium':
 				return 'rgba(245, 158, 11, 0.1)';
-			case 'Low':
-				return 'rgba(34, 197, 94, 0.1)';
-			default:
-				return 'rgba(0, 0, 0, 0.05)';
-		}
-	}};
-	color: ${(props) => {
-		switch (props.status) {
-			case 'Completed':
-				return '#22c55e';
-			case 'In Progress':
-				return '#3b82f6';
-			case 'Pending':
-				return '#f59e0b';
 			case 'Overdue':
-				return '#ef4444';
 			case 'Urgent':
-				return '#ef4444';
 			case 'High':
-				return '#f97316';
-			case 'Medium':
-				return '#f59e0b';
-			case 'Low':
-				return '#22c55e';
-			default:
-				return '#666666';
-		}
-	}};
-`;
-
-export const DeviceStatus = styled.span<{ status: string }>`
-	display: inline-block;
-	padding: 4px 10px;
-	border-radius: 4px;
-	font-size: 12px;
-	font-weight: 600;
-	width: fit-content;
-	background-color: ${(props) => {
-		switch (props.status) {
+				return 'rgba(239, 68, 68, 0.1)';
+			// Device statuses
 			case 'Active':
 				return 'rgba(34, 197, 94, 0.1)';
 			case 'Maintenance':
@@ -192,6 +153,20 @@ export const DeviceStatus = styled.span<{ status: string }>`
 	}};
 	color: ${(props) => {
 		switch (props.status) {
+			// Task statuses
+			case 'Completed':
+			case 'Low':
+				return '#22c55e';
+			case 'In Progress':
+				return '#3b82f6';
+			case 'Pending':
+			case 'Medium':
+				return '#f59e0b';
+			case 'Overdue':
+			case 'Urgent':
+			case 'High':
+				return '#ef4444';
+			// Device statuses
 			case 'Active':
 				return '#22c55e';
 			case 'Maintenance':
@@ -294,7 +269,7 @@ export const Label = styled.label`
 	}
 `;
 
-export const Input = styled.input`
+export const BaseInput = `
 	padding: 0.75rem;
 	border: 1px solid #ddd;
 	border-radius: 4px;
@@ -306,37 +281,21 @@ export const Input = styled.input`
 		border-color: #3498db;
 		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 	}
+`;
+
+export const Input = styled.input`
+	${BaseInput}
 `;
 
 export const Select = styled.select`
-	padding: 0.75rem;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	font-size: 1rem;
-	font-family: inherit;
+	${BaseInput}
 	background-color: white;
-
-	&:focus {
-		outline: none;
-		border-color: #3498db;
-		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-	}
 `;
 
 export const Textarea = styled.textarea`
-	padding: 0.75rem;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	font-size: 1rem;
-	font-family: inherit;
+	${BaseInput}
 	resize: vertical;
 	min-height: 80px;
-
-	&:focus {
-		outline: none;
-		border-color: #3498db;
-		box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-	}
 `;
 
 export const ButtonGroup = styled.div`
@@ -528,18 +487,40 @@ export const MobileDot = styled.button<{ active?: boolean }>`
 	cursor: pointer;
 `;
 
-export const ViewMoreButton = styled.button`
-	background-color: #6b7280;
-	color: white;
-	border: none;
-	padding: 0.25rem 0.5rem;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 0.8rem;
-	font-weight: 500;
+export const TabContainer = styled.div`
+	display: flex;
+	border-bottom: 2px solid #e0e0e0;
+	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+	flex-shrink: 0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+`;
 
-	&:hover {
-		background-color: #4b5563;
+// Tab controls
+export const TabControlsContainer = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background-color: #ffffff;
+	border-bottom: 2px solid #e0e0e0;
+	margin-top: 10px;
+	padding: 0 24px;
+	flex-shrink: 0;
+`;
+
+export const TabContentContainer = styled.div`
+	padding: 1.5rem;
+	flex: 1;
+	min-height: 0;
+
+	@media (max-width: 1024px) {
+		padding: 1rem;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 `;
 

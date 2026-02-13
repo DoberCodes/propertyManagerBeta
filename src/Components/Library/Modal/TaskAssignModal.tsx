@@ -11,7 +11,6 @@ import { useUpdateTaskMutation } from '../../../Redux/API/taskSlice';
 interface TaskAssignModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSubmit: (event: React.FormEvent) => void;
 	task: any;
 	propertyId: string;
 	unitId?: string;
@@ -31,6 +30,12 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 	const [selectedAssignee, setSelectedAssignee] = useState<any>(
 		props.selectedAssignee ?? { id: '', name: '', email: '' },
 	);
+
+	useEffect(() => {
+		setSelectedAssignee(
+			props.selectedAssignee ?? { id: '', name: '', email: '' },
+		);
+	}, [props.selectedAssignee]);
 	const teamMembers = useSelector((state: RootState) =>
 		state.team.groups.flatMap((group) => group.members),
 	);
@@ -94,6 +99,15 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 			(assignee, index, self) =>
 				index === self.findIndex((a) => a.id === assignee.id),
 		); // Remove duplicates based on ID
+
+		// If there's a currently selected assignee that's not in the list, add them
+		if (
+			props.selectedAssignee?.id &&
+			!formattedAssignees.find((a) => a.id === props.selectedAssignee.id)
+		) {
+			formattedAssignees.push(props.selectedAssignee);
+		}
+
 		return formattedAssignees;
 	}, [currentUser, contractors, propertyShares, familyMembers, teamMembers]);
 

@@ -20,10 +20,7 @@ export const useFavorites = (userId?: string | number) => {
 	const [favorites, setFavorites] = useState<FavoriteProperty[]>([]);
 
 	// Fetch favorites from Firebase
-	const { data: firebaseFavorites = [], isLoading } = useGetFavoritesQuery(
-		String(userId || ''),
-		{ skip: !userId },
-	);
+	const { data: firebaseFavorites = [], isLoading } = useGetFavoritesQuery();
 
 	// Firebase mutations
 	const [addFavoriteMutation] = useAddFavoriteMutation();
@@ -109,7 +106,6 @@ export const useFavorites = (userId?: string | number) => {
 		if (userId) {
 			try {
 				await addFavoriteMutation({
-					userId: String(userId),
 					propertyId: property.id,
 					title: property.title,
 					slug: property.slug,
@@ -136,7 +132,6 @@ export const useFavorites = (userId?: string | number) => {
 		if (userId) {
 			try {
 				await removeFavoriteMutation({
-					userId: String(userId),
 					propertyId,
 				}).unwrap();
 			} catch (error) {

@@ -60,8 +60,8 @@ export {
 	ModalFormContent,
 	WarningMessage,
 } from './Modal/ModalStyles';
-export { EditTaskModal } from './Modal/TaskModal';
-export { CreateUnitModal } from './Modal/CreateUnitModal';
+export { TaskModal } from './Modal/TaskModal';
+export { UnitModal } from './Modal/UnitModal';
 export { GenericModal } from './Modal/GenericModal';
 export { DeleteConfirmationModal } from './Modal/DeleteConfirmationModal';
 
@@ -76,14 +76,14 @@ export {
 export { ButtonGroup } from './ButtonGroup/ButtonGroup';
 
 // Navigation
-export { default as Tabs } from './Tabs/Tabs';
+export { TabController } from './TabController/TabController';
 export * from './NotificationPanel';
 export {
 	TabContent,
 	TabButton,
 	TabButtonsWrapper,
 	TabControlsContainer,
-} from './Tabs/TabStyles';
+} from './TabController/TabControllerStyles';
 export {
 	GradientHeader,
 	HeaderContent,

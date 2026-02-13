@@ -7,3 +7,4 @@ export { UnitsTab } from './UnitsTab';
 export { SuitesTab } from './SuitesTab';
 export { RequestsTab } from './RequestsTab';
 export { ContractorsTab } from './ContractorsTab';
+export { TabSystem } from './TabSystem';

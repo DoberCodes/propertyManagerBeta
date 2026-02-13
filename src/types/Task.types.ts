@@ -150,7 +150,7 @@ export interface TaskHandlers {
 	setCompletingTaskId: (id: string | null) => void;
 	handleTaskCheckbox: (taskId: string) => void;
 	handleCreateTask: () => void;
-	handleEditTask: () => void;
+	handleEditTask: (task: any) => void;
 	handleDeleteTask: () => void;
 	handleAssignTask: () => void;
 	handleCompleteTask: () => void;

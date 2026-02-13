@@ -14,6 +14,7 @@ export const DataLoader: React.FC = () => {
 	// Fetch property groups and sync to Redux
 
 	const { data: propertyGroups = [] } = useGetPropertyGroupsQuery();
+
 	// Note: Team data is now handled directly by components using RTK Query hooks
 	// instead of being synced to Redux store to avoid synchronization issues
 

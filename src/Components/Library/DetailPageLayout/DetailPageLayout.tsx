@@ -19,7 +19,7 @@ import {
 	TabControlsContainer,
 	TabButtonsWrapper,
 	TabButton,
-} from '../Tabs/TabStyles';
+} from '../TabController/TabControllerStyles';
 import { BreadcrumbItem, TabConfig } from '../../../types/DetailPage.types';
 
 const Wrapper = styled.div`

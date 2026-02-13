@@ -40,9 +40,16 @@ const userSlice = apiSlice.injectEndpoints({
 		}),
 
 		// Favorites endpoints
-		getFavorites: builder.query<Favorite[], string>({
-			async queryFn(userId: string) {
+		getFavorites: builder.query<Favorite[], void>({
+			async queryFn() {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					const q = query(
 						collection(db, 'favorites'),
 						where('userId', '==', userId),
@@ -63,10 +70,17 @@ const userSlice = apiSlice.injectEndpoints({
 
 		addFavorite: builder.mutation<
 			Favorite,
-			{ userId: string; propertyId: string; title: string; slug: string }
+			{ propertyId: string; title: string; slug: string }
 		>({
-			async queryFn({ userId, propertyId, title, slug }) {
+			async queryFn({ propertyId, title, slug }) {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					// Check if already exists
 					const q = query(
 						collection(db, 'favorites'),
@@ -107,12 +121,16 @@ const userSlice = apiSlice.injectEndpoints({
 			invalidatesTags: ['Favorites'],
 		}),
 
-		removeFavorite: builder.mutation<
-			void,
-			{ userId: string; propertyId: string }
-		>({
-			async queryFn({ userId, propertyId }) {
+		removeFavorite: builder.mutation<void, { propertyId: string }>({
+			async queryFn({ propertyId }) {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					const q = query(
 						collection(db, 'favorites'),
 						where('userId', '==', userId),
@@ -325,9 +343,16 @@ const userSlice = apiSlice.injectEndpoints({
 			providesTags: ['MaintenanceHistory'],
 		}),
 
-		getSharedPropertiesForUser: builder.query<Property[], string>({
-			async queryFn(userId: string) {
+		getSharedPropertiesForUser: builder.query<Property[], void>({
+			async queryFn() {
 				try {
+					// Get authenticated user from Firebase Auth
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const userId = currentUser.uid;
+
 					// Get user's email first
 					const userDocRef = doc(db, 'users', userId);
 					const userDoc = await getDoc(userDocRef);

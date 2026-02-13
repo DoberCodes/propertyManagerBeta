@@ -19,7 +19,7 @@ interface tab {
 	badgeCount?: number;
 }
 
-const Tabs: React.FC<TabsProps> = ({
+export const TabController: React.FC<TabsProps> = ({
 	property,
 	currentUser,
 	propertyMaintenanceRequests,
@@ -80,7 +80,6 @@ const Tabs: React.FC<TabsProps> = ({
 
 	// Contractors tab always available
 	tabsForProperty.push({ label: 'Contractors', value: 'contractors' });
-
 
 	const tabs = tabsForProperty;
 
@@ -172,5 +171,3 @@ const Tabs: React.FC<TabsProps> = ({
 		</div>
 	);
 };
-
-export default Tabs;

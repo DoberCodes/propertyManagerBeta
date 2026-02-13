@@ -36,6 +36,7 @@ interface ContractorsTabProps {
 export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 	propertyId,
 }) => {
+	console.log('ContractorsTab rendered with propertyId:', propertyId);
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [editingContractor, setEditingContractor] = useState<Contractor | null>(
 		null,
@@ -52,6 +53,12 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 		error,
 	} = useGetContractorsByPropertyQuery(propertyId, {
 		skip: !propertyId,
+	});
+	console.log('ContractorsTab query result:', {
+		contractors,
+		isLoading,
+		error,
+		propertyId,
 	});
 	const [deleteContractor, { isLoading: isDeleting }] =
 		useDeleteContractorMutation();

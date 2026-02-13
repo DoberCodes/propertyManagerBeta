@@ -60,8 +60,6 @@ import { ConvertRequestToTaskModal } from '../../Components/ConvertRequestToTask
 import { SharePropertyModal } from '../../Components/SharePropertyModal';
 import { AddTenantModal } from '../../Components/AddTenantModal';
 import { DeleteConfirmationModal } from '../../Components/Library/Modal/DeleteConfirmationModal';
-import { Tabs } from '../../Components/Library';
-import { EditTaskModal, CreateUnitModal } from '../../Components/Library';
 import {
 	Wrapper,
 	Header,
@@ -72,27 +70,16 @@ import {
 	EmptyState,
 	TitleContainer,
 	EditableTitleInput,
-	TabControlsContainer,
-	TabContentContainer,
 } from './PropertyDetailPage.styles';
-import {
-	DetailsTab,
-	TasksTab,
-	DevicesTab,
-	MaintenanceTab,
-	TenantsTab,
-	UnitsTab,
-	SuitesTab,
-	RequestsTab,
-	ContractorsTab,
-} from './tabs';
+
 import { DeviceModal } from '../../Components/Library/Modal';
-import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
 import {
 	useDeleteTaskMutation,
 	useGetTasksQuery,
 } from '../../Redux/API/taskSlice';
 import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
+import { TabSystem } from './TabSystem';
+import { UnitModal } from '../../Components/Library';
 
 // Utility function to clean objects of undefined values for Firebase
 const cleanObjectForFirebase = (obj: any): any => {
@@ -193,9 +180,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	// Find the property based on slug from Firebase data - move up to use in hooks
 	const property = useMemo(() => {
-		return propertyOverride
+		const resolvedProperty = propertyOverride
 			? propertyOverride
 			: firebaseProperties.find((p: any) => p.slug === slug);
+		return resolvedProperty;
 	}, [slug, firebaseProperties, propertyOverride]);
 
 	const handleEditTenant = (tenant: any) => {
@@ -631,8 +619,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				<EmptyState>
 					<h2>Property not found</h2>
 					<p>The property you're looking for doesn't exist.</p>
-					<BackButton onClick={() => navigate('/manage')}>
-						← Back to Properties
+					<BackButton onClick={() => navigate('/properties')}>
+						<FontAwesomeIcon icon={faArrowLeft} /> Back to Properties
 					</BackButton>
 				</EmptyState>
 			</Wrapper>
@@ -644,9 +632,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	return (
 		<Wrapper>
 			<Header style={{ backgroundImage: `url(${property.image})` }}>
-				<BackButton onClick={() => navigate('/properties')} title='Go back'>
-					<FontAwesomeIcon icon={faArrowLeft} />
-				</BackButton>
+				<BackButton onClick={() => navigate('/properties')}></BackButton>
 				{/* 3-dot menu for mobile */}
 				{currentUser && (
 					<div
@@ -912,112 +898,31 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			</Header>
 
 			{/* Tab Navigation */}
-			<TabControlsContainer>
-				<Tabs
-					property={property}
-					currentUser={currentUser}
-					propertyMaintenanceRequests={propertyMaintenanceRequests}
-					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
-					activeTab={activeTab}
-					setActiveTab={setActiveTab as (tab: string) => void}
-				/>
-			</TabControlsContainer>
-
-			{/* Tab Content Container */}
-			<TabContentContainer>
-				{/* Details Tab */}
-				{activeTab === 'details' && (
-					<DetailsTab
-						isEditMode={isEditMode}
-						setIsEditMode={setIsEditMode}
-						property={property}
-						getPropertyFieldValue={getPropertyFieldValue}
-						handlePropertyFieldChange={handlePropertyFieldChange}
-						teamMembers={[]}
-					/>
-				)}
-
-				{/* Devices Tab */}
-				{activeTab === 'devices' && <DevicesTab property={property} />}
-
-				{/* Suites Tab */}
-				{activeTab === 'suites' &&
-					property?.propertyType !== 'Commercial' &&
-					property?.hasSuites && <SuitesTab property={property} />}
-
-				{/* Tasks Tab */}
-				{activeTab === 'tasks' && (
-					<TasksTab
-						propertyTasks={propertyTasks}
-						selectedTasks={selectedTasks}
-						setSelectedTasks={setSelectedTasks}
-						handleTaskCheckbox={handleTaskCheckbox}
-						handleCreateTask={handleCreateTask}
-						handleEditTask={handleEditTask}
-						handleAssignTask={handleAssignTask}
-						handleCompleteTask={handleCompleteTask}
-						handleDeleteTask={handleDeleteTask}
-						teamMembers={teamMembers}
-						contractors={propertyContractors}
-						sharedUsers={currentPropertyShares}
-						currentUser={currentUser}
-					/>
-				)}
-
-				{/* Maintenance History Tab */}
-				{activeTab === 'maintenance' && (
-					<MaintenanceTab
-						property={property}
-						maintenanceHistoryRecords={maintenanceHistoryRecords}
-						units={propertyUnits}
-						teamMembers={teamMembers}
-						contractors={propertyContractors}
-						familyMembers={familyMembers}
-						tasks={allTasks}
-						onAddMaintenanceHistory={handleAddMaintenanceHistory}
-						onUpdateMaintenanceHistory={handleUpdateMaintenanceHistory}
-						onDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
-					/>
-				)}
-
-				{/* Tenants Tab */}
-				{activeTab === 'tenants' &&
-					property?.isRental &&
-					!hasCommercialSuites && (
-						<TenantsTab
-							property={property}
-							currentUser={currentUser}
-							setShowAddTenantModal={setShowAddTenantModal}
-							onEditTenant={handleEditTenant}
-							onDeleteTenant={handleDeleteTenant}
-							onViewTenantPromo={handleViewTenantPromo}
-						/>
-					)}
-				{/* Units Tab */}
-				{activeTab === 'units' && property?.propertyType === 'Multi-Family' && (
-					<UnitsTab
-						property={property}
-						units={propertyUnits}
-						handleCreateUnit={handleCreateUnit}
-						handleDeleteUnit={handleDeleteUnit}
-					/>
-				)}
-
-				{/* Maintenance Requests Tab */}
-				{activeTab === 'requests' && property?.isRental && (
-					<RequestsTab
-						propertyMaintenanceRequests={propertyMaintenanceRequests}
-						currentUser={currentUser}
-						canApproveMaintenanceRequest={canApproveMaintenanceRequest}
-						handleConvertRequestToTask={handleConvertRequestToTask}
-					/>
-				)}
-
-				{/* Contractors Tab */}
-				{activeTab === 'contractors' && (
-					<ContractorsTab propertyId={property?.id || ''} />
-				)}
-			</TabContentContainer>
+			<TabSystem
+				property={property}
+				currentUser={currentUser}
+				propertyMaintenanceRequests={propertyMaintenanceRequests}
+				canApproveMaintenanceRequest={canApproveMaintenanceRequest}
+				propertyTasks={propertyTasks}
+				maintenanceHistoryRecords={maintenanceHistoryRecords}
+				propertyUnits={propertyUnits}
+				propertyContractors={propertyContractors}
+				familyMembers={familyMembers}
+				teamMembers={[]}
+				allTasks={[]}
+				handleAddMaintenanceHistory={handleAddMaintenanceHistory}
+				handleDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
+				setShowAddTenantModal={setShowAddTenantModal}
+				handleEditTenant={handleEditTenant}
+				handleDeleteTenant={handleDeleteTenant}
+				handleViewTenantPromo={handleViewTenantPromo}
+				handleCreateTask={handleCreateTask}
+				handleEditTask={handleEditTask}
+				hasCommercialSuites={hasCommercialSuites}
+				handleCreateUnit={handleCreateUnit}
+				handleDeleteUnit={handleDeleteUnit}
+				handleConvertRequestToTask={handleConvertRequestToTask}
+			/>
 
 			{/* Add Device Dialog */}
 			<DeviceModal
@@ -1030,8 +935,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				units={propertyUnits}
 			/>
 
-			{/* Task Create/Edit Dialog */}
-			<EditTaskModal
+			{console.info(
+				'Rendering EditTaskModal with editingTaskId:',
+				editingTaskId,
+				showTaskDialog,
+			)}
+
+			{/* <TaskModal
 				isOpen={showTaskDialog}
 				isEditing={Boolean(editingTaskId)}
 				editingTaskId={editingTaskId}
@@ -1052,10 +962,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				assigneeOptions={assigneeOptions}
 				maintenanceHistoryOptions={maintenanceHistoryOptions}
 				currentUser={currentUser}
-			/>
+			/> */}
 
 			{/* Unit Create Dialog */}
-			<CreateUnitModal
+			<UnitModal
 				isOpen={showUnitDialog}
 				formData={unitFormData}
 				onClose={() => setShowUnitDialog(false)}
@@ -1063,7 +973,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				onChange={handleUnitFormChange}
 			/>
 
-			{/* Task Assignment Dialog */}
+			{/* Task Assignment Dialog
 			{showTaskAssignDialog && (
 				<TaskAssignModal
 					isOpen={showTaskAssignDialog}
@@ -1077,7 +987,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					task={allTasks.find((t) => t.id === assigningTaskId)}
 					propertyId={property.id}
 				/>
-			)}
+			)} */}
 
 			{/* Convert Request to Task Modal */}
 			{convertingRequest && (

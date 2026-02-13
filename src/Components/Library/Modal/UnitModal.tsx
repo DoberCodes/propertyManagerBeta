@@ -22,7 +22,7 @@ interface CreateUnitModalProps {
  * Create Unit Modal Component
  * Handles creating new units for a property
  */
-export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
+export const UnitModal: React.FC<CreateUnitModalProps> = ({
 	isOpen,
 	formData,
 	onClose,
@@ -77,5 +77,3 @@ export const CreateUnitModal: React.FC<CreateUnitModalProps> = ({
 		</GenericModal>
 	);
 };
-
-export default CreateUnitModal;
