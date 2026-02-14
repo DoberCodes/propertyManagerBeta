@@ -106,6 +106,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 			setContractorToDelete(null);
 		} catch (error) {
 			console.error('Failed to delete contractor:', error);
+			alert('Failed to delete contractor. Please try again.');
 		}
 	};
 

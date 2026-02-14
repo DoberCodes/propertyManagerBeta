@@ -39,11 +39,12 @@ import {
 	useDeleteTaskMutation,
 	useUpdateTaskMutation,
 } from '../../../Redux/API/taskSlice';
-import { deleteTask as deleteTaskAction } from '../../../Redux/Slices/propertyDataSlice';
 
 export const TasksTab: React.FC<TasksTabProps> = ({
 	propertyTasks,
+	property,
 	currentUser,
+	assigneeOptions = [],
 }) => {
 	const [filters, setFilters] = useState<FilterValues>({});
 	const [showFilters, setShowFilters] = useState(false);
@@ -51,7 +52,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
 	const [showAssignModal, setShowAssignModal] = useState(false);
-	const [showApprovalModal, setShowApprovalModal] = useState(false);
 	const [showTaskModal, setShowTaskModal] = useState(false);
 	const [showCompleteTaskConfirmation, setShowCompleteTaskConfirmation] =
 		useState(false);
@@ -72,6 +72,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 
 	const handleEditTask = (task: Task) => {
 		console.log('TasksTab: Editing task:', task);
+		console.log('TasksTab: Task has id?', !!task.id, 'id value:', task.id);
 		setSelectedTask(task);
 		setIsEditing(true);
 		setShowTaskModal(true);
@@ -95,13 +96,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 		setShowCompleteTaskConfirmation(true);
 	};
 
-	const handleRowSelect = (selectedRowIds: Set<string>) => {
-		// For single selection, set the first selected task
-		const selectedId = Array.from(selectedRowIds)[0];
-		const task = processedTasks.find((t) => t.id === selectedId) || null;
-		setSelectedTask(task);
-	};
-
 	const confirmDeleteTask = async () => {
 		if (selectedTask) {
 			try {
@@ -110,6 +104,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 				setSelectedTask(null);
 			} catch (error) {
 				console.error('Failed to delete task:', error);
+				alert('Failed to delete task. Please try again.');
 			}
 		}
 	};
@@ -150,7 +145,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 		{ header: 'Due Date', key: 'dueDate' },
 	];
 
-	const taskActions: Action[] = [
+	const taskActions: Action<Task>[] = [
 		{
 			label: 'Edit',
 			icon: faEdit,
@@ -368,7 +363,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 						columns={columns}
 						rowData={filteredTasks}
 						actions={taskActions}
-						onRowSelect={handleRowSelect}
+						showCheckbox={false}
 					/>
 
 					{/* Mobile Task Cards */}
@@ -467,7 +462,16 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 				isOpen={showTaskModal}
 				onClose={() => setShowTaskModal(false)}
 				editingTask={isEditing ? selectedTask : undefined}
+				editingTaskId={isEditing ? selectedTask?.id : undefined}
 				isEditing={isEditing}
+				propertyId={property?.id || ''}
+				assigneeOptions={assigneeOptions}
+				currentUser={currentUser}
+				onSaved={(updatedTask) => {
+					if (updatedTask) {
+						setSelectedTask(updatedTask);
+					}
+				}}
 			/>
 
 			<WarningDialog

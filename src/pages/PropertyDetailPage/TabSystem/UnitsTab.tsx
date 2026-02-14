@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { UnitsTabProps } from '../../../types/PropertyDetailPage.types';
 import { useNavigate } from 'react-router-dom';
 import {

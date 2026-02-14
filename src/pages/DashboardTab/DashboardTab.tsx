@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
 	PieChart,
 	Pie,
@@ -332,7 +332,6 @@ export const DashboardTab = () => {
 	];
 
 	const handleTaskCompletion = (taskId: string) => {
-		const task = allTasks.find((t) => t.id === taskId);
 		setCompletingTaskId(taskId);
 		setShowTaskCompletionModal(true);
 	};

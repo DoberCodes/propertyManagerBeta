@@ -286,6 +286,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				await deleteDevice(deviceId);
 			} catch (error) {
 				console.error('Error deleting device:', error);
+				alert('Failed to delete device. Please try again.');
 			}
 		}
 	};

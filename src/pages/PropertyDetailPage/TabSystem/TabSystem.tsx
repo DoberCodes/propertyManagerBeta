@@ -4,7 +4,6 @@ import { DevicesTab } from './DevicesTab';
 import { SuitesTab } from './SuitesTab';
 import { TasksTab } from './TasksTab';
 import { MaintenanceTab } from './MaintenanceTab';
-import { canApproveMaintenanceRequest } from '../../../utils/permissions';
 import { ContractorsTab } from './ContractorsTab';
 import { RequestsTab } from './RequestsTab';
 import { TenantsTab } from './TenantsTab';
@@ -25,6 +24,7 @@ interface TabsProps {
 	propertyContractors: any[];
 	familyMembers: any[];
 	allTasks: Task[];
+	assigneeOptions?: { label: string; value: string; email?: string }[];
 	handleAddMaintenanceHistory: (history: any) => void;
 	handleDeleteMaintenanceHistory: (historyId: string) => void;
 	setShowAddTenantModal: (show: boolean) => void;
@@ -51,6 +51,7 @@ export const TabSystem = ({
 	propertyContractors,
 	familyMembers,
 	allTasks,
+	assigneeOptions = [],
 	handleAddMaintenanceHistory,
 	handleDeleteMaintenanceHistory,
 	setShowAddTenantModal,
@@ -63,8 +64,6 @@ export const TabSystem = ({
 	hasCommercialSuites,
 }: TabsProps) => {
 	const [activeTab, setActiveTab] = React.useState('details');
-
-	console.info(activeTab, 'active tab in TabSystem render');
 
 	return (
 		<>
@@ -102,6 +101,7 @@ export const TabSystem = ({
 						property={property}
 						propertyTasks={propertyTasks}
 						currentUser={currentUser}
+						assigneeOptions={assigneeOptions}
 					/>
 				)}
 

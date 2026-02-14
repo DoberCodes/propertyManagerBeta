@@ -498,7 +498,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	// Generate assignee options for task editing
 	const assigneeOptions = useMemo(() => {
-		const assignees: Array<{ label: string; value: string }> = [];
+		const assignees: Array<{ label: string; value: string; email?: string }> =
+			[];
 
 		// Add shared users (only those with user accounts for notifications)
 		currentPropertyShares
@@ -511,6 +512,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				assignees.push({
 					label: fullName,
 					value: share.sharedWithUserId,
+					email: share.sharedWithEmail,
 				});
 			});
 
@@ -523,6 +525,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 						member.title || ''
 					})`.trim(),
 					value: member.id,
+					email: member.email,
 				});
 			});
 
@@ -531,6 +534,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			assignees.push({
 				label: `${contractor.name} (${contractor.category})`,
 				value: contractor.id,
+				email: contractor.email,
 			});
 		});
 
@@ -539,6 +543,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 			assignees.push({
 				label: `${member.firstName} ${member.lastName}`,
 				value: member.id,
+				email: member.email,
 			});
 		});
 
@@ -908,7 +913,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				propertyUnits={propertyUnits}
 				propertyContractors={propertyContractors}
 				familyMembers={familyMembers}
-				teamMembers={[]}
+				teamMembers={teamMembers}
+				assigneeOptions={assigneeOptions}
 				allTasks={[]}
 				handleAddMaintenanceHistory={handleAddMaintenanceHistory}
 				handleDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
@@ -935,35 +941,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				units={propertyUnits}
 			/>
 
-			{console.info(
-				'Rendering EditTaskModal with editingTaskId:',
-				editingTaskId,
-				showTaskDialog,
-			)}
-
-			{/* <TaskModal
-				isOpen={showTaskDialog}
-				isEditing={Boolean(editingTaskId)}
-				editingTaskId={editingTaskId}
-				propertyId={property?.id}
-				onClose={() => setShowTaskDialog(false)}
-				onSaved={() => {
-					setShowTaskDialog(false);
-					setSelectedTasks([]);
-				}}
-				statusOptions={[
-					'Pending',
-					'In Progress',
-					'Awaiting Approval',
-					'Completed',
-					'Rejected',
-				]}
-				priorityOptions={['Low', 'Medium', 'High', 'Urgent']}
-				assigneeOptions={assigneeOptions}
-				maintenanceHistoryOptions={maintenanceHistoryOptions}
-				currentUser={currentUser}
-			/> */}
-
 			{/* Unit Create Dialog */}
 			<UnitModal
 				isOpen={showUnitDialog}
@@ -972,22 +949,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 				onSubmit={handleUnitFormSubmit}
 				onChange={handleUnitFormChange}
 			/>
-
-			{/* Task Assignment Dialog
-			{showTaskAssignDialog && (
-				<TaskAssignModal
-					isOpen={showTaskAssignDialog}
-					onClose={() => {
-						setShowTaskAssignDialog(false);
-						setAssigningTaskId(null);
-						setSelectedAssignee(null);
-					}}
-					selectedAssignee={selectedAssignee}
-					onSubmit={setSelectedAssignee}
-					task={allTasks.find((t) => t.id === assigningTaskId)}
-					propertyId={property.id}
-				/>
-			)} */}
 
 			{/* Convert Request to Task Modal */}
 			{convertingRequest && (

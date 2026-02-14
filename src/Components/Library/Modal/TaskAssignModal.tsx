@@ -58,8 +58,6 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 		fetchFamilyMembers();
 	}, [currentUser?.accountId]);
 
-	console.info(contractors);
-
 	const fetchAssignees = useCallback(() => {
 		const family = familyMembers;
 		const totalAssignees = [
@@ -109,20 +107,23 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 		}
 
 		return formattedAssignees;
-	}, [currentUser, contractors, propertyShares, familyMembers, teamMembers]);
+	}, [
+		familyMembers,
+		teamMembers,
+		contractors,
+		propertyShares,
+		props.selectedAssignee,
+	]);
 
 	const [assignTask] = useUpdateTaskMutation();
-	console.info(props.task, 'Task in TaskAssignModal');
 
 	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
-		console.info('Assigning task to:', selectedAssignee);
 		if (!selectedAssignee?.id) {
 			alert('Please select an assignee');
 			return;
 		}
 
-		console.info('Selected Assignee:', selectedAssignee);
 		const updatedTask = {
 			assignedTo: {
 				id: selectedAssignee.id,

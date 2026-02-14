@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { GenericModal } from './GenericModal';
 import {
@@ -57,11 +57,10 @@ interface EditTaskModalProps {
 	onSaved?: (updatedTask?: any) => void; // called after successful create/update
 	statusOptions?: string[];
 	priorityOptions?: string[];
-	assigneeOptions?: { label: string; value: string }[];
+	assigneeOptions?: { label: string; value: string; email?: string }[];
 	currentUser?: { id: string; firstName?: string; lastName?: string } | null;
 	// new/optional callbacks and placeholders
 	taskTitlePlaceholder?: string;
-	onDevicesChange?: (devices: string[]) => void;
 }
 
 export const TaskModal: React.FC<EditTaskModalProps> = ({
@@ -84,7 +83,6 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 	assigneeOptions = [],
 	currentUser = null,
 	taskTitlePlaceholder = 'Task title',
-	onDevicesChange,
 }) => {
 	console.log(
 		'EditTaskModal: props - isOpen:',
@@ -93,22 +91,27 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 		isEditing,
 		'editingTaskId:',
 		editingTaskId,
+		'editingTask?.id:',
+		editingTask?.id,
 	);
 	// modal-owned form state (defaults)
-	const defaultForm: TaskFormData = {
-		title: '',
-		dueDate: '',
-		status: 'Pending',
-		notes: '',
-		devices: [],
-		isRecurring: false,
-		recurrenceFrequency: undefined,
-		recurrenceInterval: undefined,
-		recurrenceCustomUnit: undefined,
-		enableNotifications: false,
-		notifications: [],
-		linkedMaintenanceHistoryIds: [],
-	};
+	const defaultForm: TaskFormData = useMemo(
+		() => ({
+			title: '',
+			dueDate: '',
+			status: 'Pending',
+			notes: '',
+			devices: [],
+			isRecurring: false,
+			recurrenceFrequency: undefined,
+			recurrenceInterval: undefined,
+			recurrenceCustomUnit: undefined,
+			enableNotifications: false,
+			notifications: [],
+			linkedMaintenanceHistoryIds: [],
+		}),
+		[],
+	);
 
 	const dispatch = useDispatch();
 	const { data: allTasks = [] } = useGetTasksQuery();
@@ -132,6 +135,11 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 		});
 	}, [allDevices]);
 
+	// Memoized device change handler to prevent re-renders
+	const handleDeviceChange = useCallback((devices: string[]) => {
+		setFormState((prev) => ({ ...prev, devices }));
+	}, []);
+
 	// Maintenance history options for task linking
 	const internalMaintenanceHistoryOptions = React.useMemo(() => {
 		return allMaintenanceHistory.map((record) => {
@@ -147,12 +155,19 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 
 	const [formState, setFormState] = useState<TaskFormData>(defaultForm);
 
+	// Memoize the found task to prevent unnecessary re-renders
+	const foundTask = React.useMemo(() => {
+		if (editingTaskId && !editingTask) {
+			return allTasks.find((t: any) => t.id === editingTaskId);
+		}
+		return null;
+	}, [editingTaskId, editingTask, allTasks]);
+
 	// initialize form when modal opens or when editingTaskId/initialTask changes
 	useEffect(() => {
 		if (!isOpen) return;
 
 		if (editingTask) {
-			console.log('EditTaskModal: Using editingTask:', editingTask);
 			setFormState({
 				title: editingTask.title || '',
 				dueDate: editingTask.dueDate ? editingTask.dueDate.split('T')[0] : '',
@@ -173,39 +188,29 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 			return;
 		}
 
-		if (editingTaskId) {
-			console.log('EditTaskModal: Looking for task with ID:', editingTaskId);
-			console.log('EditTaskModal: Available tasks count:', allTasks.length);
-			console.log(
-				'EditTaskModal: Available task IDs:',
-				allTasks.map((t) => t.id),
-			);
-			const task = allTasks.find((t: any) => t.id === editingTaskId);
-			console.log('EditTaskModal: Found task:', task);
-			if (task) {
-				setFormState({
-					title: task.title || '',
-					dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
-					status: task.status || 'Pending',
-					notes: task.notes || '',
-					priority: task.priority,
-					assignedTo: task.assignedTo?.id || task.assignee || '',
-					devices: task.devices || [],
-					isRecurring: task.isRecurring || false,
-					recurrenceFrequency: task.recurrenceFrequency,
-					recurrenceInterval: task.recurrenceInterval,
-					recurrenceCustomUnit: task.recurrenceCustomUnit,
-					enableNotifications: (task as any).enableNotifications || false,
-					notifications: (task as any).notifications || [],
-					linkedMaintenanceHistoryIds:
-						(task as any).linkedMaintenanceHistoryIds || [],
-				});
-				return;
-			}
+		if (foundTask) {
+			setFormState({
+				title: foundTask.title || '',
+				dueDate: foundTask.dueDate ? foundTask.dueDate.split('T')[0] : '',
+				status: foundTask.status || 'Pending',
+				notes: foundTask.notes || '',
+				priority: foundTask.priority,
+				assignedTo: foundTask.assignedTo?.id || foundTask.assignee || '',
+				devices: foundTask.devices || [],
+				isRecurring: foundTask.isRecurring || false,
+				recurrenceFrequency: foundTask.recurrenceFrequency,
+				recurrenceInterval: foundTask.recurrenceInterval,
+				recurrenceCustomUnit: foundTask.recurrenceCustomUnit,
+				enableNotifications: (foundTask as any).enableNotifications || false,
+				notifications: (foundTask as any).notifications || [],
+				linkedMaintenanceHistoryIds:
+					(foundTask as any).linkedMaintenanceHistoryIds || [],
+			});
+			return;
 		}
 
 		setFormState(defaultForm);
-	}, [isOpen, editingTaskId, editingTask, initialTask, allTasks, defaultForm]);
+	}, [isOpen, editingTaskId, editingTask, initialTask, foundTask, defaultForm]);
 
 	const handleChange = (e: React.ChangeEvent<any>) => {
 		const { name, value, type, checked } = e.target as any;
@@ -282,30 +287,112 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 			return;
 		}
 
+		console.log('TaskModal: handleSubmit called', {
+			isEditing,
+			editingTaskId,
+			editingTask,
+			'editingTask?.id': editingTask?.id,
+			'condition check': isEditing && (editingTaskId || editingTask?.id),
+			'selectedTask from props': editingTask,
+			formState,
+		});
+
 		try {
-			if (isEditing && editingTaskId) {
-				const updatesRaw: any = { ...formState };
+			// Determine if this is an update operation
+			const taskId = editingTaskId || editingTask?.id;
+			const isUpdate = !!taskId;
+
+			console.log('TaskModal: handleSubmit called', {
+				isEditing,
+				editingTaskId,
+				editingTask,
+				'editingTask?.id': editingTask?.id,
+				taskId: taskId,
+				isUpdate: isUpdate,
+				formState,
+			});
+
+			if (isUpdate) {
+				if (!taskId) {
+					console.error('TaskModal: No task ID available for update');
+					alert('Unable to update task: missing task ID');
+					return;
+				}
+				console.log('TaskModal: Updating task with ID:', taskId);
+				let updatesRaw: any = { ...formState };
+
+				// Convert assignedTo from string (user ID) to object format
+				if (updatesRaw.assignedTo && assigneeOptions) {
+					const selectedOption = assigneeOptions.find(
+						(option) => option.value === updatesRaw.assignedTo,
+					);
+					if (selectedOption) {
+						const assignedToObj: any = {
+							id: selectedOption.value,
+							name: selectedOption.label,
+						};
+						// Only include email if it exists and is not empty
+						if (selectedOption.email && selectedOption.email.trim()) {
+							assignedToObj.email = selectedOption.email;
+						}
+						updatesRaw.assignedTo = assignedToObj;
+					}
+				} else if (!updatesRaw.assignedTo) {
+					// If assignedTo is empty, remove it
+					delete updatesRaw.assignedTo;
+				}
+
 				const updates = Object.fromEntries(
 					Object.entries(updatesRaw).filter(([, value]) => value !== undefined),
 				);
 
+				console.log('TaskModal: Updates to save:', updates);
 				const updated = await updateTaskApi({
-					id: editingTaskId,
+					id: taskId,
 					updates,
 				}).unwrap();
+				console.log('TaskModal: Task updated successfully:', updated);
 				dispatch(updateTask(updated));
 				onSaved?.(updated);
 				onClose();
 			} else {
-				const newTask: any = {
-					id: `task-${Date.now()}`,
-					propertyId: propertyId || undefined,
+				console.log('TaskModal: Creating new task');
+				let newTaskRaw: any = {
+					propertyId: propertyId,
 					...formState,
-					userId: '',
+					userId: currentUser?.id || '',
 					property: '',
 				};
 
+				// Convert assignedTo from string (user ID) to object format
+				if (newTaskRaw.assignedTo && assigneeOptions) {
+					const selectedOption = assigneeOptions.find(
+						(option) => option.value === newTaskRaw.assignedTo,
+					);
+					if (selectedOption) {
+						const assignedToObj: any = {
+							id: selectedOption.value,
+							name: selectedOption.label,
+						};
+						// Only include email if it exists and is not empty
+						if (selectedOption.email && selectedOption.email.trim()) {
+							assignedToObj.email = selectedOption.email;
+						}
+						newTaskRaw.assignedTo = assignedToObj;
+					}
+				} else if (!newTaskRaw.assignedTo) {
+					// If assignedTo is empty, remove it
+					delete newTaskRaw.assignedTo;
+				}
+
+				// Filter out undefined values to prevent Firestore errors
+				const newTask = Object.fromEntries(
+					Object.entries(newTaskRaw).filter(([, value]) => value !== undefined),
+				) as any;
+
+				console.log('TaskModal: New task to create:', newTask);
 				const created = await createTask(newTask).unwrap();
+				console.log('TaskModal: Task created successfully:', created);
 				dispatch(addTask(created));
 				onSaved?.(created);
 				onClose();
@@ -428,10 +515,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 								<MultiSelect
 									options={internalDeviceOptions}
 									value={formState.devices || []}
-									onChange={(devices: string[]) => {
-										setFormState((prev) => ({ ...prev, devices }));
-										onDevicesChange?.(devices);
-									}}
+									onChange={handleDeviceChange}
 									placeholder='Select devices for this task...'
 								/>
 							</FormGroup>
@@ -459,7 +543,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 									</button>
 									{(formState.linkedMaintenanceHistoryIds?.length || 0) > 0 && (
 										<span style={{ fontSize: '12px', color: '#6b7280' }}>
-											{fd.linkedMaintenanceHistoryIds?.length} linked
+											{formState.linkedMaintenanceHistoryIds?.length} linked
 										</span>
 									)}
 								</div>
@@ -509,14 +593,15 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 									min='1'
 									max='365'
 									required={
-										fd.recurrenceFrequency === 'custom' && wantsRecurrence
+										formState.recurrenceFrequency === 'custom' &&
+										wantsRecurrence
 									}
 									placeholder='e.g., 3 for every 3 days'
 								/>
 							</FormGroup>
 						)}
 
-						{fd.recurrenceFrequency === 'custom' && (
+						{formState.recurrenceFrequency === 'custom' && (
 							<FormGroup>
 								<FormLabel>Time Unit *</FormLabel>
 								<FormSelect
@@ -524,7 +609,8 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 									value={formState.recurrenceCustomUnit || ''}
 									onChange={onChange}
 									required={
-										fd.recurrenceFrequency === 'custom' && wantsRecurrence
+										formState.recurrenceFrequency === 'custom' &&
+										wantsRecurrence
 									}>
 									<option value=''>Select unit...</option>
 									<option value='days'>Days</option>
@@ -553,7 +639,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 									type='checkbox'
 									id='enableNotifications'
 									name='enableNotifications'
-									checked={fd.enableNotifications || false}
+									checked={formState.enableNotifications || false}
 									onChange={(e) => {
 										const isChecked = e.target.checked;
 										onChange({
@@ -568,7 +654,8 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 										// If enabling notifications and no notifications exist, set defaults
 										if (
 											isChecked &&
-											(!fd.notifications || fd.notifications.length === 0)
+											(!formState.notifications ||
+												formState.notifications.length === 0)
 										) {
 											const defaultNotifications =
 												getDefaultTaskNotifications();
@@ -591,7 +678,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 							</small>
 						</FormGroupFull>
 
-						{fd.enableNotifications && (
+						{formState.enableNotifications && (
 							<>
 								<FormGroupFull>
 									<FormLabel>Notification Schedule</FormLabel>
@@ -601,58 +688,62 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 											flexDirection: 'column',
 											gap: '12px',
 										}}>
-										{(fd.notifications || []).map((notification, index) => (
-											<div
-												key={notification.id}
-												style={{
-													display: 'flex',
-													alignItems: 'center',
-													gap: '12px',
-													padding: '12px',
-													border: '1px solid #e5e7eb',
-													borderRadius: '6px',
-													backgroundColor: '#f9fafb',
-												}}>
-												<input
-													type='checkbox'
-													id={`notification-${index}`}
-													checked={notification.enabled}
-													onChange={(e) => {
-														const updatedNotifications = [
-															...(fd.notifications || []),
-														];
-														updatedNotifications[index] = {
-															...updatedNotifications[index],
-															enabled: e.target.checked,
-														};
-														onChange({
-															target: {
-																name: 'notifications',
-																value: updatedNotifications,
-																type: 'custom',
-															},
-														} as any);
-													}}
-												/>
-												<div style={{ flex: 1 }}>
-													<div style={{ fontWeight: '500', color: '#374151' }}>
-														{notification.type === 'reminder'
-															? notification.daysBeforeDue === 1
-																? '1 day before due'
-																: `${notification.daysBeforeDue} days before due`
-															: `Week ${
-																	Math.abs(notification.daysBeforeDue || 0) / 7
-															  } overdue`}
-													</div>
-													<div style={{ fontSize: '14px', color: '#6b7280' }}>
-														{getDefaultNotificationMessage(
-															notification,
-															fd.title || 'Task',
-														)}
+										{(formState.notifications || []).map(
+											(notification, index) => (
+												<div
+													key={notification.id}
+													style={{
+														display: 'flex',
+														alignItems: 'center',
+														gap: '12px',
+														padding: '12px',
+														border: '1px solid #e5e7eb',
+														borderRadius: '6px',
+														backgroundColor: '#f9fafb',
+													}}>
+													<input
+														type='checkbox'
+														id={`notification-${index}`}
+														checked={notification.enabled}
+														onChange={(e) => {
+															const updatedNotifications = [
+																...(formState.notifications || []),
+															];
+															updatedNotifications[index] = {
+																...updatedNotifications[index],
+																enabled: e.target.checked,
+															};
+															onChange({
+																target: {
+																	name: 'notifications',
+																	value: updatedNotifications,
+																	type: 'custom',
+																},
+															} as any);
+														}}
+													/>
+													<div style={{ flex: 1 }}>
+														<div
+															style={{ fontWeight: '500', color: '#374151' }}>
+															{notification.type === 'reminder'
+																? notification.daysBeforeDue === 1
+																	? '1 day before due'
+																	: `${notification.daysBeforeDue} days before due`
+																: `Week ${
+																		Math.abs(notification.daysBeforeDue || 0) /
+																		7
+																  } overdue`}
+														</div>
+														<div style={{ fontSize: '14px', color: '#6b7280' }}>
+															{getDefaultNotificationMessage(
+																notification,
+																formState.title || 'Task',
+															)}
+														</div>
 													</div>
 												</div>
-											</div>
-										))}
+											),
+										)}
 									</div>
 								</FormGroupFull>
 

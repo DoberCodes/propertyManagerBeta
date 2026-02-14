@@ -10,7 +10,7 @@ import {
 	where,
 } from '@firebase/firestore';
 import { CompletionFile, Task } from '../../types/Task.types';
-import { apiSlice } from './apiSlice';
+import { apiSlice, docToData } from './apiSlice';
 import { auth, db } from '../../config/firebase';
 import { PropertyShare } from '../../types/Property.types';
 
@@ -111,7 +111,7 @@ export const taskSlice = apiSlice.injectEndpoints({
 						);
 						const tasksSnapshot = await getDocs(tasksQuery);
 						const tasks = tasksSnapshot.docs
-							.map((doc) => doc.data() as Task)
+							.map((doc) => docToData(doc) as Task)
 							.filter(Boolean) as Task[];
 						allTasks.push(...tasks);
 					}

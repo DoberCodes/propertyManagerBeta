@@ -50,6 +50,7 @@ export interface TasksTabProps {
 	propertyTasks: any[];
 	property: any;
 	currentUser?: any;
+	assigneeOptions?: { label: string; value: string; email?: string }[];
 }
 
 export interface MaintenanceTabProps {

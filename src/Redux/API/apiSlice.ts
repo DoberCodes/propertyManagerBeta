@@ -34,7 +34,11 @@ const sanitizeFirestoreData = (data: any): any => {
 // Helper function to convert Firestore docs to data with IDs and sanitized fields
 export const docToData = (docSnapshot: any) => {
 	if (!docSnapshot.exists()) return null;
-	return { id: docSnapshot.id, ...sanitizeFirestoreData(docSnapshot.data()) };
+	const data = sanitizeFirestoreData(docSnapshot.data());
+	// Ensure the ID from the document reference is used, not from the data
+	// Remove any 'id' field from data to prevent it from overriding the document ID
+	const { id: _, ...dataWithoutId } = data;
+	return { id: docSnapshot.id, ...dataWithoutId };
 };
 
 export const apiSlice = createApi({
