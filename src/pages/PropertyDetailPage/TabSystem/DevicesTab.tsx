@@ -64,7 +64,6 @@ interface DevicesTabProps {
 }
 
 export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
-	console.log('DevicesTab rendered with property:', property);
 	const [showDeviceModal, setShowDeviceModal] = useState(false);
 	const [editingDevice, setEditingDevice] = useState<any>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,11 +85,6 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const [carouselIndex, setCarouselIndex] = useState(0);
 
 	const { data: devices = [], isLoading } = useGetDevicesQuery(property.id);
-	console.log('DevicesTab query result:', {
-		devices,
-		isLoading,
-		propertyId: property.id,
-	});
 	const { data: units = [] } = useGetUnitsQuery(property.id);
 
 	const columns: Column[] = [

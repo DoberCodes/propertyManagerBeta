@@ -39,7 +39,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 
 	const handleEditTask = (task?: any) => {
 		if (task?.length !== 1) return;
-		console.log('useTaskHandlers: Setting editingTaskId to:', task[0]);
 		setEditingTaskId(task[0]);
 		setShowTaskDialog(true);
 	};

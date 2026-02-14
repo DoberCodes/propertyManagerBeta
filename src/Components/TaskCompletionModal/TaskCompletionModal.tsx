@@ -33,11 +33,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 	onSuccess,
 	task,
 }) => {
-	console.log('🚀 TaskCompletionModal rendered with:', {
-		taskId,
-		taskTitle,
-		task,
-	}); // Log modal render
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [completionDate, setCompletionDate] = useState('');
@@ -119,32 +114,11 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 				userType: currentUser!.userType,
 			}).unwrap();
 
-			// Step 4: Create new recurring task if applicable
-			console.log('🔄 RECURRENCE: Checking if task should recur. Task data:', {
-				isRecurring: task?.isRecurring,
-				recurrenceFrequency: task?.recurrenceFrequency,
-				recurrenceInterval: task?.recurrenceInterval,
-				taskId: task?.id,
-				taskTitle: task?.title,
-			});
-
 			if (
 				task?.isRecurring &&
 				task?.recurrenceFrequency &&
 				task?.recurrenceInterval
 			) {
-				console.log(
-					'🔄 RECURRENCE: Starting recurrence logic for task:',
-					task.title,
-				);
-				console.log('🔄 RECURRENCE: Task data:', {
-					isRecurring: task.isRecurring,
-					recurrenceFrequency: task.recurrenceFrequency,
-					recurrenceInterval: task.recurrenceInterval,
-					recurrenceCustomUnit: task.recurrenceCustomUnit,
-					propertyId: task.propertyId,
-				});
-
 				try {
 					const nextDueDate = calculateNextDueDate(
 						completionDate || new Date().toISOString().split('T')[0],
@@ -152,8 +126,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 						task.recurrenceInterval,
 						task.recurrenceCustomUnit,
 					);
-
-					console.log('🔄 RECURRENCE: Calculated next due date:', nextDueDate);
 
 					// Build recurring task object, conditionally adding optional fields
 					const recurringTaskData: any = {
@@ -175,11 +147,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 					if (task.assignee) recurringTaskData.assignee = task.assignee;
 					if (task.recurrenceCustomUnit)
 						recurringTaskData.recurrenceCustomUnit = task.recurrenceCustomUnit;
-
-					console.log(
-						'🔄 RECURRENCE: Creating recurring task with data:',
-						recurringTaskData,
-					);
 
 					await createTask(recurringTaskData).unwrap();
 

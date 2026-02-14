@@ -3,10 +3,12 @@ import styled from 'styled-components';
 export const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
-	padding: 20px;
-	min-height: 100%;
-	background-color: #fafafa; /* match TeamPage off-white */
+	gap: 16px;
+	height: 100%;
+	padding: 16px;
+	margin: 10px 20px;
+	justify-content: flex-start;
+	overflow: hidden;
 
 	@media (max-width: 1024px) {
 		padding: 15px;
@@ -23,6 +25,7 @@ export const PageHeader = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	border-radius: 20px;
 	gap: 20px;
 	padding-bottom: 20px;
 	border-bottom: 2px solid #e5e7eb;
@@ -67,6 +70,7 @@ export const TopActions = styled.div`
 export const GroupsContainer = styled.div`
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+	height: fit-content;
 	gap: 40px;
 	flex: 1;
 	align-items: start;
@@ -87,6 +91,7 @@ export const GroupsContainer = styled.div`
 `;
 
 export const GroupSection = styled.div`
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
@@ -231,7 +236,7 @@ export const GroupActionButton = styled.button`
 	}
 `;
 
-export const AddPropertyButton = styled.button`
+export const AddPropertyButton = styled.button<{ disabled?: boolean }>`
 	background-color: #22c55e;
 	color: white;
 	border: none;
@@ -251,6 +256,13 @@ export const AddPropertyButton = styled.button`
 		background-color: #15803d;
 	}
 
+	&:disabled {
+		background-color: #d1d5db; /* Light gray background for disabled state */
+		color: #9ca3af; /* Gray text for disabled state */
+		cursor: not-allowed; /* Change cursor to indicate disabled state */
+		opacity: 0.6; /* Reduce opacity for visual feedback */
+	}
+
 	@media (max-width: 480px) {
 		padding: 8px 12px;
 		font-size: 12px;
@@ -263,7 +275,8 @@ export const PropertiesGrid = styled.div<{
 	$singleProperty?: boolean;
 }>`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	grid-template-rows: repeat(auto-fill, minmax(260px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	gap: 24px;
 	margin-top: 8px; /* space from header */
 	justify-items: center;
@@ -279,7 +292,8 @@ export const PropertiesGrid = styled.div<{
 			: ''}
 
 	@media (max-width: 1024px) {
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		display: grid;
+
 		gap: 20px;
 		justify-items: center;
 
@@ -311,7 +325,6 @@ export const PropertiesGrid = styled.div<{
 		gap: 14px;
 		justify-items: center;
 		align-items: start;
-		margin: 8px auto 0;
 		padding: 0 8px;
 
 		${({ $isHomeowner, $singleProperty }) =>
@@ -327,7 +340,7 @@ export const PropertiesGrid = styled.div<{
 
 export const PropertyTile = styled.div`
 	position: relative;
-	height: 320px;
+	height: 15rem;
 	border-radius: 8px;
 	overflow: hidden;
 	cursor: pointer;

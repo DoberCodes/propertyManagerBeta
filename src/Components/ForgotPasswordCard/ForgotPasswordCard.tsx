@@ -41,9 +41,7 @@ export const ForgotPasswordCard = () => {
 		}
 
 		try {
-			console.log('Attempting to send password reset email to:', email.trim());
 			await resetPassword(email.trim());
-			console.log('Password reset email sent successfully');
 			setSuccess(
 				"Password reset email sent! Check your inbox (and spam folder) for instructions. If you don't receive the email, please check your Firebase Console email template configuration.",
 			);

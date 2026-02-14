@@ -104,10 +104,8 @@ export const App = () => {
 
 		// Listen to Firebase auth state changes to persist authentication
 		const unsubscribe = onAuthStateChange(async (user) => {
-			console.log('Auth state changed:', user ? 'User logged in' : 'No user');
 			clearTimeout(timeout);
 			if (user) {
-				console.log('Setting current user:', user.id);
 				dispatch(setCurrentUser(user));
 				// Update localStorage to keep session in sync
 				localStorage.setItem(
@@ -118,12 +116,10 @@ export const App = () => {
 					}),
 				);
 			} else {
-				console.log('Setting current user to null');
 				dispatch(setCurrentUser(null));
 				localStorage.removeItem('loggedUser');
 			}
 			// Auth check is complete - stop showing loading state
-			console.log('Setting auth loading to false');
 			dispatch(setAuthLoading(false));
 		});
 
@@ -215,8 +211,6 @@ export const App = () => {
 			window.removeEventListener('touchend', onTouchEnd);
 		};
 	}, []);
-
-	console.log('Current authLoading state:', authLoading);
 
 	if (authLoading) {
 		return (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { PropertyDialog } from './PropertyDialog';
@@ -64,6 +64,7 @@ import {
 	GroupActionButton,
 } from './PropertiesTab.styles';
 import { Property } from '../../types/Property.types';
+import { current } from '@reduxjs/toolkit';
 
 export const Properties = () => {
 	const navigate = useNavigate();
@@ -255,6 +256,18 @@ export const Properties = () => {
 		}
 	};
 
+	const handleDisabled = useCallback(() => {
+		if (!currentUser) return true;
+		if (currentUser.subscription) {
+			const remainingSlots = getRemainingPropertySlots(
+				currentUser.subscription,
+				totalProperties,
+			);
+			return remainingSlots <= 0;
+		}
+		return false;
+	}, [currentUser, totalProperties]);
+
 	const handleAddPropertyGlobalClick = async () => {
 		// Check subscription limits
 		if (currentUser?.subscription) {
@@ -264,10 +277,6 @@ export const Properties = () => {
 				currentUser.role,
 			);
 			if (!canAdd) {
-				const remainingSlots = getRemainingPropertySlots(
-					currentUser.subscription,
-					totalProperties,
-				);
 				const planDetails = getSubscriptionPlanDetails(
 					currentUser.subscription.plan,
 				);
@@ -705,7 +714,9 @@ export const Properties = () => {
 								+ Add Group
 							</AddGroupButton>
 						)}
-						<AddPropertyButton onClick={handleAddPropertyGlobalClick}>
+						<AddPropertyButton
+							disabled={handleDisabled()}
+							onClick={handleAddPropertyGlobalClick}>
 							+ Add Property
 						</AddPropertyButton>
 					</TopActions>

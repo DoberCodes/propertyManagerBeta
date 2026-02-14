@@ -21,7 +21,7 @@ export const Main = styled.div`
 	); /* Use fixed height to ensure full viewport usage */
 	overflow: hidden;
 	flex-direction: row;
-	min-height: 0; /* Allow flex items to shrink below their minimum content size */
+	min-height: 100vh; /* Allow flex items to shrink below their minimum content size */
 
 	@media (max-width: 1024px) {
 		flex-direction: column;
@@ -54,9 +54,11 @@ export const Content = styled.div`
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	height: calc(100vh);
 	overflow-y: auto;
 	padding: 20px;
-	background-color: #ffffff;
+	background-color: #fafafa; /* match TeamPage off-white */
+
 	padding-bottom: 70px;
 
 	@media (max-width: 1024px) {

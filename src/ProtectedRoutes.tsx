@@ -70,7 +70,6 @@ export const ProtectedRoutes = ({
 	// Check subscription requirements
 	if (requireSubscription && currentUser) {
 		if (!currentUser.subscription) {
-			console.log('No subscription found, redirecting to paywall');
 			return <Navigate to='/paywall' replace />;
 		}
 
@@ -79,7 +78,6 @@ export const ProtectedRoutes = ({
 
 		// Allow access if subscription is active OR if expired users are allowed for this route
 		if (!isActive && !(allowExpiredUsers && isExpired)) {
-			console.log('Subscription check failed, redirecting to paywall');
 			return <Navigate to='/paywall' replace />;
 		}
 	}

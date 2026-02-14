@@ -66,33 +66,27 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 
 	// Wrapper functions for table actions
 	const handleCreateTask = () => {
-		console.log('TasksTab: Create Task button clicked');
 		setIsEditing(false);
 		setShowTaskModal(true);
 	};
 
 	const handleEditTask = (task: Task) => {
-		console.log('TasksTab: Editing task:', task);
-		console.log('TasksTab: Task has id?', !!task.id, 'id value:', task.id);
 		setSelectedTask(task);
 		setIsEditing(true);
 		setShowTaskModal(true);
 	};
 
 	const handleDeleteTask = (task: Task) => {
-		console.log('TasksTab: Deleting task:', task);
 		setSelectedTask(task);
 		setShowDeleteConfirmation(true);
 	};
 
 	const handleAssignTask = (task: Task) => {
-		console.log('TasksTab: Assigning task:', task);
 		setSelectedTask(task);
 		setShowAssignModal(true);
 	};
 
 	const handleCompleteTask = (task: Task) => {
-		console.log('TasksTab: Marking task as complete:', task);
 		setSelectedTask(task);
 		setShowCompleteTaskConfirmation(true);
 	};

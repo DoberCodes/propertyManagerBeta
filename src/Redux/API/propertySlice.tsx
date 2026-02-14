@@ -268,13 +268,10 @@ const propertySlice = apiSlice.injectEndpoints({
 		// Property endpoints
 		getProperties: builder.query<Property[], void>({
 			async queryFn() {
-				console.log('getProperties query called');
 				try {
 					// Get authenticated user from Firebase Auth
 					const currentUser = auth.currentUser;
-					console.log('getProperties: currentUser:', currentUser);
 					if (!currentUser) {
-						console.log('getProperties: User not authenticated');
 						return { error: 'User not authenticated' };
 					}
 					const userId = currentUser.uid;
@@ -411,20 +408,6 @@ const propertySlice = apiSlice.injectEndpoints({
 					];
 					const uniqueProperties = Array.from(
 						new Map(allProperties.map((p) => [p.id, p])).values(),
-					);
-
-					console.log(
-						'getProperties: returning',
-						uniqueProperties.length,
-						'properties',
-					);
-					console.log(
-						'getProperties: properties:',
-						uniqueProperties.map((p) => ({
-							id: p.id,
-							title: p.title,
-							slug: p.slug,
-						})),
 					);
 
 					return { data: uniqueProperties };

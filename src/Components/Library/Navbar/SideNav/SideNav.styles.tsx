@@ -101,7 +101,7 @@ export const MobileBottomNav = styled.div`
 	justify-content: stretch;
 	align-items: stretch;
 	padding: 0;
-	padding-bottom: max(0, env(safe-area-inset-bottom));
+	padding-bottom: max(40px, env(safe-area-inset-bottom));
 	padding-left: env(safe-area-inset-left);
 	padding-right: env(safe-area-inset-right);
 	z-index: 100;

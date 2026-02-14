@@ -66,24 +66,16 @@ const tenantSlice = apiSlice.injectEndpoints({
 
 					// If tenant is assigned to a unit, also add them to the unit's occupants
 					if (tenantData.unit) {
-						console.log(
-							'Adding tenant to unit:',
-							tenantData.unit,
-							'for property:',
-							tenantData.propertyId,
-						);
 						const unitsQuery = query(
 							collection(db, 'units'),
 							where('propertyId', '==', tenantData.propertyId),
 							where('name', '==', tenantData.unit),
 						);
 						const unitsSnapshot = await getDocs(unitsQuery);
-						console.log('Units found:', unitsSnapshot.size);
 
 						if (!unitsSnapshot.empty) {
 							const unitDoc = unitsSnapshot.docs[0];
 							const unitData = unitDoc.data();
-							console.log('Unit data:', unitData);
 							const occupants = unitData.occupants || [];
 
 							// Add tenant to unit's occupants array
@@ -99,7 +91,6 @@ const tenantSlice = apiSlice.injectEndpoints({
 
 							occupants.push(tenantOccupant);
 							await updateDoc(unitDoc.ref, { occupants });
-							console.log('Updated unit occupants:', occupants);
 						} else {
 							console.log('No unit found with name:', tenantData.unit);
 						}
@@ -159,16 +150,9 @@ const tenantSlice = apiSlice.injectEndpoints({
 					// Handle unit occupant updates
 					const oldUnit = existingTenant?.unit;
 					const newUnit = updates.unit;
-					console.log(
-						'Updating tenant unit assignment - old:',
-						oldUnit,
-						'new:',
-						newUnit,
-					);
 
 					// Remove from old unit if unit changed
 					if (oldUnit && oldUnit !== newUnit) {
-						console.log('Removing tenant from old unit:', oldUnit);
 						const oldUnitQuery = query(
 							collection(db, 'units'),
 							where('propertyId', '==', propertyId),
@@ -182,13 +166,11 @@ const tenantSlice = apiSlice.injectEndpoints({
 								(occupant: any) => occupant.id !== tenantId,
 							);
 							await updateDoc(oldUnitDoc.ref, { occupants });
-							console.log('Removed tenant from old unit');
 						}
 					}
 
 					// Add to new unit if assigned
 					if (newUnit && (!oldUnit || oldUnit !== newUnit)) {
-						console.log('Adding tenant to new unit:', newUnit);
 						const newUnitQuery = query(
 							collection(db, 'units'),
 							where('propertyId', '==', propertyId),
@@ -216,7 +198,6 @@ const tenantSlice = apiSlice.injectEndpoints({
 
 							occupants.push(tenantOccupant);
 							await updateDoc(newUnitDoc.ref, { occupants });
-							console.log('Added tenant to new unit');
 						} else {
 							console.log('New unit not found:', newUnit);
 						}

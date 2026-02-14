@@ -175,7 +175,7 @@ export const DashboardTab = () => {
 			// Verify checkout session
 			handleCheckoutSuccess(sessionId)
 				.then((result) => {
-					console.log('Checkout success verified:', result);
+					console.info('Checkout verification result:', result);
 					// Force a logout/login to refresh user data with new subscription
 					dispatch(logout());
 					setTimeout(() => {
@@ -275,7 +275,6 @@ export const DashboardTab = () => {
 			return priorityB - priorityA;
 		});
 
-		console.log('Carousel tasks count:', sorted.length);
 		return sorted;
 	}, [
 		allTasks,
@@ -452,9 +451,6 @@ export const DashboardTab = () => {
 
 							// Handle logic for updated row, e.g., marking a task as completed
 							if (updatedRow.status === 'Completed') {
-								console.log(
-									'✅ Status changed to Completed, calling handleTaskCompletion',
-								);
 								handleTaskCompletion(updatedRow.id);
 								return;
 							}

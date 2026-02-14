@@ -156,10 +156,6 @@ export const TabSystem = ({
 				{/* Contractors Tab */}
 				{activeTab === 'contractors' &&
 					(() => {
-						console.log(
-							'About to render ContractorsTab with propertyId:',
-							property?.id,
-						);
 						return <ContractorsTab propertyId={property?.id || ''} />;
 					})()}
 			</TabContentContainer>

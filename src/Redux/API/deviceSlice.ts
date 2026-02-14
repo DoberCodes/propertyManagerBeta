@@ -20,18 +20,12 @@ const deviceSlice = apiSlice.injectEndpoints({
 		// Device endpoints
 		getDevices: builder.query<Device[], string>({
 			async queryFn(propertyId: string) {
-				console.log('getDevices query called with propertyId:', propertyId);
 				try {
 					const q = query(
 						collection(db, 'devices'),
 						where('location.propertyId', '==', propertyId),
 					);
 					const querySnapshot = await getDocs(q);
-					console.log(
-						'getDevices query result:',
-						querySnapshot.size,
-						'documents',
-					);
 					const devices = querySnapshot.docs
 						.map((doc) => docToData(doc) as Device)
 						.filter(Boolean) as Device[];

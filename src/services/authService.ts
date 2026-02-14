@@ -117,7 +117,6 @@ const createUserSubscription = async (
 	email: string,
 ) => {
 	// Create Stripe trial subscription for all plans
-	console.log('Creating Stripe trial subscription for plan:', selectedPlan);
 	try {
 		const priceId = getPriceIdForPlan(selectedPlan);
 		if (!priceId) {

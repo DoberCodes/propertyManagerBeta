@@ -84,16 +84,6 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 	currentUser = null,
 	taskTitlePlaceholder = 'Task title',
 }) => {
-	console.log(
-		'EditTaskModal: props - isOpen:',
-		isOpen,
-		'isEditing:',
-		isEditing,
-		'editingTaskId:',
-		editingTaskId,
-		'editingTask?.id:',
-		editingTask?.id,
-	);
 	// modal-owned form state (defaults)
 	const defaultForm: TaskFormData = useMemo(
 		() => ({
@@ -287,30 +277,10 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 			return;
 		}
 
-		console.log('TaskModal: handleSubmit called', {
-			isEditing,
-			editingTaskId,
-			editingTask,
-			'editingTask?.id': editingTask?.id,
-			'condition check': isEditing && (editingTaskId || editingTask?.id),
-			'selectedTask from props': editingTask,
-			formState,
-		});
-
 		try {
 			// Determine if this is an update operation
 			const taskId = editingTaskId || editingTask?.id;
 			const isUpdate = !!taskId;
-
-			console.log('TaskModal: handleSubmit called', {
-				isEditing,
-				editingTaskId,
-				editingTask,
-				'editingTask?.id': editingTask?.id,
-				taskId: taskId,
-				isUpdate: isUpdate,
-				formState,
-			});
 
 			if (isUpdate) {
 				if (!taskId) {
@@ -318,7 +288,6 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					alert('Unable to update task: missing task ID');
 					return;
 				}
-				console.log('TaskModal: Updating task with ID:', taskId);
 				let updatesRaw: any = { ...formState };
 
 				// Convert assignedTo from string (user ID) to object format
@@ -346,17 +315,14 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					Object.entries(updatesRaw).filter(([, value]) => value !== undefined),
 				);
 
-				console.log('TaskModal: Updates to save:', updates);
 				const updated = await updateTaskApi({
 					id: taskId,
 					updates,
 				}).unwrap();
-				console.log('TaskModal: Task updated successfully:', updated);
 				dispatch(updateTask(updated));
 				onSaved?.(updated);
 				onClose();
 			} else {
-				console.log('TaskModal: Creating new task');
 				let newTaskRaw: any = {
 					propertyId: propertyId,
 					...formState,
@@ -390,9 +356,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					Object.entries(newTaskRaw).filter(([, value]) => value !== undefined),
 				) as any;
 
-				console.log('TaskModal: New task to create:', newTask);
 				const created = await createTask(newTask).unwrap();
-				console.log('TaskModal: Task created successfully:', created);
 				dispatch(addTask(created));
 				onSaved?.(created);
 				onClose();

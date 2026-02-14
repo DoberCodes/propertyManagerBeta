@@ -19,13 +19,8 @@ const contractorSlice = apiSlice.injectEndpoints({
 		// Contractor endpoints
 		getContractorsByProperty: builder.query<any[], string>({
 			async queryFn(propertyId: string) {
-				console.log(
-					'getContractorsByProperty query called with propertyId:',
-					propertyId,
-				);
 				try {
 					if (!propertyId) {
-						console.log('getContractorsByProperty: no propertyId provided');
 						return { data: [] };
 					}
 					const contractorQuery = query(
@@ -33,11 +28,7 @@ const contractorSlice = apiSlice.injectEndpoints({
 						where('propertyId', '==', propertyId),
 					);
 					const snapshot = await getDocs(contractorQuery);
-					console.log(
-						'getContractorsByProperty query result:',
-						snapshot.size,
-						'documents',
-					);
+
 					const contractors = snapshot.docs
 						.map((doc) => docToData(doc) as Contractor)
 						.filter(Boolean) as Contractor[];

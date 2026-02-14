@@ -12,8 +12,8 @@ export const Wrapper = styled.div`
 	justify-content: space-between;
 	height: ${nav_height};
 	background: linear-gradient(90deg, #065f46 0%, #047857 100%);
-	padding: 20px 20px;
-	padding-top: max(20px, env(safe-area-inset-top));
+	padding: 40px 20px;
+	padding-top: max(40px, env(safe-area-inset-top));
 	padding-left: max(20px, env(safe-area-inset-left));
 	padding-right: max(20px, env(safe-area-inset-right));
 	overflow: visible;
@@ -38,7 +38,7 @@ export const Wrapper = styled.div`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 20px 15px;
+		padding: 40px 15px;
 		padding-left: max(15px, env(safe-area-inset-left));
 		padding-right: max(15px, env(safe-area-inset-right));
 
@@ -59,7 +59,7 @@ export const Wrapper = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 20px 10px;
+		padding: 40px 10px;
 		padding-left: max(10px, env(safe-area-inset-left));
 		padding-right: max(10px, env(safe-area-inset-right));
 
