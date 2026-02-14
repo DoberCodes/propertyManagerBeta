@@ -14,13 +14,13 @@ export const ZeroStateContainer = styled.div`
 	min-height: 300px;
 
 	@media (max-width: 1024px) {
-		padding: 3rem 1.5rem;
-		min-height: 250px;
+		padding: 3.5rem 1.5rem;
+		min-height: 280px;
 	}
 
 	@media (max-width: 480px) {
-		padding: 2rem 1rem;
-		min-height: 200px;
+		padding: 3rem 1.5rem;
+		min-height: 320px;
 	}
 `;
 
@@ -30,12 +30,13 @@ export const ZeroStateIcon = styled.div`
 	opacity: 0.5;
 
 	@media (max-width: 1024px) {
-		font-size: 40px;
-		margin-bottom: 1rem;
+		font-size: 44px;
+		margin-bottom: 1.25rem;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 32px;
+		font-size: 40px;
+		margin-bottom: 1.5rem;
 	}
 `;
 
@@ -46,11 +47,11 @@ export const ZeroStateTitle = styled.h3`
 	margin: 0 0 0.75rem 0;
 
 	@media (max-width: 1024px) {
-		font-size: 20px;
+		font-size: 22px;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 18px;
+		font-size: 20px;
 	}
 `;
 
@@ -62,12 +63,14 @@ export const ZeroStateDescription = styled.p`
 	line-height: 1.6;
 
 	@media (max-width: 1024px) {
-		font-size: 14px;
-		margin-bottom: 1.5rem;
+		font-size: 15px;
+		margin-bottom: 1.75rem;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 13px;
+		font-size: 16px;
+		margin-bottom: 2rem;
+		line-height: 1.5;
 	}
 `;
 
@@ -80,7 +83,8 @@ export const ZeroStateActions = styled.div`
 	@media (max-width: 480px) {
 		flex-direction: column;
 		width: 100%;
-		max-width: 300px;
+		max-width: 320px;
+		gap: 0.75rem;
 	}
 `;
 
@@ -95,6 +99,7 @@ export const ZeroStatePrimaryButton = styled.button`
 	cursor: pointer;
 	transition: all 0.2s;
 	box-shadow: ${COLORS.shadowMd};
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background: linear-gradient(
@@ -113,8 +118,9 @@ export const ZeroStatePrimaryButton = styled.button`
 
 	@media (max-width: 480px) {
 		width: 100%;
-		padding: 0.75rem 1.5rem;
-		font-size: 15px;
+		padding: 1rem 1.75rem;
+		font-size: 16px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 
@@ -128,6 +134,7 @@ export const ZeroStateSecondaryButton = styled.button`
 	font-size: 16px;
 	cursor: pointer;
 	transition: all 0.2s;
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: ${COLORS.primaryLight};
@@ -142,7 +149,8 @@ export const ZeroStateSecondaryButton = styled.button`
 
 	@media (max-width: 480px) {
 		width: 100%;
-		padding: 0.75rem 1.5rem;
-		font-size: 15px;
+		padding: 1rem 1.75rem;
+		font-size: 16px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;

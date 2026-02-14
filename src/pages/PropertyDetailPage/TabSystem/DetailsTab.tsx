@@ -26,7 +26,13 @@ export const DetailsTab: React.FC<DetailsTabProps> = ({
 				<SectionContainer>
 					<SectionHeader>Notes</SectionHeader>
 					<InfoCard style={{ padding: '16px' }}>
-						<p style={{ margin: 0, lineHeight: '1.6', color: '#333' }}>
+						<p
+							style={{
+								margin: 0,
+								lineHeight: '1.6',
+								color: '#333',
+								fontSize: '16px',
+							}}>
 							{property.notes}
 						</p>
 					</InfoCard>

@@ -19,8 +19,8 @@ export const PageWrapper = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 10px;
-		gap: 10px;
+		padding: 16px;
+		gap: 16px;
 	}
 `;
 
@@ -39,9 +39,10 @@ export const PageHeader = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		gap: 10px;
-		padding-bottom: 15px;
+		gap: 16px;
+		padding-bottom: 16px;
 		flex-direction: column;
+		align-items: flex-start;
 	}
 `;
 
@@ -56,7 +57,7 @@ export const PageTitle = styled.h1`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 20px;
+		font-size: 22px;
 	}
 `;
 
@@ -79,7 +80,7 @@ export const ContentContainer = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		gap: 10px;
+		gap: 16px;
 	}
 `;
 
@@ -95,7 +96,7 @@ export const Section = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 12px;
+		padding: 16px;
 	}
 `;
 
@@ -106,6 +107,7 @@ export const SectionTitle = styled.h2`
 	margin: 0 0 12px 0;
 
 	@media (max-width: 480px) {
-		font-size: 16px;
+		font-size: 17px;
+		margin: 0 0 14px 0;
 	}
 `;

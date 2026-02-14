@@ -20,9 +20,9 @@ export const UserImage = styled.img`
 	border: 2px solid black;
 
 	@media (max-width: 480px) {
-		width: 32px;
-		height: 32px;
-		border: 1px solid black;
+		width: 36px;
+		height: 36px;
+		border: 2px solid black;
 	}
 `;
 
@@ -37,7 +37,7 @@ export const UserInfo = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		margin-left: 4px;
+		margin-left: 6px;
 		display: none;
 	}
 `;
@@ -51,7 +51,7 @@ export const UserName = styled.span`
 	line-height: 1.2;
 
 	@media (max-width: 1024px) {
-		font-size: 12px;
+		font-size: 13px;
 	}
 `;
 
@@ -63,7 +63,7 @@ export const UserTitle = styled.span`
 	line-height: 1.2;
 
 	@media (max-width: 1024px) {
-		font-size: 10px;
+		font-size: 11px;
 	}
 `;
 
@@ -80,7 +80,7 @@ export const DropdownMenu = styled.div`
 	pointer-events: auto;
 
 	@media (max-width: 480px) {
-		min-width: 120px;
+		min-width: 140px;
 		top: calc(100% + 2px);
 	}
 `;
@@ -93,28 +93,26 @@ export const DropdownItem = styled(Link)`
 	font-size: 14px;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
+	display: flex;
+	align-items: center;
 
 	&:first-child {
 		border-radius: 4px 4px 0 0;
+	}
+
+	&:hover {
+		background-color: #f0fdf4;
 	}
 
 	&:last-child {
 		border-radius: 0 0 4px 4px;
 	}
 
-	&:hover {
-		background-color: rgba(34, 197, 94, 0.1);
-		color: #22c55e;
-	}
-
-	&.active {
-		background-color: #22c55e;
-		color: white;
-	}
-
 	@media (max-width: 480px) {
-		padding: 8px 12px;
-		font-size: 12px;
+		padding: 12px 16px;
+		font-size: 15px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 

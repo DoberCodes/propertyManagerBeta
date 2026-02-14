@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FormSelect } from '../Modal/ModalStyles';
+import { FormOptions, FormSelect } from '../Modal/ModalStyles';
+import { DropdownButton } from '../DropdownButton/DropdownButton';
 
 export interface TabsContextProps {
 	property: any;
@@ -13,7 +14,7 @@ interface TabsProps extends TabsContextProps {
 	setActiveTab: (tab: string) => void;
 }
 
-interface tab {
+export interface tab {
 	label: string;
 	value: string;
 	badgeCount?: number;
@@ -90,41 +91,13 @@ export const TabController: React.FC<TabsProps> = ({
 					width: '100%',
 					padding: '0 16px',
 					marginBottom: '8px',
+					overflowX: 'auto',
 				}}>
-				<FormSelect
-					value={activeTab}
-					onChange={(e) => setActiveTab(e.target.value)}
-					style={{
-						width: '100%',
-						padding: '12px 16px',
-						border: '2px solid #e5e7eb',
-						borderRadius: '8px',
-						fontSize: '16px',
-						fontWeight: '500',
-						backgroundColor: '#ffffff',
-						color: '#374151',
-						cursor: 'pointer',
-						transition: 'all 0.2s ease',
-						boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-						outline: 'none',
-					}}
-					onFocus={(e) => {
-						e.target.style.borderColor = '#10b981';
-						e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-					}}
-					onBlur={(e) => {
-						e.target.style.borderColor = '#e5e7eb';
-						e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-					}}>
-					{tabs.map((tab) => (
-						<option key={tab.value} value={tab.value}>
-							{tab.label}
-							{tab.badgeCount && tab.badgeCount > 0
-								? ` (${tab.badgeCount})`
-								: ''}
-						</option>
-					))}
-				</FormSelect>
+				<DropdownButton
+					activeTab={activeTab}
+					SetActiveTab={setActiveTab}
+					availableTabs={tabs}
+				/>
 			</div>
 		);
 	}

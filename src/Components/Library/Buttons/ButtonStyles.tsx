@@ -18,6 +18,7 @@ export const PrimaryButton = styled.button`
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #16a34a;
@@ -34,8 +35,15 @@ export const PrimaryButton = styled.button`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 10px 20px;
-		font-size: 13px;
+		padding: 14px 24px;
+		font-size: 15px;
+		min-height: 48px; /* Larger touch target on mobile */
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px 24px;
+		font-size: 16px; /* Prevent iOS zoom */
+		min-height: 48px;
 	}
 `;
 
@@ -52,6 +60,7 @@ export const SecondaryButton = styled.button`
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #f3f4f6;
@@ -64,8 +73,15 @@ export const SecondaryButton = styled.button`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 10px 20px;
-		font-size: 13px;
+		padding: 14px 24px;
+		font-size: 15px;
+		min-height: 48px; /* Larger touch target on mobile */
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px 24px;
+		font-size: 16px; /* Prevent iOS zoom */
+		min-height: 48px;
 	}
 `;
 
@@ -82,6 +98,7 @@ export const DangerButton = styled.button`
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #dc2626;
@@ -98,8 +115,15 @@ export const DangerButton = styled.button`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 10px 20px;
-		font-size: 13px;
+		padding: 14px 24px;
+		font-size: 15px;
+		min-height: 48px; /* Larger touch target on mobile */
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px 24px;
+		font-size: 16px; /* Prevent iOS zoom */
+		min-height: 48px;
 	}
 `;
 
@@ -116,6 +140,7 @@ export const SmallButton = styled.button`
 	font-weight: 500;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 36px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #16a34a;
@@ -127,8 +152,9 @@ export const SmallButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 6px 12px;
-		font-size: 13px;
+		padding: 10px 18px;
+		font-size: 15px;
+		min-height: 44px; /* Larger touch target on mobile */
 	}
 `;
 
@@ -146,6 +172,8 @@ export const IconButton = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	min-width: 44px; /* Better touch target */
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #f3f4f6;
@@ -155,6 +183,11 @@ export const IconButton = styled.button`
 	&:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		min-width: 48px; /* Larger touch target on mobile */
+		min-height: 48px;
 	}
 `;
 
@@ -171,6 +204,7 @@ export const OutlineButton = styled.button`
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
 
 	&:hover:not(:disabled) {
 		background-color: #22c55e;
@@ -183,8 +217,15 @@ export const OutlineButton = styled.button`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 10px 20px;
-		font-size: 13px;
+		padding: 14px 24px;
+		font-size: 15px;
+		min-height: 48px; /* Larger touch target on mobile */
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px 24px;
+		font-size: 16px; /* Prevent iOS zoom */
+		min-height: 48px;
 	}
 `;
 
@@ -199,7 +240,8 @@ export const ButtonRow = styled.div`
 
 	@media (max-width: 480px) {
 		flex-direction: column-reverse;
-		gap: 8px;
+		gap: 12px;
+		margin-top: 20px;
 
 		button {
 			width: 100%;

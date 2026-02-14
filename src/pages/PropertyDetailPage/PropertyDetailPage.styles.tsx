@@ -118,8 +118,11 @@ export const TabButton = styled.button<{ isActive: boolean }>`
 	}
 
 	@media (max-width: 480px) {
-		padding: 10px 12px;
-		font-size: 11px;
+		padding: 14px 16px;
+		font-size: 16px;
+		min-height: 48px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -181,8 +184,11 @@ export const ToolbarButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 6px 10px;
-		font-size: 11px;
+		padding: 12px 16px;
+		font-size: 14px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -295,8 +301,9 @@ export const FavoriteButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 10px 14px;
-		font-size: 12px;
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 		width: 100%;
 		text-align: center;
 	}
@@ -319,6 +326,12 @@ export const BackButton = styled.button`
 
 	&:hover {
 		background-color: rgba(0, 0, 0, 0.7);
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -578,8 +591,9 @@ export const PencilIcon = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 4px 6px;
-		font-size: 12px;
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -609,6 +623,12 @@ export const EditModeButton = styled.button`
 	&:disabled {
 		background-color: #9ca3af;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -641,6 +661,11 @@ export const MinimalEditButton = styled.button`
 	&:disabled {
 		color: #9ca3af;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -712,6 +737,14 @@ export const AddDeviceButton = styled.button`
 	&:disabled {
 		background-color: #9ca3af;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -786,10 +819,10 @@ export const InfoCard = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 14px;
-		gap: 6px;
+		padding: 16px;
+		gap: 8px;
 		width: 100%;
-		min-height: 80px;
+		min-height: 100px;
 	}
 `;
 
@@ -801,6 +834,11 @@ export const InfoLabel = styled.label`
 	letter-spacing: 0.8px;
 	margin-bottom: 4px;
 	display: block;
+
+	@media (max-width: 480px) {
+		font-size: 13px;
+		margin-bottom: 6px;
+	}
 `;
 
 export const InfoValue = styled.span`
@@ -809,4 +847,9 @@ export const InfoValue = styled.span`
 	color: #1e293b;
 	word-break: break-word;
 	line-height: 1.4;
+
+	@media (max-width: 480px) {
+		font-size: 16px;
+		line-height: 1.5;
+	}
 `;

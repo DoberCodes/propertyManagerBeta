@@ -31,6 +31,24 @@ const sanitizeFirestoreData = (data: any): any => {
 	return data;
 };
 
+// Utility function to clean objects of undefined values for Firebase
+// const cleanObjectForFirebase = (obj: any): any => {
+// 	if (obj === null || obj === undefined) return obj;
+// 	if (typeof obj !== 'object') return obj;
+// 	if (Array.isArray(obj)) {
+// 		return obj.map(cleanObjectForFirebase).filter((item) => item !== undefined);
+// 	}
+
+// 	const cleaned: any = {};
+// 	for (const [key, value] of Object.entries(obj)) {
+// 		const cleanedValue = cleanObjectForFirebase(value);
+// 		if (cleanedValue !== undefined) {
+// 			cleaned[key] = cleanedValue;
+// 		}
+// 	}
+// 	return cleaned;
+// };
+
 // Helper function to convert Firestore docs to data with IDs and sanitized fields
 export const docToData = (docSnapshot: any) => {
 	if (!docSnapshot.exists()) return null;

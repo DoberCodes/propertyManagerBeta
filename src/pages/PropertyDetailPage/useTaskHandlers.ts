@@ -51,9 +51,11 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 		}
 	};
 
-	const handleAssignTask = () => {
-		if (selectedTasks.length !== 1) return;
-		setAssigningTaskId(selectedTasks[0]);
+	const handleAssignTask = (taskId?: string) => {
+		const taskToAssign =
+			taskId || (selectedTasks.length === 1 ? selectedTasks[0] : null);
+		if (!taskToAssign) return;
+		setAssigningTaskId(taskToAssign);
 		setShowTaskAssignDialog(true);
 	};
 

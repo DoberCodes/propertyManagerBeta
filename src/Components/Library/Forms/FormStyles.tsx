@@ -17,6 +17,11 @@ export const FormLabel = styled.label`
 	color: #333;
 	margin-bottom: 0.5rem;
 	font-size: 14px;
+
+	@media (max-width: 480px) {
+		font-size: 15px;
+		margin-bottom: 0.625rem;
+	}
 `;
 
 export const FormInput = styled.input`
@@ -42,6 +47,12 @@ export const FormInput = styled.input`
 
 	&::placeholder {
 		color: #999;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.875rem;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -70,6 +81,12 @@ export const FormTextarea = styled.textarea`
 
 	&::placeholder {
 		color: #999;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.875rem;
+		font-size: 16px;
+		min-height: 120px;
 	}
 `;
 
@@ -100,6 +117,12 @@ export const FormSelect = styled.select`
 	@media (max-width: 1024px) {
 		padding: 0.5rem;
 		font-size: 13px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.875rem;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -135,6 +158,12 @@ export const MultiSelectInput = styled.div`
 		min-height: 36px;
 		padding: 0.4rem 0.6rem;
 		font-size: 13px;
+	}
+
+	@media (max-width: 480px) {
+		min-height: 44px;
+		padding: 0.625rem 0.75rem;
+		font-size: 16px;
 	}
 `;
 
@@ -192,6 +221,14 @@ export const MultiSelectOption = styled.div<{ $isSelected: boolean }>`
 
 	&:hover {
 		background-color: #f9fafb;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.75rem;
+		font-size: 16px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -283,12 +320,22 @@ export const FormError = styled.div`
 	color: #e74c3c;
 	font-size: 14px;
 	margin-top: 0.25rem;
+
+	@media (max-width: 480px) {
+		font-size: 15px;
+		margin-top: 0.375rem;
+	}
 `;
 
 export const FormHelperText = styled.div`
 	color: #666;
 	font-size: 13px;
 	margin-top: 0.25rem;
+
+	@media (max-width: 480px) {
+		font-size: 14px;
+		margin-top: 0.375rem;
+	}
 `;
 
 export const FormRow = styled.div`
@@ -309,4 +356,9 @@ export const FormSectionTitle = styled.h3`
 	margin-bottom: 1rem;
 	padding-bottom: 0.5rem;
 	border-bottom: 2px solid #f0f0f0;
+
+	@media (max-width: 480px) {
+		font-size: 17px;
+		margin-bottom: 1.125rem;
+	}
 `;

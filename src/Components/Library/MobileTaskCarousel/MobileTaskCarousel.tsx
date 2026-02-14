@@ -155,7 +155,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	const handleAssignClick = () => {
 		// If shared task handlers are passed in, use them
 		if (taskHandlers && taskHandlers.handleAssignTask) {
-			taskHandlers.handleAssignTask();
+			taskHandlers.handleAssignTask(currentTask.id);
 			return;
 		}
 

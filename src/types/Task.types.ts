@@ -152,7 +152,7 @@ export interface TaskHandlers {
 	handleCreateTask: () => void;
 	handleEditTask: (task: any) => void;
 	handleDeleteTask: () => void;
-	handleAssignTask: () => void;
+	handleAssignTask: (taskId?: string) => void;
 	handleCompleteTask: () => void;
 	handleTaskCompletionSuccess: () => void;
 	confirmDeleteTask: () => void;

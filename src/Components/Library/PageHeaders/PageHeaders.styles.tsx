@@ -61,7 +61,7 @@ const PageTitle = styled.h1`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 24px;
+		font-size: 26px;
 	}
 `;
 
@@ -143,7 +143,7 @@ const HeroTitle = styled.h1`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 22px;
+		font-size: 24px;
 	}
 `;
 

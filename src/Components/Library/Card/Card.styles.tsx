@@ -8,20 +8,23 @@ export const Wrapper = styled.div`
 	padding: 10px;
 
 	@media (max-width: 1024px) {
-		width: 40%;
+		width: 45%;
+		padding: 12px;
+		height: calc(500px - ${nav_height});
 	}
 
-	@media (max-width: 1024px) {
-		width: 60%;
-		padding: 8px;
-		height: calc(450px - ${nav_height});
+	@media (max-width: 768px) {
+		width: 70%;
+		padding: 16px;
+		height: auto;
+		min-height: 350px;
 	}
 
 	@media (max-width: 480px) {
-		width: 90%;
-		padding: 8px;
+		width: 95%;
+		padding: 20px;
 		height: auto;
-		min-height: 300px;
+		min-height: 400px;
 	}
 `;
 
@@ -29,11 +32,11 @@ export const CardTitle = styled.h2`
 	text-align: center;
 
 	@media (max-width: 1024px) {
-		font-size: 18px;
+		font-size: 20px;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 16px;
+		font-size: 18px;
 	}
 `;
 

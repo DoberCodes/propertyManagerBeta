@@ -12,7 +12,6 @@ export const TabControlsContainer = styled.div`
 	background-color: white;
 	border-bottom: 2px solid #e5e7eb;
 	border-radius: 8px 8px 0 0;
-	padding: 0 16px;
 `;
 
 export const TabButtonsWrapper = styled.div`
@@ -66,13 +65,30 @@ export const TabButton = styled.button<TabButtonProps>`
 		padding: 10px 12px;
 		font-size: 13px;
 	}
+
+	@media (max-width: 480px) {
+		padding: 14px 16px;
+		font-size: 16px;
+		min-height: 48px;
+		display: flex;
+		align-items: center;
+	}
 `;
 
 export const TabsContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	min-height: 0;
+	min-height: 100%;
+	width: 100%;
+
+	@media (max-width: 1024px) {
+		width: 100%;
+	}
+	@media (max-width: 480px) {
+		border: 1px solid #e5e7eb;
+		border-radius: 8px;
+	}
 `;
 
 export const TabContent = styled.div`
@@ -80,12 +96,13 @@ export const TabContent = styled.div`
 	overflow-y: auto;
 	padding: 20px;
 	background-color: #ffffff;
+	width: 100%;
 
 	@media (max-width: 1024px) {
 		padding: 15px;
 	}
 
 	@media (max-width: 480px) {
-		padding: 10px;
+		padding: 16px;
 	}
 `;

@@ -48,6 +48,10 @@ export const PageTitle = styled.h1`
 	color: ${COLORS.textPrimary};
 	margin: 0;
 	font-weight: 600;
+
+	@media (max-width: 480px) {
+		font-size: 1.875rem;
+	}
 `;
 
 export const FormSection = styled.div`
@@ -138,8 +142,11 @@ export const CancelButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 0.5rem 1rem;
-		font-size: 13px;
+		padding: 0.75rem 1.25rem;
+		font-size: 16px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -170,8 +177,11 @@ export const SaveButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 0.5rem 1.25rem;
-		font-size: 13px;
+		padding: 0.75rem 1.5rem;
+		font-size: 16px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 

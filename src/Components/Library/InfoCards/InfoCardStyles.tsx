@@ -15,13 +15,14 @@ export const InfoGrid = styled.div`
 	margin-bottom: 20px;
 
 	@media (max-width: 1024px) {
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 12px;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 14px;
 	}
 
 	@media (max-width: 480px) {
 		grid-template-columns: 1fr;
-		gap: 10px;
+		gap: 12px;
+		margin-bottom: 16px;
 	}
 `;
 
@@ -41,11 +42,11 @@ export const InfoCard = styled.div`
 	}
 
 	@media (max-width: 1024px) {
-		padding: 14px;
+		padding: 15px;
 	}
 
 	@media (max-width: 480px) {
-		padding: 12px;
+		padding: 16px;
 	}
 `;
 
@@ -62,8 +63,8 @@ export const InfoLabel = styled.label`
 	margin-bottom: 8px;
 
 	@media (max-width: 480px) {
-		font-size: 11px;
-		margin-bottom: 6px;
+		font-size: 13px;
+		margin-bottom: 8px;
 	}
 `;
 
@@ -78,11 +79,12 @@ export const InfoValue = styled.p`
 	word-break: break-word;
 
 	@media (max-width: 1024px) {
-		font-size: 15px;
+		font-size: 16px;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 14px;
+		font-size: 16px;
+		line-height: 1.4;
 	}
 `;
 
@@ -93,7 +95,7 @@ export const SectionContainer = styled.div`
 	padding: 16px 0;
 
 	@media (max-width: 480px) {
-		padding: 12px 0;
+		padding: 14px 0;
 	}
 `;
 
@@ -107,12 +109,12 @@ export const SectionHeader = styled.h2`
 	margin: 0 0 16px 0;
 
 	@media (max-width: 1024px) {
-		font-size: 17px;
-		margin: 0 0 14px 0;
+		font-size: 18px;
+		margin: 0 0 15px 0;
 	}
 
 	@media (max-width: 480px) {
-		font-size: 16px;
-		margin: 0 0 12px 0;
+		font-size: 17px;
+		margin: 0 0 14px 0;
 	}
 `;

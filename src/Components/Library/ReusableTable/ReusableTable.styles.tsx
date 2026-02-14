@@ -8,6 +8,11 @@ export const ActionButton = styled.button`
 	border-radius: 4px;
 	color: #374151;
 	transition: background-color 0.2s ease;
+	min-width: 44px; /* Better touch target */
+	min-height: 44px; /* Better touch target */
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
 	&:hover:not(:disabled) {
 		background-color: #f3f4f6;
@@ -25,6 +30,12 @@ export const ActionButton = styled.button`
 			background-color: #fef2f2;
 		}
 	}
+
+	@media (max-width: 480px) {
+		min-width: 48px; /* Larger touch target on mobile */
+		min-height: 48px;
+		padding: 8px 12px;
+	}
 `;
 
 export const TableContainer = styled.div`
@@ -32,6 +43,10 @@ export const TableContainer = styled.div`
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
 	background-color: #fff;
+
+	@media (max-width: 768px) {
+		border-radius: 8px;
+	}
 `;
 
 export const StyledTable = styled.table`
@@ -51,6 +66,8 @@ export const StyledTable = styled.table`
 
 	th {
 		text-align: left;
+		font-weight: 600;
+		font-size: 14px;
 	}
 
 	tbody tr:hover {
@@ -66,11 +83,42 @@ export const StyledTable = styled.table`
 		font-size: 14px;
 		background-color: #fff;
 		cursor: pointer;
+		min-height: 36px; /* Better touch target */
 
 		&:focus {
 			outline: none;
 			border-color: #3b82f6;
 			box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+		}
+
+		@media (max-width: 480px) {
+			font-size: 16px; /* Prevent iOS zoom */
+			min-height: 44px;
+			padding: 8px 10px;
+		}
+	}
+
+	@media (max-width: 768px) {
+		th,
+		td {
+			padding: 10px 8px;
+			font-size: 14px;
+		}
+
+		th {
+			font-size: 13px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		th,
+		td {
+			padding: 12px 10px;
+			font-size: 15px;
+		}
+
+		th {
+			font-size: 14px;
 		}
 	}
 `;
@@ -83,5 +131,13 @@ export const EmptyState = styled.div`
 	p {
 		margin: 0;
 		font-size: 14px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 50px 20px;
+
+		p {
+			font-size: 16px;
+		}
 	}
 `;

@@ -20,7 +20,7 @@ export const GradientHeader = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 18px 16px;
+		padding: 24px 16px;
 	}
 `;
 
@@ -36,7 +36,7 @@ export const HeaderContent = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		gap: 8px;
+		gap: 12px;
 	}
 `;
 
@@ -96,8 +96,11 @@ export const HeaderBackButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 6px 10px;
-		font-size: 12px;
+		padding: 10px 14px;
+		font-size: 14px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 `;
 
@@ -115,7 +118,7 @@ export const HeaderTitle = styled.h1`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 20px;
+		font-size: 24px;
 	}
 `;
 
@@ -128,7 +131,7 @@ export const HeaderSubtitle = styled.p`
 	color: rgba(255, 255, 255, 0.9);
 
 	@media (max-width: 480px) {
-		font-size: 13px;
+		font-size: 15px;
 	}
 `;
 
@@ -141,6 +144,6 @@ export const HeaderSubtitleMuted = styled.p`
 	color: rgba(255, 255, 255, 0.8);
 
 	@media (max-width: 480px) {
-		font-size: 13px;
+		font-size: 15px;
 	}
 `;

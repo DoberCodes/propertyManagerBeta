@@ -810,6 +810,24 @@ const userSlice = apiSlice.injectEndpoints({
 				},
 			},
 		),
+
+		getUserById: builder.query<User | null, string>({
+			async queryFn(userId: string) {
+				try {
+					const docRef = doc(db, 'users', userId);
+					const docSnapshot = await getDoc(docRef);
+
+					if (!docSnapshot.exists()) {
+						return { data: null };
+					}
+
+					const userData = docToData(docSnapshot) as User;
+					return { data: userData };
+				} catch (error: any) {
+					return { error: error.message };
+				}
+			},
+		}),
 	}),
 });
 export const {
@@ -833,4 +851,5 @@ export const {
 	useGetPropertyInvitationsQuery,
 	useGetAllPropertyInvitationsQuery,
 	useGetUserByEmailQuery,
+	useGetUserByIdQuery,
 } = userSlice;

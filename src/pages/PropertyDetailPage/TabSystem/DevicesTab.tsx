@@ -68,6 +68,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const [showDeviceModal, setShowDeviceModal] = useState(false);
 	const [editingDevice, setEditingDevice] = useState<any>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [selectedDevice, setSelectedDevice] = useState<any>(null);
 	const [deviceFormData, setDeviceFormData] = useState<DeviceFormData>({
 		type: '',
 		brand: '',
@@ -191,6 +192,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const handleCloseModal = () => {
 		setShowDeviceModal(false);
 		resetForm();
+		setSelectedDevice(null);
 	};
 
 	const handleFormChange = (field: string, value: any) => {
@@ -284,6 +286,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 		if (window.confirm('Are you sure you want to delete this device?')) {
 			try {
 				await deleteDevice(deviceId);
+				setSelectedDevice(null);
 			} catch (error) {
 				console.error('Error deleting device:', error);
 				alert('Failed to delete device. Please try again.');
@@ -316,7 +319,10 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				<MobileCarouselViewport>
 					<MobileCarouselTrack index={carouselIndex}>
 						{devices.map((device) => (
-							<DeviceCard key={device.id}>
+							<DeviceCard
+								key={device.id}
+								$isSelected={selectedDevice === device}
+								onClick={() => setSelectedDevice(device)}>
 								<div
 									style={{
 										display: 'flex',
@@ -347,6 +353,13 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 												background: 'transparent',
 												border: 'none',
 												cursor: 'pointer',
+												padding: '8px',
+												borderRadius: '4px',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												minWidth: '44px',
+												minHeight: '44px',
 											}}>
 											<FontAwesomeIcon icon={faEdit} />
 										</button>
@@ -357,6 +370,13 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 												border: 'none',
 												cursor: 'pointer',
 												color: '#ef4444',
+												padding: '8px',
+												borderRadius: '4px',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												minWidth: '44px',
+												minHeight: '44px',
 											}}>
 											<FontAwesomeIcon icon={faTrash} />
 										</button>

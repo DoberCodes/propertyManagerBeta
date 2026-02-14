@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faArrowLeft,
@@ -15,7 +15,6 @@ import { useTaskHandlers } from './useTaskHandlers';
 import { useUnitHandlers } from './useUnitHandlers';
 import { usePropertyEditHandlers } from './usePropertyEditHandlers';
 import { useMaintenanceRequestHandlers } from './useMaintenanceRequestHandlers';
-import { getPropertyFieldValueUtil } from './PropertyDetailPage.utils';
 import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { useGetPropertySharesQuery } from '../../Redux/API/userSlice';
 import {
@@ -23,23 +22,18 @@ import {
 	useUpdatePropertyMutation,
 	useGetUnitsQuery,
 } from '../../Redux/API/propertySlice';
-import { useGetDevicesQuery } from '../../Redux/API/deviceSlice';
 import { useGetContractorsByPropertyQuery } from '../../Redux/API/contractorSlice';
 import {
 	useGetMaintenanceHistoryByPropertyQuery,
 	useAddMaintenanceHistoryMutation,
-	useUpdateMaintenanceHistoryMutation,
 	useDeleteMaintenanceHistoryMutation,
 } from '../../Redux/API/maintenanceSlice';
 
 // Tenant APIs moved to tenantSlice
 import {
 	useRemoveTenantMutation,
-	useRevokeTenantInvitationCodeMutation,
 	useLazyGetTenantInvitationCodeQuery,
 	useLazyGetTenantInvitationCodesByEmailQuery,
-	useCreateTenantInvitationCodeMutation,
-	useUpdateTenantMutation,
 } from '../../Redux/API/tenantSlice';
 import {
 	canApproveMaintenanceRequest,
@@ -80,24 +74,6 @@ import {
 import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
 import { TabSystem } from './TabSystem';
 import { UnitModal } from '../../Components/Library';
-
-// Utility function to clean objects of undefined values for Firebase
-const cleanObjectForFirebase = (obj: any): any => {
-	if (obj === null || obj === undefined) return obj;
-	if (typeof obj !== 'object') return obj;
-	if (Array.isArray(obj)) {
-		return obj.map(cleanObjectForFirebase).filter((item) => item !== undefined);
-	}
-
-	const cleaned: any = {};
-	for (const [key, value] of Object.entries(obj)) {
-		const cleanedValue = cleanObjectForFirebase(value);
-		if (cleanedValue !== undefined) {
-			cleaned[key] = cleanedValue;
-		}
-	}
-	return cleaned;
-};
 
 export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	props,
@@ -145,10 +121,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
 	const [createNotification] = useCreateNotificationMutation();
 	const [addMaintenanceHistory] = useAddMaintenanceHistoryMutation();
-	const [updateMaintenanceHistory] = useUpdateMaintenanceHistoryMutation();
 	const [deleteMaintenanceHistory] = useDeleteMaintenanceHistoryMutation();
 	const [removeTenant] = useRemoveTenantMutation();
-	const [revokeTenantInvitationCode] = useRevokeTenantInvitationCodeMutation();
 	const [getTenantInvitationCode] = useLazyGetTenantInvitationCodeQuery();
 	const [getTenantInvitationCodesByEmail] =
 		useLazyGetTenantInvitationCodesByEmailQuery();
@@ -297,26 +271,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	// Destructure task handlers
 	const {
-		selectedTasks,
-		setSelectedTasks,
-		showTaskDialog,
-		setShowTaskDialog,
-		editingTaskId,
-		showTaskAssignDialog,
-		setShowTaskAssignDialog,
-		assigningTaskId,
-		setAssigningTaskId,
-		selectedAssignee,
-		setSelectedAssignee,
 		showTaskCompletionModal,
 		setShowTaskCompletionModal,
 		completingTaskId,
-		handleTaskCheckbox,
 		handleCreateTask,
 		handleEditTask,
-		handleDeleteTask,
-		handleAssignTask,
-		handleCompleteTask,
 		handleTaskCompletionSuccess,
 		confirmDeleteTask,
 	} = taskHandlers;
@@ -358,18 +317,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		}
 	};
 
-	const handleUpdateMaintenanceHistory = async (
-		id: string,
-		updates: Partial<any>,
-	) => {
-		try {
-			await updateMaintenanceHistory({ id, updates }).unwrap();
-		} catch (error) {
-			console.error('Failed to update maintenance history:', error);
-			alert('Failed to update maintenance history. Please try again.');
-		}
-	};
-
 	const handleDeleteMaintenanceHistory = async (historyId: string) => {
 		if (
 			!window.confirm(
@@ -389,9 +336,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	// Destructure property edit handlers
 	const {
-		isEditMode,
-		setIsEditMode,
-		editedProperty,
 		isEditingTitle,
 		setIsEditingTitle,
 		editedTitle,
@@ -403,7 +347,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		deviceFormData,
 		showDeviceDialog,
 		setShowDeviceDialog,
-		handlePropertyFieldChange,
 		handleDeviceFormChange,
 		handleDeviceFormSubmit,
 		handleTitleSave,
@@ -411,13 +354,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	// Destructure maintenance request handlers
 	const {
-		showMaintenanceRequestModal,
 		setShowMaintenanceRequestModal,
 		showConvertModal,
 		setShowConvertModal,
 		convertingRequest,
 		setConvertingRequest,
-		handleMaintenanceRequestSubmit,
 		handleConvertRequestToTask,
 		handleConvertToTask,
 	} = maintenanceHandlers;
@@ -462,18 +403,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		useGetMaintenanceHistoryByPropertyQuery(property?.id || '', {
 			skip: !property?.id,
 		});
-
-	const maintenanceHistoryOptions = useMemo(() => {
-		return maintenanceHistoryRecords.map((record) => {
-			const dateLabel = record.completionDate
-				? new Date(record.completionDate).toLocaleDateString()
-				: 'No date';
-			return {
-				label: `${record.title || 'Maintenance'} - ${dateLabel}`,
-				value: record.id,
-			};
-		});
-	}, [maintenanceHistoryRecords]);
 
 	// Get property shares for assignee options
 	const { data: currentPropertyShares = [] } = useGetPropertySharesQuery(
@@ -555,16 +484,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 		return uniqueAssignees;
 	}, [currentPropertyShares, teamMembers, propertyContractors, familyMembers]);
-
-	// Helper function for property field value - use util if not in edit mode
-	const getPropertyFieldValue = (field: string) => {
-		return getPropertyFieldValueUtil(
-			field,
-			property,
-			editedProperty,
-			isEditMode,
-		);
-	};
 
 	// Photo upload handler
 	const handlePhotoUpload = async (file: File | null) => {

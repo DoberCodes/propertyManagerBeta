@@ -268,9 +268,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 	if (isLoading) {
 		return (
 			<Card>
-				<CardHeader>
-					<h3>Notifications</h3>
-				</CardHeader>
 				<LoadingContainer>
 					<FontAwesomeIcon icon={faSpinner} spin size='2x' />
 				</LoadingContainer>
@@ -286,13 +283,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 
 	return (
 		<Card>
-			<CardHeader>
-				<h3>
-					Notifications
-					{unreadCount > 0 && <Badge count={unreadCount}>{unreadCount}</Badge>}
-				</h3>
-			</CardHeader>
-
 			{errorMessage && (
 				<Alert type='error'>
 					{errorMessage || 'Failed to load notifications'}
@@ -521,6 +511,14 @@ const CardHeader = styled.div`
 		align-items: center;
 		gap: 12px;
 	}
+
+	@media (max-width: 480px) {
+		padding: 16px;
+
+		h3 {
+			font-size: 17px;
+		}
+	}
 `;
 
 const Badge = styled.span<{ count: number }>`
@@ -596,6 +594,12 @@ const NotificationItem = styled.div<{
 	&:hover {
 		background-color: #f5f7ff;
 	}
+
+	@media (max-width: 480px) {
+		padding: 16px;
+		min-height: 60px;
+		align-items: flex-start;
+	}
 `;
 
 const NotificationIcon = styled.div<{ color: string }>`
@@ -620,6 +624,10 @@ const NotificationTitle = styled.div`
 	font-size: 14px;
 	font-weight: 600;
 	color: #1f2937;
+
+	@media (max-width: 480px) {
+		font-size: 15px;
+	}
 `;
 
 const NotificationTime = styled.div`
@@ -627,6 +635,10 @@ const NotificationTime = styled.div`
 	color: #999999;
 	white-space: nowrap;
 	flex-shrink: 0;
+
+	@media (max-width: 480px) {
+		font-size: 13px;
+	}
 `;
 
 const NotificationMessage = styled.div`
@@ -634,6 +646,11 @@ const NotificationMessage = styled.div`
 	color: #666666;
 	line-height: 1.4;
 	margin-bottom: 8px;
+
+	@media (max-width: 480px) {
+		font-size: 14px;
+		line-height: 1.5;
+	}
 `;
 
 const ActionButtons = styled.div`
@@ -665,6 +682,14 @@ const ActionButton = styled.button<{ variant: 'accept' | 'reject' }>`
 	&:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		padding: 10px 16px;
+		font-size: 14px;
+		min-height: 44px;
+		flex: 1;
+		justify-content: center;
 	}
 `;
 
@@ -764,6 +789,15 @@ const DismissButton = styled.button`
 	&:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		padding: 12px;
+		min-width: 44px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 `;
 

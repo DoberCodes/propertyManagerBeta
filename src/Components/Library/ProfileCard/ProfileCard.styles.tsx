@@ -20,7 +20,7 @@ export const Wrapper = styled.div`
 
 	@media (max-width: 480px) {
 		width: 90%;
-		padding: 8px;
+		padding: 16px;
 		min-height: auto;
 	}
 `;
@@ -75,7 +75,11 @@ export const Stat = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 14px;
-		padding: 6px;
+		font-size: 16px;
+		padding: 12px;
+		min-height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 `;

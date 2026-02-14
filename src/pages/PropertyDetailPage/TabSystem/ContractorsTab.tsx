@@ -27,6 +27,16 @@ import {
 	LoadingSpinner,
 	Toolbar,
 	ToolbarButton,
+	MobileContractorCard,
+	MobileContractorHeader,
+	MobileContractorTitle,
+	MobileContractorMeta,
+	MobileContractorRow,
+	MobileContractorLabel,
+	MobileContractorValue,
+	MobileContractorActions,
+	DesktopTableWrapper,
+	GridContainer,
 } from './index.styles';
 
 interface ContractorsTabProps {
@@ -269,12 +279,96 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 					<p>Try adjusting your search criteria.</p>
 				</EmptyState>
 			) : (
-				<ReusableTable
-					rowData={filteredContractors}
-					columns={contractorColumns}
-					actions={contractorActions}
-					emptyMessage='No contractors found'
-				/>
+				<>
+					<DesktopTableWrapper>
+						<GridContainer>
+							<ReusableTable
+								rowData={filteredContractors}
+								columns={contractorColumns}
+								actions={contractorActions}
+								emptyMessage='No contractors found'
+							/>
+						</GridContainer>
+					</DesktopTableWrapper>
+
+					{/* Mobile Contractor Cards */}
+					<div>
+						{filteredContractors.map((contractor) => (
+							<MobileContractorCard
+								key={contractor.id}
+								onClick={() => handleEdit(contractor)}>
+								<MobileContractorHeader>
+									<MobileContractorTitle>
+										{contractor.company || contractor.name}
+									</MobileContractorTitle>
+								</MobileContractorHeader>
+
+								<MobileContractorMeta>
+									{contractor.company &&
+										contractor.name !== contractor.company && (
+											<MobileContractorRow>
+												<MobileContractorLabel>Contact</MobileContractorLabel>
+												<MobileContractorValue>
+													{contractor.name}
+												</MobileContractorValue>
+											</MobileContractorRow>
+										)}
+
+									<MobileContractorRow>
+										<MobileContractorLabel>Phone</MobileContractorLabel>
+										<MobileContractorValue>
+											<a
+												href={`tel:${contractor.phone}`}
+												style={{ color: 'inherit', textDecoration: 'none' }}>
+												{contractor.phone}
+											</a>
+										</MobileContractorValue>
+									</MobileContractorRow>
+
+									{contractor.email && (
+										<MobileContractorRow>
+											<MobileContractorLabel>Email</MobileContractorLabel>
+											<MobileContractorValue>
+												{contractor.email}
+											</MobileContractorValue>
+										</MobileContractorRow>
+									)}
+
+									{contractor.category && (
+										<MobileContractorRow>
+											<MobileContractorLabel>Category</MobileContractorLabel>
+											<MobileContractorValue>
+												<CategoryBadge category={contractor.category}>
+													{contractor.category}
+												</CategoryBadge>
+											</MobileContractorValue>
+										</MobileContractorRow>
+									)}
+								</MobileContractorMeta>
+
+								<MobileContractorActions>
+									<ToolbarButton
+										onClick={(e) => {
+											e.stopPropagation();
+											handleEdit(contractor);
+										}}
+										style={{ flex: 1, padding: '0.5rem' }}>
+										Edit
+									</ToolbarButton>
+									<ToolbarButton
+										className='delete'
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteClick(contractor);
+										}}
+										style={{ flex: 1, padding: '0.5rem' }}>
+										Delete
+									</ToolbarButton>
+								</MobileContractorActions>
+							</MobileContractorCard>
+						))}
+					</div>
+				</>
 			)}
 		</SectionContainer>
 	);

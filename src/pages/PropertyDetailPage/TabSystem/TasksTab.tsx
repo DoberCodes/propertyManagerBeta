@@ -32,6 +32,7 @@ import {
 	ToolbarButton,
 	StatusBadge,
 	EmptyState,
+	DesktopTableWrapper,
 } from './index.styles';
 import { TaskAssignModal } from '../../../Components/Library/Modal/TaskAssignModal';
 import { Task } from '../../../types/Task.types';
@@ -358,16 +359,20 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 			</div>
 
 			{filteredTasks.length > 0 ? (
-				<GridContainer>
-					<ReusableTable
-						columns={columns}
-						rowData={filteredTasks}
-						actions={taskActions}
-						showCheckbox={false}
-					/>
+				<>
+					<DesktopTableWrapper>
+						<GridContainer>
+							<ReusableTable
+								columns={columns}
+								rowData={filteredTasks}
+								actions={taskActions}
+								showCheckbox={false}
+							/>
+						</GridContainer>
+					</DesktopTableWrapper>
 
 					{/* Mobile Task Cards */}
-					<div className='mobile-only'>
+					<div>
 						{filteredTasks.map((task) => (
 							<MobileTaskCard
 								key={task.id}
@@ -443,7 +448,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 							</MobileTaskCard>
 						))}
 					</div>
-				</GridContainer>
+				</>
 			) : (
 				<EmptyState>
 					<p>No tasks associated with this property</p>

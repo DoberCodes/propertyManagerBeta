@@ -8,6 +8,11 @@ export const CarouselContainer = styled.div`
 	padding: 20px;
 	background: #f9fafb;
 	border-radius: 12px;
+
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 16px;
+	}
 `;
 
 export const CarouselViewport = styled.div`
@@ -41,6 +46,12 @@ export const TaskCard = styled.div`
 	gap: 16px;
 	margin-right: 16px;
 
+	@media (max-width: 768px) {
+		padding: 16px;
+		gap: 14px;
+		margin-right: 12px;
+	}
+
 	&:hover {
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 		border-color: #3b82f6;
@@ -58,6 +69,11 @@ export const CardHeader = styled.div`
 	gap: 12px;
 	border-bottom: 1px solid #f3f4f6;
 	padding-bottom: 12px;
+
+	@media (max-width: 768px) {
+		gap: 10px;
+		padding-bottom: 10px;
+	}
 `;
 
 export const CardTitle = styled.h3`
@@ -67,6 +83,10 @@ export const CardTitle = styled.h3`
 	color: #1f2937;
 	flex: 1;
 	word-break: break-word;
+
+	@media (max-width: 768px) {
+		font-size: 16px;
+	}
 `;
 
 export const CardProperty = styled.div`
@@ -77,6 +97,11 @@ export const CardProperty = styled.div`
 	background: #eef2ff;
 	border-radius: 6px;
 	width: fit-content;
+
+	@media (max-width: 768px) {
+		font-size: 12px;
+		padding: 6px 10px;
+	}
 `;
 
 export const CardContent = styled.div`
@@ -84,6 +109,10 @@ export const CardContent = styled.div`
 	flex-direction: column;
 	gap: 12px;
 	flex: 1;
+
+	@media (max-width: 768px) {
+		gap: 10px;
+	}
 `;
 
 export const CardMeta = styled.div`
@@ -94,6 +123,10 @@ export const CardMeta = styled.div`
 	@media (max-width: 360px) {
 		grid-template-columns: 1fr;
 	}
+
+	@media (max-width: 768px) {
+		gap: 10px;
+	}
 `;
 
 export const MetaItem = styled.div`
@@ -103,6 +136,11 @@ export const MetaItem = styled.div`
 	padding: 8px;
 	background: #f9fafb;
 	border-radius: 6px;
+
+	@media (max-width: 768px) {
+		padding: 10px;
+		gap: 6px;
+	}
 `;
 
 export const MetaLabel = styled.span`
@@ -111,20 +149,31 @@ export const MetaLabel = styled.span`
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
+
+	@media (max-width: 768px) {
+		font-size: 12px;
+	}
 `;
 
 export const MetaValue = styled.span`
 	font-size: 14px;
 	font-weight: 500;
 	color: #374151;
+
+	@media (max-width: 768px) {
+		font-size: 15px;
+	}
 `;
 
 export const CardActions = styled.div`
 	display: flex;
 	gap: 8px;
-	padding-top: 12px;
 	border-top: 1px solid #f3f4f6;
 	flex-wrap: wrap;
+
+	@media (max-width: 768px) {
+		gap: 10px;
+	}
 `;
 
 export const ActionButton = styled.button`
@@ -141,6 +190,14 @@ export const ActionButton = styled.button`
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
+	min-height: 44px; /* Better touch target */
+
+	@media (max-width: 768px) {
+		min-width: 90px;
+		padding: 12px 16px;
+		font-size: 14px;
+		min-height: 48px; /* Larger touch target on mobile */
+	}
 
 	&:hover {
 		opacity: 0.9;
@@ -156,18 +213,26 @@ export const IndicatorDots = styled.div`
 	display: flex;
 	justify-content: center;
 	gap: 8px;
-	padding: 8px 0;
+	padding: 5px 0;
+
+	@media (max-width: 768px) {
+		gap: 10px;
+		padding: 5px 0;
+	}
 `;
 
 export const Dot = styled.button<{ active: boolean }>`
-	width: 8px;
-	height: 8px;
+	width: 10px;
+	height: 10px;
 	border-radius: 50%;
 	border: none;
 	cursor: pointer;
 	background: ${(props) => (props.active ? '#3b82f6' : '#d1d5db')};
 	transition: all 0.2s ease;
 	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
 	&:hover {
 		background: ${(props) => (props.active ? '#2563eb' : '#9ca3af')};
@@ -186,4 +251,9 @@ export const NoTasks = styled.div`
 	color: #6b7280;
 	font-size: 16px;
 	font-weight: 500;
+
+	@media (max-width: 768px) {
+		padding: 40px 16px;
+		font-size: 18px;
+	}
 `;

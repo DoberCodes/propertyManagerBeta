@@ -111,8 +111,9 @@ export const ToolbarButton = styled.button`
 	}
 
 	@media (max-width: 480px) {
-		padding: 6px 10px;
-		font-size: 11px;
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 	}
 `;
 
@@ -335,6 +336,7 @@ export const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
 
 	@media (max-width: 480px) {
 		width: 100%;
+		min-height: 44px;
 	}
 `;
 
@@ -452,14 +454,38 @@ export const MobileCarouselTrack = styled.div<{ index: number }>`
 	user-select: none;
 `;
 
-export const DeviceCard = styled.div`
-	min-width: 100%;
-	flex: 0 0 100%;
+export const BaseMobileCard = styled.div<{ $isSelected?: boolean }>`
 	background: white;
 	border: 1px solid #e5e7eb;
-	border-radius: 10px;
-	padding: 12px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+	border-radius: 12px;
+	padding: 16px;
+	margin-bottom: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+	cursor: pointer;
+
+	${({ $isSelected }) =>
+		$isSelected &&
+		`
+        background: #f0fdf4;
+        border-color: #22c55e;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+    `}
+
+	&:hover {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		transform: translateY(-1px);
+	}
+
+	@media (max-width: 480px) {
+		padding: 14px;
+		margin-bottom: 10px;
+	}
+`;
+
+export const DeviceCard = styled(BaseMobileCard)`
+	min-width: 100%;
+	flex: 0 0 100%;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -493,6 +519,7 @@ export const TabContainer = styled.div`
 	background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 	flex-shrink: 0;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	height: 100%;
 `;
 
 // Tab controls
@@ -505,6 +532,11 @@ export const TabControlsContainer = styled.div`
 	margin-top: 10px;
 	padding: 0 24px;
 	flex-shrink: 0;
+
+	@media (max-width: 1024px) {
+		min-height: 0;
+		padding: 5px 12px;
+	}
 `;
 
 export const TabContentContainer = styled.div`
@@ -513,11 +545,9 @@ export const TabContentContainer = styled.div`
 	min-height: 0;
 
 	@media (max-width: 1024px) {
-		padding: 1rem;
 	}
 
 	@media (max-width: 480px) {
-		padding: 0.75rem;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -587,37 +617,11 @@ export const ModalActions = styled.div`
 	}
 `;
 
-export const MobileTaskCard = styled.div<{ $isSelected: boolean }>`
+export const MobileTaskCard = styled(BaseMobileCard)<{ $isSelected: boolean }>`
 	display: none;
-	background: white;
-	border: 1px solid #e5e7eb;
-	border-radius: 12px;
-	padding: 16px;
-	margin-bottom: 12px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	transition: all 0.2s ease;
-	cursor: pointer;
-
-	${({ $isSelected }) =>
-		$isSelected &&
-		`
-        background: #f0fdf4;
-        border-color: #22c55e;
-        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
-    `}
-
-	&:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-		transform: translateY(-1px);
-	}
 
 	@media (max-width: 1024px) {
 		display: block;
-	}
-
-	@media (max-width: 480px) {
-		padding: 14px;
-		margin-bottom: 10px;
 	}
 `;
 
@@ -729,7 +733,61 @@ export const MobileActionButton = styled.button<{
 	}}
 
 	@media (max-width: 480px) {
-		padding: 6px 10px;
-		font-size: 12px;
+		padding: 12px 16px;
+		font-size: 16px;
+		min-height: 44px;
 	}
+`;
+
+export const MobileContractorCard = styled(BaseMobileCard)`
+	display: none;
+
+	@media (max-width: 1024px) {
+		display: block;
+	}
+`;
+
+export const MobileContractorHeader = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 12px;
+`;
+
+export const MobileContractorTitle = styled.h3`
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #1f2937;
+`;
+
+export const MobileContractorMeta = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+`;
+
+export const MobileContractorRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+`;
+
+export const MobileContractorLabel = styled.span`
+	font-size: 14px;
+	font-weight: 500;
+	color: #6b7280;
+`;
+
+export const MobileContractorValue = styled.span`
+	font-size: 14px;
+	color: #1f2937;
+`;
+
+export const MobileContractorActions = styled.div`
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #e5e7eb;
 `;

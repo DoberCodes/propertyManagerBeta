@@ -72,8 +72,8 @@ export const ModalContainer = styled.div`
 	@media (max-width: 480px) {
 		max-width: 95%;
 		height: auto;
-		max-height: 82vh;
-		min-height: 300px;
+		max-height: 85vh;
+		min-height: 350px;
 		border-radius: 10px;
 	}
 `;
@@ -90,6 +90,10 @@ export const ModalHeader = styled.div`
 		rgba(16, 185, 129, 0.05) 100%
 	);
 	flex-shrink: 0;
+
+	@media (max-width: 480px) {
+		padding: 1.25rem 1.5rem;
+	}
 `;
 
 export const ModalTitle = styled.h2`
@@ -99,7 +103,7 @@ export const ModalTitle = styled.h2`
 	color: ${COLORS.primaryDark};
 
 	@media (max-width: 480px) {
-		font-size: 1.25rem;
+		font-size: 1.375rem;
 	}
 `;
 
@@ -122,12 +126,22 @@ export const ModalCloseButton = styled.button`
 		background-color: ${COLORS.primaryLight};
 		color: ${COLORS.primary};
 	}
+
+	@media (max-width: 480px) {
+		width: 2.5rem;
+		height: 2.5rem;
+		font-size: 1.75rem;
+	}
 `;
 
 export const ModalBody = styled.div`
 	padding: 2rem;
 	flex: 1;
 	overflow-y: auto;
+
+	@media (max-width: 480px) {
+		padding: 1.5rem;
+	}
 `;
 
 export const ModalFooter = styled.div`
@@ -140,6 +154,8 @@ export const ModalFooter = styled.div`
 
 	@media (max-width: 480px) {
 		flex-direction: column-reverse;
+		padding: 1.25rem 1.5rem;
+		gap: 0.75rem;
 	}
 `;
 
@@ -150,6 +166,7 @@ export const ModalButton = styled.button`
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-size: 14px;
+	min-height: 44px; /* Better touch target */
 
 	&:disabled {
 		opacity: 0.5;
@@ -158,6 +175,9 @@ export const ModalButton = styled.button`
 
 	@media (max-width: 480px) {
 		width: 100%;
+		padding: 1rem 1.5rem;
+		font-size: 16px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 
@@ -181,11 +201,11 @@ export const DialogHeader = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		padding: 1rem 1.5rem;
-		margin-bottom: 1rem;
+		padding: 1.5rem;
+		margin-bottom: 1.25rem;
 
 		h3 {
-			font-size: 1.25rem;
+			font-size: 1.375rem;
 		}
 	}
 `;
@@ -207,6 +227,12 @@ export const CloseModalButton = styled.button`
 	&:hover {
 		background-color: ${COLORS.primaryLight};
 		color: ${COLORS.primary};
+	}
+
+	@media (max-width: 480px) {
+		width: 2.5rem;
+		height: 2.5rem;
+		font-size: 1.75rem;
 	}
 `;
 
@@ -233,9 +259,9 @@ export const DialogButtonGroup = styled.div`
 
 	@media (max-width: 480px) {
 		flex-direction: column-reverse;
-		padding: 1rem 1.5rem;
-		gap: 0.5rem;
-		margin-top: 1rem;
+		padding: 1.25rem 1.5rem;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
 	}
 `;
 
@@ -249,6 +275,7 @@ export const DialogCancelButton = styled.button`
 	font-size: 14px;
 	cursor: pointer;
 	transition: all 0.2s ease;
+	min-height: 44px; /* Better touch target */
 
 	&:hover {
 		background-color: ${COLORS.gray50};
@@ -262,6 +289,9 @@ export const DialogCancelButton = styled.button`
 
 	@media (max-width: 480px) {
 		width: 100%;
+		padding: 1rem 1.5rem;
+		font-size: 16px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 
@@ -280,6 +310,7 @@ export const DialogSubmitButton = styled.button`
 	cursor: pointer;
 	transition: all 0.2s ease;
 	box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+	min-height: 44px; /* Better touch target */
 
 	&:hover {
 		transform: translateY(-2px);
@@ -304,6 +335,9 @@ export const DialogSubmitButton = styled.button`
 
 	@media (max-width: 480px) {
 		width: 100%;
+		padding: 1rem 1.5rem;
+		font-size: 16px;
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 
@@ -350,6 +384,10 @@ export const FormGroup = styled.div`
 	&:last-of-type {
 		margin-bottom: 0;
 	}
+
+	@media (max-width: 480px) {
+		margin-bottom: 1.25rem;
+	}
 `;
 
 export const FormGrid = styled.div`
@@ -372,6 +410,11 @@ export const FormLabel = styled.label`
 	font-weight: 600;
 	color: ${COLORS.textPrimary};
 	font-size: 14px;
+
+	@media (max-width: 480px) {
+		font-size: 15px;
+		margin-bottom: 0.625rem;
+	}
 `;
 
 export const FormInput = styled.input`
@@ -383,6 +426,7 @@ export const FormInput = styled.input`
 	font-family: inherit;
 	transition: all 0.2s ease;
 	box-sizing: border-box;
+	min-height: 44px; /* Better touch target */
 
 	&:focus {
 		outline: none;
@@ -398,12 +442,18 @@ export const FormInput = styled.input`
 	@media (max-width: 1024px) {
 		padding: 0.5rem;
 		font-size: 13px;
+		min-height: 40px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 0.875rem;
+		font-size: 16px; /* Prevent zoom on iOS */
+		min-height: 48px; /* Larger touch target on mobile */
 	}
 `;
 
 export const FormSelect = styled.select`
-	width: 100%;
-	padding: 0.75rem;
+	width: auto;
 	border: 1.5px solid ${COLORS.gray300};
 	border-radius: 6px;
 	font-size: 14px;
@@ -412,6 +462,8 @@ export const FormSelect = styled.select`
 	cursor: pointer;
 	transition: all 0.2s ease;
 	box-sizing: border-box;
+	min-height: 44px; /* Better touch target */
+	overflow: hidden; /* Clip any overflow */
 
 	&:focus {
 		outline: none;
@@ -425,9 +477,17 @@ export const FormSelect = styled.select`
 
 	/* slightly smaller on tablet/mobile so native pickers don't feel oversized */
 	@media (max-width: 1024px) {
-		padding: 0.5rem;
 		font-size: 13px;
 	}
+
+	@media (max-width: 480px) {
+		font-size: 14px; /* Prevent zoom on iOS */
+	}
+`;
+
+export const FormOptions = styled.option`
+	max-width: fit-content;
+	width: 50%;
 `;
 
 export const FormTextarea = styled.textarea`
@@ -451,6 +511,12 @@ export const FormTextarea = styled.textarea`
 	&:hover:not(:focus) {
 		border-color: ${COLORS.gray400};
 	}
+
+	@media (max-width: 480px) {
+		font-size: 16px; /* Prevent zoom on iOS */
+		min-height: 120px;
+		padding: 0.875rem;
+	}
 `;
 
 export const ModalFormContent = styled.div`
@@ -462,7 +528,7 @@ export const ModalFormContent = styled.div`
 	flex-direction: column;
 
 	@media (max-width: 480px) {
-		padding: 0.5rem 1rem 1rem;
+		padding: 0.75rem 1.5rem 1rem;
 	}
 `;
 

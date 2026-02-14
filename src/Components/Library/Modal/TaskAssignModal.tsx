@@ -3,7 +3,11 @@ import { RootState } from '../../../Redux/store';
 import GenericModal from './GenericModal';
 import { FormGroup, FormLabel, FormSelect } from './ModalStyles';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useGetAllPropertySharesForUserQuery } from '../../../Redux/API/userSlice';
+import {
+	useGetPropertySharesQuery,
+	useGetUserByIdQuery,
+} from '../../../Redux/API/userSlice';
+import { useGetPropertyQuery } from '../../../Redux/API/propertySlice';
 import { useGetContractorsByPropertyQuery } from '../../../Redux/API/contractorSlice';
 import { getFamilyMembers } from '../../../services/authService';
 import { useUpdateTaskMutation } from '../../../Redux/API/taskSlice';
@@ -15,6 +19,7 @@ interface TaskAssignModalProps {
 	propertyId: string;
 	unitId?: string;
 	selectedAssignee: any;
+	assigneeOptions?: { label: string; value: string; email?: string }[];
 }
 
 export const TaskAssignModal = (props: TaskAssignModalProps) => {
@@ -23,9 +28,13 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 	const { data: contractors = [] } = useGetContractorsByPropertyQuery(
 		props.propertyId,
 	);
-	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery(
-		currentUser?.id || '',
+	const { data: propertyShares = [] } = useGetPropertySharesQuery(
+		props.propertyId,
 	);
+	const { data: property } = useGetPropertyQuery(props.propertyId);
+	const { data: propertyOwner } = useGetUserByIdQuery(property?.userId || '', {
+		skip: !property?.userId,
+	});
 
 	const [selectedAssignee, setSelectedAssignee] = useState<any>(
 		props.selectedAssignee ?? { id: '', name: '', email: '' },
@@ -59,8 +68,86 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 	}, [currentUser?.accountId]);
 
 	const fetchAssignees = useCallback(() => {
+		// If assigneeOptions are provided, use them as base and add property-specific assignees
+		if (props.assigneeOptions && props.assigneeOptions.length > 0) {
+			const formattedAssignees = props.assigneeOptions.map((option) => ({
+				id: option.value,
+				name: option.label,
+				email: option.email,
+			}));
+
+			// Add property owner if different from current user
+			if (propertyOwner && propertyOwner.id !== currentUser?.id) {
+				formattedAssignees.push({
+					id: propertyOwner.id,
+					name:
+						propertyOwner.firstName && propertyOwner.lastName
+							? `${propertyOwner.firstName} ${propertyOwner.lastName}`
+							: propertyOwner.email?.split('@')[0] || 'Property Owner',
+					email: propertyOwner.email || '',
+				});
+			}
+
+			// Add users with access to this specific property
+			const propertyShareAssignees = propertyShares
+				.filter((share) => share.sharedWithUserId)
+				.map((share) => ({
+					id: share.sharedWithUserId!,
+					name:
+						share.sharedWithFirstName && share.sharedWithLastName
+							? `${share.sharedWithFirstName} ${share.sharedWithLastName}`
+							: share.sharedWithEmail?.split('@')[0] || 'Shared User',
+					email: share.sharedWithEmail || '',
+				}));
+
+			// Add contractors for the specific property
+			const contractorAssignees = contractors.map((contractor) => ({
+				id: contractor?.id,
+				name: contractor?.name
+					? `${contractor?.name} (${contractor?.category})`
+					: contractor?.email,
+				email: contractor?.email,
+			}));
+
+			const allAssignees = [
+				...formattedAssignees,
+				...propertyShareAssignees,
+				...contractorAssignees,
+			];
+
+			// Remove duplicates based on ID
+			const uniqueAssignees = allAssignees.filter(
+				(assignee, index, self) =>
+					index === self.findIndex((a) => a.id === assignee.id),
+			);
+
+			// If there's a currently selected assignee that's not in the list, add them
+			if (
+				props.selectedAssignee?.id &&
+				!uniqueAssignees.find((a) => a.id === props.selectedAssignee.id)
+			) {
+				uniqueAssignees.push(props.selectedAssignee);
+			}
+
+			return uniqueAssignees;
+		}
+
+		// Fallback: build assignee options from various sources
 		const family = familyMembers;
 		const totalAssignees = [
+			// Add property owner if different from current user
+			...(propertyOwner && propertyOwner.id !== currentUser?.id
+				? [
+						{
+							id: propertyOwner.id,
+							name:
+								propertyOwner.firstName && propertyOwner.lastName
+									? `${propertyOwner.firstName} ${propertyOwner.lastName}`
+									: propertyOwner.email?.split('@')[0] || 'Property Owner',
+							email: propertyOwner.email || '',
+						},
+				  ]
+				: []),
 			...teamMembers.map((member) => ({
 				id: member?.id,
 				name: member?.firstName
@@ -113,6 +200,9 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 		contractors,
 		propertyShares,
 		props.selectedAssignee,
+		props.assigneeOptions,
+		property,
+		currentUser,
 	]);
 
 	const [assignTask] = useUpdateTaskMutation();

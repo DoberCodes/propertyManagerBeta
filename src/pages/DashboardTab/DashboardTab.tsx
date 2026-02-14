@@ -87,6 +87,16 @@ export const DashboardTab = () => {
 	// Local task handlers for dashboard (used by MobileTaskCarousel)
 	const taskHandlers = useTaskHandlers({ updateTaskMutation });
 
+	// Destructure task handlers state
+	const {
+		showTaskDialog,
+		setShowTaskDialog,
+		editingTaskId,
+		showTaskAssignDialog,
+		setShowTaskAssignDialog,
+		assigningTaskId,
+	} = taskHandlers;
+
 	// Pie chart data for efficiency
 	const efficiencyData = useMemo(() => {
 		const now = new Date();
@@ -189,15 +199,36 @@ export const DashboardTab = () => {
 	} | null>(null);
 	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
 
-	// Task modal states
-	const [showTaskDialog, setShowTaskDialog] = useState(false);
-	const [isEditMode, setIsEditMode] = useState(false);
-	const [editingTask, setEditingTask] = useState<any>(null);
-	const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false);
-	const [assigningTask, setAssigningTask] = useState<any>(null);
+	// Task modal states (now managed by taskHandlers)
+	// const [showTaskDialog, setShowTaskDialog] = useState(false); // Now from taskHandlers
+	// const [isEditMode, setIsEditMode] = useState(false);
+	// const [editingTask, setEditingTask] = useState<any>(null);
+	// const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false); // Now from taskHandlers
+	// const [assigningTask, setAssigningTask] = useState<any>(null);
 
-	// Fetch all property shares for dropdown options
+	// Fetch all property shares for task filtering
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
+
+	// Generate assignee options for task editing
+	const assigneeOptions = useMemo(() => {
+		const assignees: Array<{ label: string; value: string; email?: string }> =
+			[];
+
+		// Add team members
+		teamMembers
+			.filter((member): member is typeof member => member !== undefined)
+			.forEach((member) => {
+				assignees.push({
+					label: `${member.firstName || ''} ${member.lastName || ''} (${
+						member.title || ''
+					})`.trim(),
+					value: member.id,
+					email: member.email,
+				});
+			});
+
+		return assignees;
+	}, [teamMembers]);
 
 	const handleTempUnit = (unit: 'C' | 'F') => {
 		setTempUnit(unit);
@@ -306,17 +337,16 @@ export const DashboardTab = () => {
 			label: 'Edit',
 			icon: faEdit,
 			onClick: (task: any) => {
-				setIsEditMode(true);
-				setEditingTask(task);
-				setShowTaskDialog(true);
+				taskHandlers.setEditingTaskId(task.id);
+				taskHandlers.setShowTaskDialog(true);
 			},
 		},
 		{
 			label: 'Assign',
 			icon: faUserPlus,
 			onClick: (task: any) => {
-				setAssigningTask(task);
-				setShowTaskAssignDialog(true);
+				taskHandlers.setAssigningTaskId(task.id);
+				taskHandlers.setShowTaskAssignDialog(true);
 			},
 		},
 		{
@@ -563,18 +593,34 @@ export const DashboardTab = () => {
 				isOpen={showTaskDialog}
 				onClose={() => {
 					setShowTaskDialog(false);
-					setIsEditMode(false);
 				}}
-				editingTask={editingTask}
-				isEditing={isEditMode}
+				editingTask={
+					editingTaskId ? allTasks.find((t) => t.id === editingTaskId) : null
+				}
+				isEditing={!!editingTaskId}
+				assigneeOptions={assigneeOptions}
+				currentUser={currentUser}
 			/>
 
 			<TaskAssignModal
 				isOpen={showTaskAssignDialog}
-				task={assigningTask}
-				propertyId={''}
+				task={
+					assigningTaskId
+						? allTasks.find((t) => t.id === assigningTaskId)
+						: null
+				}
+				propertyId={
+					assigningTaskId
+						? allTasks.find((t) => t.id === assigningTaskId)?.propertyId || ''
+						: ''
+				}
 				onClose={() => setShowTaskAssignDialog(false)}
-				selectedAssignee={assigningTask?.assignedTo}
+				selectedAssignee={
+					assigningTaskId
+						? allTasks.find((t) => t.id === assigningTaskId)?.assignedTo
+						: null
+				}
+				assigneeOptions={assigneeOptions}
 			/>
 		</Wrapper>
 	);
