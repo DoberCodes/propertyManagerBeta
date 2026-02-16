@@ -206,82 +206,82 @@ export const SideNav = () => {
 	);
 };
 
-export const MobileNav = () => {
-	const location = useLocation();
-	const dispatch = useDispatch<AppDispatch>();
-	const currentUser = useSelector((state: RootState) => state.user.currentUser);
-	const activeRoute = useSelector(
-		(state: RootState) => state.navigation.activeRoute,
-	);
+// export const MobileNav = () => {
+// 	const location = useLocation();
+// 	const dispatch = useDispatch<AppDispatch>();
+// 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+// 	const activeRoute = useSelector(
+// 		(state: RootState) => state.navigation.activeRoute,
+// 	);
 
-	// Update Redux when location changes
-	React.useEffect(() => {
-		const hash = location.hash.replace('#', '');
-		// Extract the main route (e.g., '/dashboard' from '/dashboard' or '/property/:slug')
-		const mainRoute = '/' + hash.split('/')[1];
-		dispatch(setActiveRoute(mainRoute));
-	}, [location.hash, dispatch]);
+// 	// Update Redux when location changes
+// 	React.useEffect(() => {
+// 		const hash = location.hash.replace('#', '');
+// 		// Extract the main route (e.g., '/dashboard' from '/dashboard' or '/property/:slug')
+// 		const mainRoute = '/' + hash.split('/')[1];
+// 		dispatch(setActiveRoute(mainRoute));
+// 	}, [location.hash, dispatch]);
 
-	// Check permissions based on subscription plan
-	const canAccessTeam = currentUser?.subscription
-		? canManageTeam(currentUser.subscription)
-		: false;
-	const canAccessProperties = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
-		: false;
-	const canViewReportsPermission = currentUser?.subscription
-		? canAccessReadOnlyFeatures(currentUser.subscription)
-		: false;
-	const canExportDataPermission = currentUser?.subscription
-		? canAccessReadOnlyFeatures(currentUser.subscription)
-		: false;
-	const canViewPages = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
-		: false;
-	const isUserTenant = currentUser ? currentUser.role === 'tenant' : false;
-	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
+// 	// Check permissions based on subscription plan
+// 	const canAccessTeam = currentUser?.subscription
+// 		? canManageTeam(currentUser.subscription)
+// 		: false;
+// 	const canAccessProperties = currentUser?.subscription
+// 		? currentUser.subscription.plan !== 'free'
+// 		: false;
+// 	const canViewReportsPermission = currentUser?.subscription
+// 		? canAccessReadOnlyFeatures(currentUser.subscription)
+// 		: false;
+// 	const canExportDataPermission = currentUser?.subscription
+// 		? canAccessReadOnlyFeatures(currentUser.subscription)
+// 		: false;
+// 	const canViewPages = currentUser?.subscription
+// 		? currentUser.subscription.plan !== 'free'
+// 		: false;
+// 	const isUserTenant = currentUser ? currentUser.role === 'tenant' : false;
+// 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
 
-	const menuItems = [
-		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
-		{
-			label: 'Properties',
-			path: '/properties',
-			visible: !isUserTenant && (canAccessProperties || canViewPages),
-		},
-		{
-			label: 'Team',
-			path: '/team',
-			visible: !isUserTenant && !isHomeowner && (canAccessTeam || canViewPages),
-		},
-		{
-			label: 'Report',
-			path: '/report',
-			visible: !isUserTenant && (canAccessProperties || canViewPages),
-		},
-		{
-			label: 'Tenant Profile',
-			path: '/tenant-profile',
-			visible:
-				currentUser?.userType === 'tenant' ||
-				currentUser?.userType === 'Tenant' ||
-				currentUser?.userType === 'Shared Tenant',
-		},
-	];
+// 	const menuItems = [
+// 		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
+// 		{
+// 			label: 'Properties',
+// 			path: '/properties',
+// 			visible: !isUserTenant && (canAccessProperties || canViewPages),
+// 		},
+// 		{
+// 			label: 'Team',
+// 			path: '/team',
+// 			visible: !isUserTenant && !isHomeowner && (canAccessTeam || canViewPages),
+// 		},
+// 		{
+// 			label: 'Report',
+// 			path: '/report',
+// 			visible: !isUserTenant && (canAccessProperties || canViewPages),
+// 		},
+// 		{
+// 			label: 'Tenant Profile',
+// 			path: '/tenant-profile',
+// 			visible:
+// 				currentUser?.userType === 'tenant' ||
+// 				currentUser?.userType === 'Tenant' ||
+// 				currentUser?.userType === 'Shared Tenant',
+// 		},
+// 	];
 
-	const isActive = (path: string) => activeRoute === path;
-	const visibleItems = menuItems.filter((item) => item.visible);
+// 	const isActive = (path: string) => activeRoute === path;
+// 	const visibleItems = menuItems.filter((item) => item.visible);
 
-	return (
-		<MobileBottomNav>
-			{visibleItems.map((item) => (
-				<MobileNavItem
-					key={item.label}
-					to={item.path}
-					className={isActive(item.path) ? 'active' : ''}
-					title={item.label}>
-					{item.label}
-				</MobileNavItem>
-			))}
-		</MobileBottomNav>
-	);
-};
+// 	return (
+// 		<MobileBottomNav>
+// 			{visibleItems.map((item) => (
+// 				<MobileNavItem
+// 					key={item.label}
+// 					to={item.path}
+// 					className={isActive(item.path) ? 'active' : ''}
+// 					title={item.label}>
+// 					{item.label}
+// 				</MobileNavItem>
+// 			))}
+// 		</MobileBottomNav>
+// 	);
+// };

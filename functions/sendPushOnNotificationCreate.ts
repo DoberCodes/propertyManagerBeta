@@ -57,6 +57,32 @@ export const sendPushOnNotificationCreate = onDocumentCreated(
 			return;
 		}
 
+		// Check user notification preferences
+		const userPreferencesDoc = await db
+			.collection('userPreferences')
+			.doc(notification.userId)
+			.get();
+		const userPreferences = userPreferencesDoc.exists
+			? userPreferencesDoc.data()
+			: null;
+
+		if (!userPreferences || !userPreferences.notificationPreferences?.enabled) {
+			console.log(`Notifications are disabled for user ${notification.userId}`);
+			return;
+		}
+
+		const notificationType = notification.type; // Assuming notification.type exists
+		if (
+			notificationType &&
+			userPreferences.notificationPreferences.types &&
+			userPreferences.notificationPreferences.types[notificationType] === false
+		) {
+			console.log(
+				`Notification type '${notificationType}' is disabled for user ${notification.userId}`,
+			);
+			return;
+		}
+
 		// Compose the push notification
 		const payload: admin.messaging.MessagingPayload = {
 			notification: {

@@ -110,6 +110,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 	};
 
 	const handleDismissNotification = async (notificationId: string) => {
+		if (!notificationId) {
+			console.error('Notification ID is missing:', notificationId);
+			return;
+		}
 		try {
 			await deleteNotification(notificationId).unwrap();
 		} catch (err: any) {
@@ -305,7 +309,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 			) : (
 				<NotificationsList>
 					{notifications.map((notification, index) => (
-						<div key={notification.id}>
+						<div key={notification.id || `notification-${index}`}>
 							{index > 0 && <Divider />}
 							<NotificationItem
 								status={notification.status}
@@ -374,7 +378,22 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 								</NotificationContent>
 
 								<DismissButton
-									onClick={() => handleDismissNotification(notification.id)}
+									onClick={(event) => {
+										console.info(
+											'Dismiss button clicked for notification:',
+											notification,
+										);
+										console.info(event);
+										const notificationId = notification.id;
+										if (!notificationId) {
+											console.error(
+												'Notification ID is missing:',
+												notificationId,
+											);
+											return;
+										}
+										handleDismissNotification(notificationId);
+									}}
 									disabled={isDeleting}
 									title='Dismiss notification'>
 									<FontAwesomeIcon icon={faTrash} />
@@ -830,3 +849,28 @@ const CloseButton = styled.button`
 		opacity: 0.7;
 	}
 `;
+
+const NotificationPopup = styled.div`
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+
+	.popup-content {
+		background: white;
+		border-radius: 8px;
+		width: 90%;
+		height: 80%; /* Adjusted height to occupy most of the screen */
+		overflow-y: auto;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+`;
+
+// Usage of NotificationPopup
+// Wrap the notification panel content with <NotificationPopup> and <div className="popup-content">...</div>

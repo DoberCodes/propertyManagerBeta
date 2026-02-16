@@ -26,8 +26,8 @@ import {
 	useDeletePropertyShareMutation,
 	useCreatePropertyShareMutation,
 } from '../../Redux/API/userSlice';
-import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { useUpdateUserMutation } from '../../Redux/API/userSlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { db } from '../../config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import {
@@ -89,10 +89,10 @@ export const Properties = () => {
 	const [createPropertyGroup] = useCreatePropertyGroupMutation();
 	const [updatePropertyGroup] = useUpdatePropertyGroupMutation();
 	const [deletePropertyGroup] = useDeletePropertyGroupMutation();
-	const [createNotification] = useCreateNotificationMutation();
 	const [createUnit] = useCreateUnitMutation();
 	const [updateUser] = useUpdateUserMutation();
 	const [deletePropertyShare] = useDeletePropertyShareMutation();
+	const [createNotification] = useCreateNotificationMutation();
 
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
 

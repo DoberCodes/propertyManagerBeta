@@ -15,6 +15,7 @@ import '../API/teamSlice';
 import '../API/notificationSlice';
 import '../API/maintenanceSlice';
 import '../API/unitSlice';
+import notificationMiddleware from '../middleware/notificationMiddleware';
 
 export const store = configureStore({
 	reducer: {
@@ -26,7 +27,7 @@ export const store = configureStore({
 		maintenanceRequests: maintenanceRequestsReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
-		getDefaultMiddleware().concat(apiSlice.middleware),
+		getDefaultMiddleware().concat(apiSlice.middleware, notificationMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

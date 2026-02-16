@@ -5,7 +5,6 @@ import {
 	submitTaskCompletion,
 	CompletionFile,
 } from '../../Redux/Slices/propertyDataSlice';
-import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
 import { GenericModal, FormGroup } from '../Library';
@@ -17,6 +16,7 @@ import {
 	useCreateTaskMutation,
 	useSubmitTaskCompletionMutation,
 } from '../../Redux/API/taskSlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 
 interface TaskCompletionModalProps {
 	taskId: string;

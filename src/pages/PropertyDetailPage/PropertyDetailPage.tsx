@@ -15,7 +15,6 @@ import { useTaskHandlers } from './useTaskHandlers';
 import { useUnitHandlers } from './useUnitHandlers';
 import { usePropertyEditHandlers } from './usePropertyEditHandlers';
 import { useMaintenanceRequestHandlers } from './useMaintenanceRequestHandlers';
-import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { useGetPropertySharesQuery } from '../../Redux/API/userSlice';
 import {
 	useGetPropertiesQuery,
@@ -28,6 +27,7 @@ import {
 	useAddMaintenanceHistoryMutation,
 	useDeleteMaintenanceHistoryMutation,
 } from '../../Redux/API/maintenanceSlice';
+import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 
 // Tenant APIs moved to tenantSlice
 import {
@@ -119,9 +119,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 
 	const [deleteTaskMutation] = useDeleteTaskMutation();
 	const [updatePropertyMutation] = useUpdatePropertyMutation();
-	const [createNotification] = useCreateNotificationMutation();
 	const [addMaintenanceHistory] = useAddMaintenanceHistoryMutation();
 	const [deleteMaintenanceHistory] = useDeleteMaintenanceHistoryMutation();
+	const [createNotification] = useCreateNotificationMutation();
 	const [removeTenant] = useRemoveTenantMutation();
 	const [getTenantInvitationCode] = useLazyGetTenantInvitationCodeQuery();
 	const [getTenantInvitationCodesByEmail] =

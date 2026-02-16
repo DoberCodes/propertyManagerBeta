@@ -304,7 +304,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 						key={option.value}
 						$isSelected={value.includes(option.value)}
 						onClick={(e) => {
-							console.info('MultiSelect: Option clicked:', option.value);
 							e.stopPropagation();
 							handleToggleOption(option.value);
 						}}>

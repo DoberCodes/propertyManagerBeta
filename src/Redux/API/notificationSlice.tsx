@@ -11,7 +11,7 @@ import {
 	where,
 } from '@firebase/firestore';
 import { Notification } from '../../types/Notification.types';
-import { apiSlice } from './apiSlice';
+import { apiSlice, docToData } from './apiSlice';
 import { auth, db } from '../../config/firebase';
 
 const NotificationSlice = apiSlice.injectEndpoints({
@@ -31,7 +31,7 @@ const NotificationSlice = apiSlice.injectEndpoints({
 					);
 					const querySnapshot = await getDocs(q);
 					const notifications = querySnapshot.docs
-						.map((doc) => doc.data() as Notification)
+						.map((doc) => docToData(doc))
 						.filter(Boolean) as Notification[];
 					return { data: notifications };
 				} catch (error: any) {
@@ -101,12 +101,18 @@ const NotificationSlice = apiSlice.injectEndpoints({
 		}),
 
 		deleteNotification: builder.mutation<void, string>({
-			async queryFn(notificationId) {
+			async queryFn(notification) {
+				if (!notification) {
+					console.error('Invalid notificationId:', notification);
+					return { error: 'Invalid notification ID provided' };
+				}
+
 				try {
-					await deleteDoc(doc(db, 'notifications', notificationId));
+					await deleteDoc(doc(db, 'notifications', notification));
 					return { data: undefined };
 				} catch (error: any) {
-					return { error: error.message };
+					console.error('Failed to delete notification:', error); // Log full error
+					return { error: error.message || 'Unknown error occurred' };
 				}
 			},
 			invalidatesTags: ['Notifications'],
@@ -114,10 +120,11 @@ const NotificationSlice = apiSlice.injectEndpoints({
 	}),
 });
 
+export { NotificationSlice };
+
 export const {
 	useGetUserNotificationsQuery,
 	useCreateNotificationMutation,
 	useUpdateNotificationMutation,
 	useDeleteNotificationMutation,
-    
 } = NotificationSlice;

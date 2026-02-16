@@ -1,1 +1,1 @@
-export { SideNav, MobileNav } from './SideNav';
+export { SideNav /* MobileNav */ } from './SideNav';

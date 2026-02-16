@@ -42,6 +42,7 @@ import {
 import {
 	Wrapper,
 	PageHeader,
+	PageTitle,
 	AddTeamGroupButton,
 	TeamGroupSection,
 	TeamGroupHeader,
@@ -67,17 +68,23 @@ import {
 	RightColumn,
 	ImageUploadSection,
 	ImagePreview,
+	ImageUploadInput,
+	ImageUploadButton,
 	SectionTitle,
 	PropertyMultiSelect,
 	PropertyCheckbox,
 	QuickTaskHistory,
 	TaskHistoryItem,
 	FileUploadSection,
+	FileUploadInput,
+	FileUploadButton,
 	FileList,
 	FileItem,
 	DialogFooter,
+	DialogButton,
 	CancelButton,
 	SaveButton,
+	EmptyState,
 } from './TeamPage.styles';
 import { WarningDialog } from '../../Components/Library/WarningDialog';
 import {
@@ -168,13 +175,13 @@ export default function TeamPage() {
 	const [createTeamMember] = useCreateTeamMemberMutation();
 	const [updateTeamMemberApi] = useUpdateTeamMemberMutation();
 	const [deleteTeamMemberApi] = useDeleteTeamMemberMutation();
-	const [createNotification] = useCreateNotificationMutation();
 	const [createTeamMemberInvitationCode] =
 		useCreateTeamMemberInvitationCodeMutation();
 	const [redeemTeamMemberInvitationCode] =
 		useRedeemTeamMemberInvitationCodeMutation();
 	const [revokeTeamMemberInvitationCode] =
 		useRevokeTeamMemberInvitationCodeMutation();
+	const [createNotification] = useCreateNotificationMutation();
 
 	// WarningDialog state
 	const [warningDialogOpen, setWarningDialogOpen] = useState(false);

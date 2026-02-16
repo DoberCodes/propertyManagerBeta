@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../Redux/store/store';
-import { SideNav, MobileNav, TopNav } from '../../Components/Library/Navbar';
+import {
+	SideNav,
+	/*MobileNav,*/ TopNav,
+} from '../../Components/Library/Navbar';
 import { DataLoader } from '../../Components/DataLoader';
 import { OnboardingFlow } from '../../Components/OnboardingFlow';
 import LegalAgreementNotification from '../../Components/Library/LegalAgreementNotification';
@@ -102,7 +105,7 @@ export const Layout = () => {
 						<Outlet />
 					</Content>
 				</Main>
-				<MobileNav />
+				{/* <MobileNav /> */}
 			</Wrapper>
 		</>
 	);
