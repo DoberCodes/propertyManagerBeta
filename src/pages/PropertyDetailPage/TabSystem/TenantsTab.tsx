@@ -7,14 +7,20 @@ import {
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
 import { ReusableTable } from '../../../Components/Library/ReusableTable';
 import { UserRole } from '../../../constants/roles';
-import { isTenant } from '../../../utils/permissions';
+import { useSelector } from 'react-redux';
+import { selectIsTenant } from '../../../Redux/selectors/permissionSelectors';
 import {
 	FilterBar,
 	FilterConfig,
 	FilterValues,
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
-import { EmptyState, GridContainer, Toolbar, ToolbarButton } from './index.styles';
+import {
+	EmptyState,
+	GridContainer,
+	Toolbar,
+	ToolbarButton,
+} from './index.styles';
 
 export const TenantsTab: React.FC<TenantsTabProps> = ({
 	property,
@@ -57,8 +63,9 @@ export const TenantsTab: React.FC<TenantsTabProps> = ({
 			],
 		});
 	}, [property.tenants, filters]);
-	const canManageTenants =
-		currentUser && !isTenant(currentUser.role as UserRole);
+	const isUserTenant = useSelector(selectIsTenant);
+
+	const canManageTenants = currentUser && !isUserTenant;
 
 	// Table configuration
 	const columns = [

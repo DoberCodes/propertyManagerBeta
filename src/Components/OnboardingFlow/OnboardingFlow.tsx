@@ -8,6 +8,11 @@ import { SUBSCRIPTION_PLANS } from '../../constants/subscriptions';
 import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
 import TermsAcceptanceStep from './TermsAcceptanceStep';
 import { useGetTasksQuery } from '../../Redux/API/taskSlice';
+import {
+	selectIsHomeowner,
+	selectCanAccessProperties,
+	selectCanAccessTeam,
+} from '../../Redux/selectors/permissionSelectors';
 
 const OnboardingOverlay = styled.div`
 	position: fixed;
@@ -457,16 +462,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 		setCurrentStepIndex((prev) => prev + 1);
 	}, []);
 
-	// Determine user type and permissions
-	const isPropertyManager = currentUser?.subscription?.plan
-		? ['BASIC', 'PROFESSIONAL'].includes(
-				currentUser.subscription.plan.toUpperCase(),
-		  )
-		: false;
-	const canManageTeam = currentUser?.subscription?.plan
-		? SUBSCRIPTION_PLANS[currentUser.subscription.plan.toUpperCase()]
-				?.permissions?.canManageTeam || false
-		: false;
+	// Determine user type and permissions (use selectors)
+	const isHomeowner = useSelector(selectIsHomeowner);
+	const canAccessProperties = useSelector(selectCanAccessProperties);
+	const isPropertyManager =
+		!!currentUser && canAccessProperties && !isHomeowner;
+	const canManageTeam = useSelector(selectCanAccessTeam);
 
 	// Enhanced step definitions with validation and celebration logic
 	const getSteps = (): OnboardingStep[] => {

@@ -15,13 +15,18 @@ import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
 import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import { Column, Action } from '../../Components/Library/ReusableTable';
 import { StatusBadge } from '../PropertyDetailPage/TabSystem/index.styles';
-import { TaskModal } from '../../Components/Library';
+import { MobileTaskCarousel, TaskModal } from '../../Components/Library';
 import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
 import {
 	useGetTasksQuery,
 	useUpdateTaskMutation,
 } from '../../Redux/API/taskSlice';
-import { Wrapper, TaskGridSection, FilterSection } from './TasksPage.styles';
+import {
+	Wrapper,
+	TaskGridSection,
+	FilterSection,
+	CarouselSection,
+} from './TasksPage.styles';
 
 export const TasksPage = () => {
 	const navigate = useNavigate();
@@ -65,6 +70,8 @@ export const TasksPage = () => {
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
+
+	const isMobile = useSelector((state: RootState) => state.app.isMobile);
 
 	// Fetch all property shares for task filtering
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
@@ -213,6 +220,47 @@ export const TasksPage = () => {
 		},
 	];
 
+	// Get active tasks for carousel (without enrichment)
+	const carouselTasks = useMemo(() => {
+		const filtered = filterTasksByRole(
+			allTasks,
+			currentUser,
+			teamMembers,
+			allProperties,
+			propertyShares,
+		);
+		const activeTasks = filtered.filter((task) => task.status !== 'Completed');
+
+		// Filter to only show upcoming tasks (due in the future)
+		const now = new Date();
+		const upcomingTasks = activeTasks.filter((task) => {
+			if (!task.dueDate) return false;
+			const dueDate = new Date(task.dueDate);
+			return dueDate >= now;
+		});
+
+		// Sort by due date (ascending), then by priority (descending)
+		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+
+		const sorted = upcomingTasks.sort((a, b) => {
+			// Primary: Sort by due date (soonest first)
+			const dateA = new Date(a.dueDate!).getTime();
+			const dateB = new Date(b.dueDate!).getTime();
+			if (dateA !== dateB) {
+				return dateA - dateB;
+			}
+
+			// Secondary: Sort by priority (highest first)
+			const priorityA =
+				priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+			const priorityB =
+				priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+			return priorityB - priorityA;
+		});
+
+		return sorted;
+	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
+
 	const handleTaskCompletion = (taskId: string) => {
 		setCompletingTaskId(taskId);
 		setShowTaskCompletionModal(true);
@@ -240,76 +288,93 @@ export const TasksPage = () => {
 					<option value={90}>90 days</option>
 				</select>
 			</FilterSection>
-
-			{/* Task Grid Section */}
-			<TaskGridSection>
-				{filteredTasks.length === 0 ? (
-					<ZeroState
-						title={
-							allTasks.length === 0
-								? 'No tasks yet'
-								: activeTasksCount === 0
-								? 'No active tasks'
-								: 'No upcoming tasks in selected timeframe'
-						}
-						description={
-							allTasks.length === 0
-								? 'Create your first task to get started'
-								: activeTasksCount === 0
-								? 'All your tasks are completed'
-								: `Try adjusting the time filter above or check tasks in other timeframes`
-						}
-						icon='📊'></ZeroState>
-				) : (
-					<ReusableTable
-						rowData={filteredTasks}
-						columns={columns}
-						actions={taskActions}
-						onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
-						onRowSelect={(selectedRows) => {
-							setSelectedRows(new Set(selectedRows));
-						}}
-						selectedRows={selectedRows}
-						onSelectAll={(_, selectedRowIds) => {
-							setSelectedRows(new Set(selectedRowIds));
-						}}
-						showCheckbox={false}
-						onRowUpdate={(updatedRow) => {
-							// Prepare updates for Firebase
-							const updates: any = {};
-
-							// Update status if changed
-							if (updatedRow.status) {
-								updates.status = updatedRow.status;
-							}
-
-							// Update priority if changed
-							if (updatedRow.priority) {
-								updates.priority = updatedRow.priority;
-							}
-
-							// Note: AssignedTo editing is disabled in table view
-
-							// Handle logic for updated row, e.g., marking a task as completed
-							if (updatedRow.status === 'Completed') {
-								handleTaskCompletion(updatedRow.id);
-								return;
-							}
-
-							// Submit to Firebase if there are updates
-							if (Object.keys(updates).length > 0) {
-								updateTaskMutation({
-									id: updatedRow.id,
-									updates,
-								}).catch((error) => {
-									console.error('Failed to update task:', error);
-								});
+			{isMobile ? (
+				<CarouselSection>
+					<MobileTaskCarousel
+						tasks={carouselTasks}
+						onTaskComplete={handleTaskCompletion}
+						onTaskUpdate={async (taskId, updates) => {
+							try {
+								await updateTaskMutation({ id: taskId, updates }).unwrap();
+							} catch (error) {
+								console.error('Failed to update task from carousel', error);
 							}
 						}}
+						taskHandlers={taskHandlers}
 					/>
-				)}
-			</TaskGridSection>
+				</CarouselSection>
+			) : (
+				<>
+					{/* Task Grid Section */}
+					<TaskGridSection>
+						{filteredTasks.length === 0 ? (
+							<ZeroState
+								title={
+									allTasks.length === 0
+										? 'No tasks yet'
+										: activeTasksCount === 0
+										? 'No active tasks'
+										: 'No upcoming tasks in selected timeframe'
+								}
+								description={
+									allTasks.length === 0
+										? 'Create your first task to get started'
+										: activeTasksCount === 0
+										? 'All your tasks are completed'
+										: `Try adjusting the time filter above or check tasks in other timeframes`
+								}
+								icon='📊'></ZeroState>
+						) : (
+							<ReusableTable
+								rowData={filteredTasks}
+								columns={columns}
+								actions={taskActions}
+								onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
+								onRowSelect={(selectedRows) => {
+									setSelectedRows(new Set(selectedRows));
+								}}
+								selectedRows={selectedRows}
+								onSelectAll={(_, selectedRowIds) => {
+									setSelectedRows(new Set(selectedRowIds));
+								}}
+								showCheckbox={false}
+								onRowUpdate={(updatedRow) => {
+									// Prepare updates for Firebase
+									const updates: any = {};
 
+									// Update status if changed
+									if (updatedRow.status) {
+										updates.status = updatedRow.status;
+									}
+
+									// Update priority if changed
+									if (updatedRow.priority) {
+										updates.priority = updatedRow.priority;
+									}
+
+									// Note: AssignedTo editing is disabled in table view
+
+									// Handle logic for updated row, e.g., marking a task as completed
+									if (updatedRow.status === 'Completed') {
+										handleTaskCompletion(updatedRow.id);
+										return;
+									}
+
+									// Submit to Firebase if there are updates
+									if (Object.keys(updates).length > 0) {
+										updateTaskMutation({
+											id: updatedRow.id,
+											updates,
+										}).catch((error) => {
+											console.error('Failed to update task:', error);
+										});
+									}
+								}}
+							/>
+						)}
+					</TaskGridSection>
+				</>
+			)}
 			{/* Task Modals */}
 			{showTaskDialog && (
 				<TaskModal

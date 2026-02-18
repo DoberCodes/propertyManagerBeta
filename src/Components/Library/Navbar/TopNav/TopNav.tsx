@@ -18,8 +18,14 @@ import { useNavigate } from 'react-router-dom';
 import { useRecentlyViewed } from '../../../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../../../Hooks/useFavorites';
 import { UserRole } from '../../../../constants/roles';
-import { canViewAllPages, isTenant } from '../../../../utils/permissions';
-import { canManageTeam } from '../../../../utils/subscriptionUtils';
+import {
+	selectIsTenant,
+	selectCanAccessTeam,
+	selectCanAccessProperties,
+	selectCanViewAllPages,
+	selectIsHomeowner,
+	selectIsContractor,
+} from '../../../../Redux/selectors/permissionSelectors';
 import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
 import TitleName from '../../../../Assets/images/TitleName.png';
 import { GenericModal } from '../../Modal/GenericModal';
@@ -35,23 +41,21 @@ export const TopNav = () => {
 	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 	const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
-	// Check permissions for menu visibility based on subscription plan
-	const canAccessTeam = currentUser?.subscription
-		? canManageTeam(currentUser.subscription)
-		: false;
-	const canAccessProperties = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
-		: false;
-	const canViewPages = currentUser
-		? canViewAllPages(currentUser.role as UserRole)
-		: false;
-	const isUserTenant = currentUser
-		? isTenant(currentUser.role as UserRole)
-		: false;
-	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
+	// Permission flags (use selectors for single source of truth)
+	const isUserTenant = useSelector(selectIsTenant);
+	const canAccessTeam = useSelector(selectCanAccessTeam);
+	const canAccessProperties = useSelector(selectCanAccessProperties);
+	const canViewPages = useSelector(selectCanViewAllPages);
+	const isHomeowner = useSelector(selectIsHomeowner);
+	const isContractor = useSelector(selectIsContractor);
 
 	const navigationItems = [
 		{ label: 'Dashboard', path: 'dashboard', visible: !isUserTenant },
+		{
+			label: 'Tasks',
+			path: 'tasks',
+			visible: !isUserTenant && !isContractor,
+		},
 		{
 			label: 'Properties',
 			path: 'properties',

@@ -35,10 +35,8 @@ import {
 	useLazyGetTenantInvitationCodeQuery,
 	useLazyGetTenantInvitationCodesByEmailQuery,
 } from '../../Redux/API/tenantSlice';
-import {
-	canApproveMaintenanceRequest,
-	isTenant,
-} from '../../utils/permissions';
+import { canApproveMaintenanceRequest } from '../../utils/permissions';
+import { selectIsTenant } from '../../Redux/selectors/permissionSelectors';
 import { UserRole } from '../../constants/roles';
 import { TeamMember } from '../../types/Team.types';
 import { useFavorites } from '../../Hooks/useFavorites';
@@ -82,6 +80,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const { slug } = useParams<{ slug: string }>();
 	// Get current user
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const isUserTenant = useSelector(selectIsTenant);
 
 	const { isFavorite, toggleFavorite } = useFavorites(currentUser!.id);
 
@@ -597,7 +596,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 									zIndex: 1002,
 									overflow: 'hidden',
 								}}>
-								{!isTenant(currentUser.role as UserRole) && (
+								{!isUserTenant && (
 									<button
 										onClick={() => {
 											toggleFavorite({
@@ -628,7 +627,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 										{isFav ? '★ Favorited' : '☆ Add to Favorites'}
 									</button>
 								)}
-								{isTenant(currentUser.role as UserRole) && (
+								{isUserTenant && (
 									<button
 										onClick={() => {
 											setShowMaintenanceRequestModal(true);
@@ -788,14 +787,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 								})
 							}
 							style={{
-								display:
-									currentUser && !isTenant(currentUser.role as UserRole)
-										? 'block'
-										: 'none',
+								display: currentUser && !isUserTenant ? 'block' : 'none',
 							}}>
 							{isFav ? '★ Favorited' : '☆ Add to Favorites'}
 						</FavoriteButton>
-						{currentUser && isTenant(currentUser.role as UserRole) && (
+						{currentUser && isUserTenant && (
 							<FavoriteButton
 								onClick={() => setShowMaintenanceRequestModal(true)}>
 								🔧 Request Maintenance

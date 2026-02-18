@@ -271,15 +271,6 @@ export const TopChartsContainer = styled.div`
 	}
 `;
 
-export const CarouselSection = styled.div`
-	width: 100%;
-	display: none;
-
-	@media (max-width: 1024px) {
-		display: block;
-	}
-`;
-
 export const Section = styled.div`
 	background-color: white;
 	border: 1px solid #e0e0e0;
@@ -459,13 +450,16 @@ export const ZeroState = styled.div`
 
 export const TaskStatusBanners = styled.div`
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(2, 1fr);
 	gap: 16px;
 	margin-bottom: 20px;
 
 	@media (max-width: 768px) {
-		grid-template-columns: 1fr;
 		gap: 12px;
+	}
+
+	@media (max-width: 480px) {
+		gap: 8px;
 	}
 `;
 

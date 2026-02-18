@@ -25,6 +25,7 @@ import {
 } from '../../../Components/Library/FilterBar';
 import { applyFilters } from '../../../utils/tableFilters';
 import { AddMaintenanceHistoryModal } from '../../../Components/Library/Modal/AddMaintenanceHistoryModal';
+import { useSelector } from 'react-redux';
 
 export interface MaintenanceTabProps {
 	property: any;
@@ -65,7 +66,6 @@ export const MaintenanceTab = ({
 	const navigate = useNavigate();
 	const [filters, setFilters] = useState<FilterValues>({});
 	const [showAddModal, setShowAddModal] = useState(false);
-	const [isMobile, setIsMobile] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 	const [selectedRecordIds, setSelectedRecordIds] = useState<Set<string>>(
 		new Set(),
@@ -73,16 +73,10 @@ export const MaintenanceTab = ({
 	const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
 	const canBulkEdit = Boolean(onUpdateMaintenanceHistory);
 
-	// Mobile detection
-	useEffect(() => {
-		const checkMobile = () => {
-			setIsMobile(window.innerWidth < 768);
-		};
+	const { isMobile } = useSelector((state: any) => state.app);
 
-		checkMobile();
-		window.addEventListener('resize', checkMobile);
-		return () => window.removeEventListener('resize', checkMobile);
-	}, []);
+	console.info(isMobile);
+	// Mobile detection
 
 	// Bulk selection handlers
 	const toggleRecordSelection = (recordId: string) => {

@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { RootState } from '../../Redux/store/store';
 import { ZeroState } from '../Library/ZeroState';
 import { PropertyDialog } from './PropertyDialog';
+import { selectIsHomeowner } from '../../Redux/selectors/permissionSelectors';
 import {
 	useCreatePropertyMutation,
 	useCreatePropertyGroupMutation,
@@ -32,7 +33,7 @@ const HomeownerPropertyWrapper: React.FC = () => {
 	);
 
 	// Only allow one property for homeowners
-	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
+	const isHomeowner = useSelector(selectIsHomeowner);
 
 	if (!isHomeowner) {
 		// Fallback: not a homeowner, show error

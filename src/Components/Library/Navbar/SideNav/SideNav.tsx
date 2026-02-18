@@ -3,10 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../../Redux/store/store';
 import { setActiveRoute } from '../../../../Redux/Slices/navigationSlice';
-import {
-	canManageTeam,
-	canAccessReadOnlyFeatures,
-} from '../../../../utils/subscriptionUtils';
+// subscription utils used via selectors now
 import { useRecentlyViewed } from '../../../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../../../Hooks/useFavorites';
 import { UserRole } from '../../../../constants/roles';
@@ -22,6 +19,14 @@ import {
 	MobileBottomNav,
 	MobileNavItem,
 } from './SideNav.styles';
+import {
+	selectIsTenant,
+	selectCanAccessTeam,
+	selectCanAccessProperties,
+	selectCanAccessReadOnlyFeatures,
+	selectIsHomeowner,
+	selectIsContractor,
+} from '../../../../Redux/selectors/permissionSelectors';
 
 export const SideNav = () => {
 	const location = useLocation();
@@ -42,24 +47,15 @@ export const SideNav = () => {
 		dispatch(setActiveRoute(mainRoute));
 	}, [location.hash, dispatch]);
 
-	// Check permissions based on subscription plan
-	const canAccessTeam = currentUser?.subscription
-		? canManageTeam(currentUser.subscription)
-		: false;
-	const canAccessProperties = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
-		: false;
-	const canViewReportsPermission = currentUser?.subscription
-		? canAccessReadOnlyFeatures(currentUser.subscription)
-		: false;
-	const canExportDataPermission = currentUser?.subscription
-		? canAccessReadOnlyFeatures(currentUser.subscription)
-		: false;
-	const canViewPages = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free'
-		: false;
-	const isUserTenant = currentUser ? currentUser.role === 'tenant' : false;
-	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
+	// Permission flags (use selectors so logic is centralized)
+	const isUserTenant = useSelector(selectIsTenant);
+	const canAccessTeam = useSelector(selectCanAccessTeam);
+	const canAccessProperties = useSelector(selectCanAccessProperties);
+	const canViewReportsPermission = useSelector(selectCanAccessReadOnlyFeatures);
+	const canExportDataPermission = useSelector(selectCanAccessReadOnlyFeatures);
+	const canViewPages = useSelector(selectCanAccessProperties);
+	const isHomeowner = useSelector(selectIsHomeowner);
+	const isContractor = useSelector(selectIsContractor);
 
 	const isActive = (path: string) => activeRoute === path;
 
@@ -69,7 +65,7 @@ export const SideNav = () => {
 		{
 			label: 'Tasks',
 			path: '/tasks',
-			visible: !isUserTenant && currentUser?.role !== 'contractor',
+			visible: !isUserTenant && !isContractor,
 		},
 		{
 			label: 'Properties',

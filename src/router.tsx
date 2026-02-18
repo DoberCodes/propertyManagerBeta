@@ -30,6 +30,10 @@ import { TenantProfilePage } from './pages/TenantProfilePage';
 import { TEAM_VIEW_ROLES, FULL_ACCESS_ROLES } from './constants/roles';
 import { isNativeApp } from './utils/platform';
 import { useSelector } from 'react-redux';
+import {
+	selectIsHomeowner,
+	selectCanAccessTeam,
+} from './Redux/selectors/permissionSelectors';
 import PaywallPageIndex from './pages/PaywallPage';
 
 // Component to handle root route - redirects to login in mobile app
@@ -42,10 +46,9 @@ const RootRoute = () => {
 
 export const RouterComponent = () => {
 	const currentUser = useSelector((state: any) => state.user.currentUser);
-	const userSubscriptionPlan = currentUser?.subscription?.plan;
-	const isUserHomeowner = userSubscriptionPlan === 'homeowner';
-	const shouldShowTeamRoute =
-		currentUser && userSubscriptionPlan && !isUserHomeowner;
+	const isUserHomeowner = useSelector(selectIsHomeowner);
+	const canAccessTeam = useSelector(selectCanAccessTeam);
+	const shouldShowTeamRoute = !!currentUser && canAccessTeam;
 	return (
 		<Router>
 			<Routes>

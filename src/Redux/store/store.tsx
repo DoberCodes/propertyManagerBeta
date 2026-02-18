@@ -5,7 +5,6 @@ import propertyDataReducer from '../Slices/propertyDataSlice';
 import teamReducer from '../Slices/teamSlice';
 import maintenanceRequestsReducer from '../Slices/maintenanceRequestsSlice';
 import { apiSlice } from '../API/apiSlice';
-import { taskSlice } from '../API/taskSlice';
 import '../API/deviceSlice';
 import '../API/contractorSlice';
 import '../API/propertySlice';
@@ -16,10 +15,12 @@ import '../API/notificationSlice';
 import '../API/maintenanceSlice';
 import '../API/unitSlice';
 import notificationMiddleware from '../middleware/notificationMiddleware';
+import appSlice from '../Slices/appSlice';
 
 export const store = configureStore({
 	reducer: {
 		user: userReducer,
+		app: appSlice,
 		[apiSlice.reducerPath]: apiSlice.reducer,
 		navigation: navigationReducer,
 		propertyData: propertyDataReducer,

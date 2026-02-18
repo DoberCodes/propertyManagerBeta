@@ -13,6 +13,10 @@ import { RootState } from '../../Redux/store/store';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { UserRole } from '../../constants/roles';
 import {
+	selectCanAccessProperties,
+	selectIsHomeowner,
+} from '../../Redux/selectors/permissionSelectors';
+import {
 	useCreatePropertyMutation,
 	useUpdatePropertyMutation,
 	useDeletePropertyMutation,
@@ -70,6 +74,8 @@ export const Properties = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const canAccessProperties = useSelector(selectCanAccessProperties);
+	const isHomeowner = useSelector(selectIsHomeowner);
 	const teamMembers = useSelector((state: RootState) =>
 		state.team.groups.flatMap((group) => group.members),
 	);
@@ -99,10 +105,11 @@ export const Properties = () => {
 	// Check if user can manage properties based on subscription plan
 	// All paid plans allow property management, free plan has limited access
 	// Expired users cannot add new properties
-	const canManage = currentUser?.subscription
-		? currentUser.subscription.plan !== 'free' &&
-		  !isTrialExpired(currentUser.subscription)
-		: false;
+	const canManage =
+		canAccessProperties &&
+		(currentUser?.subscription
+			? !isTrialExpired(currentUser.subscription)
+			: false);
 
 	// Check if user can create/edit/delete groups (basic and above plans only, not homeowner)
 	// Expired users cannot manage groups
@@ -127,7 +134,7 @@ export const Properties = () => {
 	// Count total properties for this user (for homeowners, only count owned properties, not shared)
 	const totalProperties = groupsWithProperties.reduce((acc, group) => {
 		// For homeowners, only count properties in groups they own (exclude "Shared Properties")
-		if (currentUser?.subscription?.plan === 'homeowner') {
+		if (isHomeowner) {
 			if (group.name?.toLowerCase() === 'shared properties') {
 				return acc; // Don't count shared properties for homeowner limits
 			}
@@ -303,10 +310,7 @@ export const Properties = () => {
 		setDialogOpen(true);
 
 		// For homeowners with no groups, automatically create "My Properties" group
-		if (
-			currentUser?.subscription?.plan === 'homeowner' &&
-			filteredGroups.length === 0
-		) {
+		if (isHomeowner && filteredGroups.length === 0) {
 			try {
 				const result = await createPropertyGroup({
 					name: 'My Properties',
@@ -835,7 +839,7 @@ export const Properties = () => {
 							</HeaderRight>
 						</GroupHeader>
 						<PropertiesGrid
-							$isHomeowner={currentUser?.subscription?.plan === 'homeowner'}
+							$isHomeowner={isHomeowner}
 							$singleProperty={(group.properties || []).length === 1}>
 							{(group.properties || []).map((property: Property) => (
 								<PropertyTile

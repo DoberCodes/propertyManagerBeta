@@ -9,6 +9,7 @@ import { checkForUpdates } from './utils/versionCheck';
 import styled from 'styled-components';
 import { Capacitor } from '@capacitor/core';
 import { initializePushNotifications } from './services/pushNotifications';
+import { setIsMobile } from './Redux/Slices/appSlice';
 
 const LoadingContainer = styled.div`
 	display: flex;
@@ -140,6 +141,16 @@ export const App = () => {
 			unsubscribe();
 			clearTimeout(timeout);
 		};
+	}, [dispatch]);
+
+	useEffect(() => {
+		const checkMobile = () => {
+			dispatch(setIsMobile(window.innerWidth < 768));
+		};
+
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
 	}, [dispatch]);
 
 	useEffect(() => {

@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../Redux/store/store';
 import { FormOptions, FormSelect } from '../Modal/ModalStyles';
 import { DropdownButton } from '../DropdownButton/DropdownButton';
 
@@ -28,19 +30,13 @@ export const TabController: React.FC<TabsProps> = ({
 	activeTab,
 	setActiveTab,
 }) => {
-	const [isMobile, setIsMobile] = useState(false);
-
-	useEffect(() => {
-		const checkIsMobile = () => {
-			setIsMobile(window.innerWidth <= 768);
-		};
-
-		checkIsMobile();
-		window.addEventListener('resize', checkIsMobile);
-
-		return () => window.removeEventListener('resize', checkIsMobile);
-	}, []);
-
+	const isMobile = useSelector((state: RootState) => state.app.isMobile);
+	const isHomeowner = useSelector((state: RootState) =>
+		state.user.currentUser
+			? state.user.currentUser.subscription?.plan === 'homeowner'
+			: false,
+	);
+	const isPropertyManager = currentUser ? !isHomeowner : true;
 	// Build tabs dynamically based on property attributes and user type
 	const baseTabs: tab[] = [
 		{ label: 'Details', value: 'details' },
@@ -62,10 +58,6 @@ export const TabController: React.FC<TabsProps> = ({
 	}
 
 	// Tenants and Requests only for rental properties and non-homeowner users
-	const isPropertyManager = currentUser?.subscription
-		? currentUser.subscription.plan !== 'homeowner'
-		: true;
-
 	if (property?.isRental && isPropertyManager) {
 		tabsForProperty.push({ label: 'Tenants', value: 'tenants' });
 		tabsForProperty.push({

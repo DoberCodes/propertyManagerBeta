@@ -17,8 +17,8 @@ import {
 	useGetAllPropertySharesForUserQuery,
 	useGetAllMaintenanceHistoryForUserQuery,
 } from '../../Redux/API/userSlice';
-import { UserRole } from '../../constants/roles';
-import { isTenant, getTenantPropertySlug } from '../../utils/permissions';
+import { getTenantPropertySlug } from '../../utils/permissions';
+import { selectIsTenant } from '../../Redux/selectors/permissionSelectors';
 import { filterTasksByRole } from '../../utils/dataFilters';
 import { getDefaultTempUnit } from '../../utils/geolocationUtils';
 import { getCurrentLocation } from '../../utils/geolocation';
@@ -35,7 +35,6 @@ import {
 	Wrapper,
 	BottomSectionsWrapper,
 	TopChartsContainer,
-	CarouselSection,
 	Section,
 	SectionTitle,
 	SectionContent,
@@ -43,7 +42,6 @@ import {
 	TaskStatusBanners,
 	TaskStatusBanner,
 	TaskStatusCount,
-	TaskStatusLabel,
 	TaskStatusText,
 	PropertyScoreSection,
 	PropertyScoreTitle,
@@ -51,7 +49,6 @@ import {
 	ScoreValue,
 } from './DashboardTab.styles';
 import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
-import { MobileTaskCarousel } from '../../Components/Library/MobileTaskCarousel/MobileTaskCarousel';
 import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
 import { TaskModal } from '../../Components/Library';
 import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
@@ -136,8 +133,10 @@ export const DashboardTab = () => {
 	const COLORS = ['#34d399', '#60a5fa', '#f87171'];
 
 	// Redirect tenants to their assigned property
+	const isUserTenant = useSelector(selectIsTenant);
+
 	useEffect(() => {
-		if (currentUser && isTenant(currentUser.role as UserRole)) {
+		if (currentUser && isUserTenant) {
 			const propertySlug = getTenantPropertySlug(
 				currentUser.assignedPropertyId,
 			);
@@ -145,7 +144,7 @@ export const DashboardTab = () => {
 				navigate(`/property/${propertySlug}`, { replace: true });
 			}
 		}
-	}, [currentUser, navigate]);
+	}, [currentUser, isUserTenant, navigate]);
 
 	// Get user geolocation once on mount (with permission request on mobile)
 	useEffect(() => {
@@ -200,13 +199,6 @@ export const DashboardTab = () => {
 		longitude: number;
 	} | null>(null);
 
-	// Task modal states (now managed by taskHandlers)
-	// const [showTaskDialog, setShowTaskDialog] = useState(false); // Now from taskHandlers
-	// const [isEditMode, setIsEditMode] = useState(false);
-	// const [editingTask, setEditingTask] = useState<any>(null);
-	// const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false); // Now from taskHandlers
-	// const [assigningTask, setAssigningTask] = useState<any>(null);
-
 	// Fetch all property shares for task filtering
 	const { data: propertyShares = [] } = useGetAllPropertySharesForUserQuery();
 
@@ -234,59 +226,6 @@ export const DashboardTab = () => {
 	const handleTempUnit = (unit: 'C' | 'F') => {
 		setTempUnit(unit);
 	};
-
-	// Get active tasks for carousel (without enrichment)
-	const carouselTasks = useMemo(() => {
-		const filtered = filterTasksByRole(
-			allTasks,
-			currentUser,
-			teamMembers,
-			allProperties,
-			propertyShares,
-		);
-		const activeTasks = filtered.filter((task) => task.status !== 'Completed');
-
-		// Filter to only show upcoming tasks (due in the future)
-		const now = new Date();
-		const upcomingTasks = activeTasks.filter((task) => {
-			if (!task.dueDate) return false;
-			const dueDate = new Date(task.dueDate);
-			return dueDate >= now;
-		});
-
-		// Sort by due date (ascending), then by priority (descending)
-		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
-
-		const sorted = upcomingTasks.sort((a, b) => {
-			// Primary: Sort by due date (soonest first)
-			const dateA = new Date(a.dueDate!).getTime();
-			const dateB = new Date(b.dueDate!).getTime();
-			if (dateA !== dateB) {
-				return dateA - dateB;
-			}
-
-			// Secondary: Sort by priority (highest first)
-			const priorityA =
-				priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-			const priorityB =
-				priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-			return priorityB - priorityA;
-		});
-
-		return sorted;
-	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
-
-	// Count of active tasks (before timeframe filtering)
-	const activeTasksCount = useMemo(() => {
-		const filtered = filterTasksByRole(
-			allTasks,
-			currentUser,
-			teamMembers,
-			allProperties,
-			propertyShares,
-		);
-		return filtered.filter((task) => task.status !== 'Completed').length;
-	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
 
 	// Task status counts for banner display
 	const taskStatusCounts = useMemo(() => {
@@ -379,11 +318,6 @@ export const DashboardTab = () => {
 		[],
 	);
 
-	const handleTaskCompletion = (taskId: string) => {
-		setCompletingTaskId(taskId);
-		setShowTaskCompletionModal(true);
-	};
-
 	const handleTaskCompletionSuccess = () => {
 		setShowTaskCompletionModal(false);
 		setCompletingTaskId(null);
@@ -409,7 +343,6 @@ export const DashboardTab = () => {
 					<TaskStatusCount $type='overdue'>
 						{taskStatusCounts.overdue}
 					</TaskStatusCount>
-					<TaskStatusLabel>Overdue</TaskStatusLabel>
 					<TaskStatusText>
 						{taskStatusCounts.overdue === 1 ? 'Overdue Task' : 'Overdue Tasks'}
 					</TaskStatusText>
@@ -419,23 +352,10 @@ export const DashboardTab = () => {
 					<TaskStatusCount $type='upcoming'>
 						{taskStatusCounts.upcoming}
 					</TaskStatusCount>
-					<TaskStatusLabel>Upcoming</TaskStatusLabel>
 					<TaskStatusText>
 						{taskStatusCounts.upcoming === 1
 							? 'Upcoming Task'
 							: 'Upcoming Tasks'}
-					</TaskStatusText>
-				</TaskStatusBanner>
-
-				<TaskStatusBanner $type='completed' onClick={() => navigate('/tasks')}>
-					<TaskStatusCount $type='completed'>
-						{taskStatusCounts.completed}
-					</TaskStatusCount>
-					<TaskStatusLabel>Completed</TaskStatusLabel>
-					<TaskStatusText>
-						{taskStatusCounts.completed === 1
-							? 'Completed Task'
-							: 'Completed Tasks'}
 					</TaskStatusText>
 				</TaskStatusBanner>
 			</TaskStatusBanners>
@@ -548,20 +468,6 @@ export const DashboardTab = () => {
 				</TopChartsContainer>
 
 				{/* Task Carousel Section - Mobile Only */}
-				<CarouselSection>
-					<MobileTaskCarousel
-						tasks={carouselTasks}
-						onTaskComplete={handleTaskCompletion}
-						onTaskUpdate={async (taskId, updates) => {
-							try {
-								await updateTaskMutation({ id: taskId, updates }).unwrap();
-							} catch (error) {
-								console.error('Failed to update task from carousel', error);
-							}
-						}}
-						taskHandlers={taskHandlers}
-					/>
-				</CarouselSection>
 
 				{/* Seasonal Maintenance - Mobile Only (Below Carousel) */}
 				<Section className='mobile-seasonal'>

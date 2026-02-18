@@ -45,3 +45,12 @@ export const FilterSection = styled.div`
 		}
 	}
 `;
+
+export const CarouselSection = styled.div`
+	width: 100%;
+	display: none;
+
+	@media (max-width: 1024px) {
+		display: block;
+	}
+`;
