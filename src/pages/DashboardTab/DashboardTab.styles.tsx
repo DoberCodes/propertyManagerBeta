@@ -456,3 +456,227 @@ export const ZeroState = styled.div`
 	align-items: center;
 	justify-content: center;
 `;
+
+export const TaskStatusBanners = styled.div`
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+	margin-bottom: 20px;
+
+	@media (max-width: 768px) {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+`;
+
+export const TaskStatusBanner = styled.div<{
+	$type: 'overdue' | 'upcoming' | 'completed';
+}>`
+	background: white;
+	border-radius: 8px;
+	padding: 20px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	border-left: 4px solid
+		${(props) => {
+			switch (props.$type) {
+				case 'overdue':
+					return '#ef4444';
+				case 'upcoming':
+					return '#f59e0b';
+				case 'completed':
+					return '#10b981';
+				default:
+					return '#6b7280';
+			}
+		}};
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px;
+	}
+`;
+
+export const TaskStatusCount = styled.div<{
+	$type: 'overdue' | 'upcoming' | 'completed';
+}>`
+	font-size: 32px;
+	font-weight: 700;
+	color: ${(props) => {
+		switch (props.$type) {
+			case 'overdue':
+				return '#ef4444';
+			case 'upcoming':
+				return '#f59e0b';
+			case 'completed':
+				return '#10b981';
+			default:
+				return '#6b7280';
+		}
+	}};
+	margin-bottom: 8px;
+
+	@media (max-width: 480px) {
+		font-size: 28px;
+	}
+`;
+
+export const TaskStatusLabel = styled.div`
+	font-size: 14px;
+	font-weight: 500;
+	color: #6b7280;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 4px;
+`;
+
+export const TaskStatusText = styled.div`
+	font-size: 16px;
+	font-weight: 600;
+	color: #1f2937;
+
+	@media (max-width: 480px) {
+		font-size: 14px;
+	}
+`;
+
+export const PropertyScoreSection = styled.div`
+	background: white;
+	border-radius: 8px;
+	padding: 24px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+
+	@media (max-width: 768px) {
+		padding: 20px;
+		margin-bottom: 16px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 16px;
+		margin-bottom: 12px;
+	}
+`;
+
+export const PropertyScoreTitle = styled.h3`
+	font-size: 18px;
+	font-weight: 600;
+	color: #1f2937;
+	margin: 0;
+	text-align: center;
+
+	@media (max-width: 480px) {
+		font-size: 16px;
+	}
+`;
+
+export const ScoreGaugeContainer = styled.div`
+	position: relative;
+	width: 200px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+
+	@media (max-width: 480px) {
+		width: 160px;
+	}
+`;
+
+export const ScoreGauge = styled.div`
+	position: relative;
+	width: 180px;
+	height: 90px;
+	border-radius: 90px 90px 0 0;
+	background: conic-gradient(
+		from 270deg,
+		#ef4444 0deg 60deg,
+		#f59e0b 60deg 120deg,
+		#10b981 120deg 180deg
+	);
+	overflow: hidden;
+
+	&::before {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 45px;
+		background: white;
+	}
+
+	@media (max-width: 480px) {
+		width: 144px;
+		height: 72px;
+
+		&::before {
+			height: 36px;
+		}
+	}
+`;
+
+export const ScoreNeedle = styled.div<{ $score: number }>`
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 2px;
+	height: 90px;
+	background: #1f2937;
+	z-index: 2;
+	transform-origin: bottom center;
+	transform: translateX(-50%)
+		rotate(
+			${(props) => {
+				// Convert score (0-100) to angle (-90deg to 90deg)
+				const angle = (props.$score / 100) * 180 - 90;
+				return `${angle}deg`;
+			}}
+		);
+
+	&::before {
+		content: '';
+		position: absolute;
+		bottom: -4px;
+		left: -4px;
+		width: 10px;
+		height: 10px;
+		background: #1f2937;
+		border-radius: 50%;
+	}
+
+	@media (max-width: 480px) {
+		height: 72px;
+		bottom: 0;
+
+		&::before {
+			bottom: -3px;
+			left: -3px;
+			width: 8px;
+			height: 8px;
+		}
+	}
+`;
+
+export const ScoreValue = styled.div`
+	font-size: 48px;
+	font-weight: 700;
+	color: #1f2937;
+	text-align: center;
+	margin-top: 8px;
+
+	@media (max-width: 480px) {
+		font-size: 36px;
+		margin-top: 6px;
+	}
+`;

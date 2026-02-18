@@ -17,6 +17,7 @@ import { FeatureDocsPage } from './pages/FeatureDocsPage';
 import LegalPage from './pages/LegalPage';
 import { Layout } from './pages/Layout';
 import { DashboardTab } from './pages/DashboardTab';
+import { TasksPage } from './pages/TasksPage';
 import { Properties } from './Components/PropertiesTab';
 import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { UnitDetailPage } from './pages/UnitDetailPage';
@@ -92,6 +93,7 @@ export const RouterComponent = () => {
 						</ProtectedRoutes>
 					}>
 					<Route path='dashboard' element={<DashboardTab />} />
+					<Route path='tasks' element={<TasksPage />} />
 
 					{/* Properties management - accessible to all authenticated users */}
 					<Route

@@ -67,6 +67,11 @@ export const SideNav = () => {
 	const desktopMenuItems = [
 		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
 		{
+			label: 'Tasks',
+			path: '/tasks',
+			visible: !isUserTenant && currentUser?.role !== 'contractor',
+		},
+		{
 			label: 'Properties',
 			path: '/properties',
 			visible: !isUserTenant && (canAccessProperties || canViewPages),

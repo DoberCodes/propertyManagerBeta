@@ -33,7 +33,6 @@ import { handleCheckoutSuccess } from '../../services/stripeService';
 import { logout } from '../../Redux/Slices/userSlice';
 import {
 	Wrapper,
-	TaskGridSection,
 	BottomSectionsWrapper,
 	TopChartsContainer,
 	CarouselSection,
@@ -41,15 +40,19 @@ import {
 	SectionTitle,
 	SectionContent,
 	TempToggle,
-	FilterSection,
+	TaskStatusBanners,
+	TaskStatusBanner,
+	TaskStatusCount,
+	TaskStatusLabel,
+	TaskStatusText,
+	PropertyScoreSection,
+	PropertyScoreTitle,
+	ScoreGaugeContainer,
+	ScoreValue,
 } from './DashboardTab.styles';
 import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
-import { ReusableTable } from '../../Components/Library/ReusableTable';
 import { MobileTaskCarousel } from '../../Components/Library/MobileTaskCarousel/MobileTaskCarousel';
 import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
-import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
-import { Column, Action } from '../../Components/Library/ReusableTable';
-import { StatusBadge } from '../PropertyDetailPage/TabSystem/index.styles';
 import { TaskModal } from '../../Components/Library';
 import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
 import {
@@ -189,7 +192,6 @@ export const DashboardTab = () => {
 		}
 	}, [location.search, currentUser, dispatch]);
 
-	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 	const [tempUnit, setTempUnit] = useState<'C' | 'F'>('C');
@@ -197,7 +199,6 @@ export const DashboardTab = () => {
 		latitude: number;
 		longitude: number;
 	} | null>(null);
-	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
 
 	// Task modal states (now managed by taskHandlers)
 	// const [showTaskDialog, setShowTaskDialog] = useState(false); // Now from taskHandlers
@@ -245,21 +246,18 @@ export const DashboardTab = () => {
 		);
 		const activeTasks = filtered.filter((task) => task.status !== 'Completed');
 
-		// Filter tasks within the specified days
+		// Filter to only show upcoming tasks (due in the future)
 		const now = new Date();
-		const daysInMs = taskDaysFilter * 24 * 60 * 60 * 1000;
-		const futureDate = new Date(now.getTime() + daysInMs);
-
-		const tasksWithinRange = activeTasks.filter((task) => {
+		const upcomingTasks = activeTasks.filter((task) => {
 			if (!task.dueDate) return false;
 			const dueDate = new Date(task.dueDate);
-			return dueDate >= now && dueDate <= futureDate;
+			return dueDate >= now;
 		});
 
 		// Sort by due date (ascending), then by priority (descending)
 		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
 
-		const sorted = tasksWithinRange.sort((a, b) => {
+		const sorted = upcomingTasks.sort((a, b) => {
 			// Primary: Sort by due date (soonest first)
 			const dateA = new Date(a.dueDate!).getTime();
 			const dateB = new Date(b.dueDate!).getTime();
@@ -276,26 +274,7 @@ export const DashboardTab = () => {
 		});
 
 		return sorted;
-	}, [
-		allTasks,
-		currentUser,
-		teamMembers,
-		allProperties,
-		taskDaysFilter,
-		propertyShares,
-	]);
-
-	const filteredTasks = useMemo(() => {
-		// Enrich carousel tasks with propertyTitle for display in table
-		return carouselTasks.map((task) => {
-			const property = allProperties.find((p) => p.id === task.propertyId);
-			return {
-				...task,
-				propertyTitle: property?.title || task.property || 'Unknown Property',
-				assignedToNames: task.assignedTo?.name || '',
-			};
-		});
-	}, [carouselTasks, allProperties]);
+	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
 
 	// Count of active tasks (before timeframe filtering)
 	const activeTasksCount = useMemo(() => {
@@ -309,56 +288,96 @@ export const DashboardTab = () => {
 		return filtered.filter((task) => task.status !== 'Completed').length;
 	}, [allTasks, currentUser, teamMembers, allProperties, propertyShares]);
 
-	// Table columns definition
-	const columns: Column[] = [
-		{ header: 'Title', key: 'title' },
-		{
-			header: 'Status',
-			key: 'status',
-			render: (status: string) => (
-				<StatusBadge status={status}>{status}</StatusBadge>
-			),
-		},
-		{ header: 'Priority', key: 'priority' },
-		{
-			header: 'Assigned To',
-			key: 'assignedTo',
-			render: (_unused: any, task: any) =>
-				typeof task.assignedTo === 'object'
-					? task.assignedTo.name
-					: task.assignedTo || 'Unassigned',
-		},
-		{ header: 'Due Date', key: 'dueDate' },
-	];
+	// Task status counts for banner display
+	const taskStatusCounts = useMemo(() => {
+		const filteredTasks = filterTasksByRole(
+			allTasks,
+			currentUser,
+			teamMembers,
+			allProperties,
+			propertyShares,
+		);
 
-	const taskActions: Action[] = [
-		{
-			label: 'Edit',
-			icon: faEdit,
-			onClick: (task: any) => {
-				taskHandlers.setEditingTaskId(task.id);
-				taskHandlers.setShowTaskDialog(true);
-			},
-		},
-		{
-			label: 'Assign',
-			icon: faUserPlus,
-			onClick: (task: any) => {
-				taskHandlers.setAssigningTaskId(task.id);
-				taskHandlers.setShowTaskAssignDialog(true);
-			},
-		},
-		{
-			label: 'Delete',
-			icon: faTrash,
-			onClick: (_task: any) => {
-				if (window.confirm('Are you sure you want to delete this task?')) {
-					// Handle delete logic here
+		const now = new Date();
+		let overdue = 0;
+		let upcoming = 0;
+		let completed = allMaintenanceHistory.length; // Completed tasks from maintenance history
+
+		filteredTasks.forEach((task) => {
+			if (task.status === 'Completed') {
+				// Already counted in maintenance history
+				return;
+			}
+
+			if (task.dueDate) {
+				const dueDate = new Date(task.dueDate);
+				if (dueDate < now) {
+					// Overdue if past due and not completed
+					if (
+						task.status === 'Pending' ||
+						task.status === 'In Progress' ||
+						task.status === 'Awaiting Approval' ||
+						task.status === 'Rejected'
+					) {
+						overdue++;
+					}
+				} else {
+					// Upcoming if due in the future
+					upcoming++;
 				}
-			},
-			className: 'delete',
-		},
-	];
+			}
+		});
+
+		return {
+			overdue,
+			upcoming,
+			completed,
+		};
+	}, [
+		allTasks,
+		currentUser,
+		teamMembers,
+		allProperties,
+		propertyShares,
+		allMaintenanceHistory,
+	]);
+
+	// Property score calculation (100 - penalty for overdue tasks)
+	const propertyScore = useMemo(() => {
+		const baseScore = 100;
+		const penaltyPerOverdueTask = 5; // 5 points deducted per overdue task
+		const score = Math.max(
+			0,
+			baseScore - taskStatusCounts.overdue * penaltyPerOverdueTask,
+		);
+		return score;
+	}, [taskStatusCounts.overdue]);
+
+	const gaugeNeedle = useMemo(() => {
+		const centerX = 100;
+		const centerY = 100;
+		const radius = 70;
+		const theta = Math.PI * (1 - propertyScore / 100);
+		const end = {
+			x: centerX + radius * Math.cos(theta),
+			y: centerY - radius * Math.sin(theta),
+		};
+		return {
+			centerX,
+			centerY,
+			x: end.x,
+			y: end.y,
+		};
+	}, [propertyScore]);
+
+	const gaugeSegments = useMemo(
+		() => [
+			{ name: 'Low', value: 33, fill: '#ef4444' },
+			{ name: 'Medium', value: 33, fill: '#f59e0b' },
+			{ name: 'High', value: 34, fill: '#10b981' },
+		],
+		[],
+	);
 
 	const handleTaskCompletion = (taskId: string) => {
 		setCompletingTaskId(taskId);
@@ -368,7 +387,6 @@ export const DashboardTab = () => {
 	const handleTaskCompletionSuccess = () => {
 		setShowTaskCompletionModal(false);
 		setCompletingTaskId(null);
-		setSelectedRows(new Set());
 	};
 
 	return (
@@ -385,89 +403,86 @@ export const DashboardTab = () => {
 					<ExpiredTrialBanner onUpgradeClick={() => navigate('/paywall')} />
 				)}
 
-			{/* Task Filter Section */}
-			<FilterSection>
-				<label htmlFor='task-days-filter'>Show tasks due within:</label>
-				<select
-					id='task-days-filter'
-					value={taskDaysFilter}
-					onChange={(e) => setTaskDaysFilter(Number(e.target.value))}>
-					<option value={7}>7 days</option>
-					<option value={14}>14 days</option>
-					<option value={30}>30 days</option>
-					<option value={60}>60 days</option>
-					<option value={90}>90 days</option>
-				</select>
-			</FilterSection>
+			{/* Task Status Banners */}
+			<TaskStatusBanners>
+				<TaskStatusBanner $type='overdue' onClick={() => navigate('/tasks')}>
+					<TaskStatusCount $type='overdue'>
+						{taskStatusCounts.overdue}
+					</TaskStatusCount>
+					<TaskStatusLabel>Overdue</TaskStatusLabel>
+					<TaskStatusText>
+						{taskStatusCounts.overdue === 1 ? 'Overdue Task' : 'Overdue Tasks'}
+					</TaskStatusText>
+				</TaskStatusBanner>
 
-			{/* Task Grid Section */}
-			<TaskGridSection>
-				{filteredTasks.length === 0 ? (
-					<ZeroState
-						title={
-							allTasks.length === 0
-								? 'No tasks yet'
-								: activeTasksCount === 0
-								? 'No active tasks'
-								: 'No upcoming tasks in selected timeframe'
-						}
-						description={
-							allTasks.length === 0
-								? 'Create your first task to get started'
-								: activeTasksCount === 0
-								? 'All your tasks are completed'
-								: `Try adjusting the time filter above or check tasks in other timeframes`
-						}
-						icon='📊'></ZeroState>
-				) : (
-					<ReusableTable
-						rowData={filteredTasks}
-						columns={columns}
-						actions={taskActions}
-						onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
-						onRowSelect={(selectedRows) => {
-							setSelectedRows(new Set(selectedRows));
-						}}
-						selectedRows={selectedRows}
-						onSelectAll={(_, selectedRowIds) => {
-							setSelectedRows(new Set(selectedRowIds));
-						}}
-						showCheckbox={false}
-						onRowUpdate={(updatedRow) => {
-							// Prepare updates for Firebase
-							const updates: any = {};
+				<TaskStatusBanner $type='upcoming' onClick={() => navigate('/tasks')}>
+					<TaskStatusCount $type='upcoming'>
+						{taskStatusCounts.upcoming}
+					</TaskStatusCount>
+					<TaskStatusLabel>Upcoming</TaskStatusLabel>
+					<TaskStatusText>
+						{taskStatusCounts.upcoming === 1
+							? 'Upcoming Task'
+							: 'Upcoming Tasks'}
+					</TaskStatusText>
+				</TaskStatusBanner>
 
-							// Update status if changed
-							if (updatedRow.status) {
-								updates.status = updatedRow.status;
-							}
+				<TaskStatusBanner $type='completed' onClick={() => navigate('/tasks')}>
+					<TaskStatusCount $type='completed'>
+						{taskStatusCounts.completed}
+					</TaskStatusCount>
+					<TaskStatusLabel>Completed</TaskStatusLabel>
+					<TaskStatusText>
+						{taskStatusCounts.completed === 1
+							? 'Completed Task'
+							: 'Completed Tasks'}
+					</TaskStatusText>
+				</TaskStatusBanner>
+			</TaskStatusBanners>
 
-							// Update priority if changed
-							if (updatedRow.priority) {
-								updates.priority = updatedRow.priority;
-							}
-
-							// Note: AssignedTo editing is disabled in table view
-
-							// Handle logic for updated row, e.g., marking a task as completed
-							if (updatedRow.status === 'Completed') {
-								handleTaskCompletion(updatedRow.id);
-								return;
-							}
-
-							// Submit to Firebase if there are updates
-							if (Object.keys(updates).length > 0) {
-								updateTaskMutation({
-									id: updatedRow.id,
-									updates,
-								}).catch((error) => {
-									console.error('Failed to update task:', error);
-								});
-							}
-						}}
-					/>
-				)}
-			</TaskGridSection>
+			{/* Property Score Section */}
+			<PropertyScoreSection>
+				<PropertyScoreTitle>Property Score</PropertyScoreTitle>
+				<ScoreGaugeContainer>
+					<PieChart width={200} height={110}>
+						<Pie
+							data={gaugeSegments}
+							dataKey='value'
+							cx={100}
+							cy={100}
+							startAngle={180}
+							endAngle={0}
+							innerRadius={60}
+							outerRadius={80}
+							stroke='none'
+							isAnimationActive={false}>
+							{gaugeSegments.map((segment, index) => (
+								<Cell
+									key={`gauge-${segment.name}-${index}`}
+									fill={segment.fill}
+								/>
+							))}
+						</Pie>
+						<g>
+							<line
+								x1={gaugeNeedle.centerX}
+								y1={gaugeNeedle.centerY}
+								x2={gaugeNeedle.x}
+								y2={gaugeNeedle.y}
+								stroke='#1f2937'
+								strokeWidth='2'
+							/>
+							<circle
+								cx={gaugeNeedle.centerX}
+								cy={gaugeNeedle.centerY}
+								r='4'
+								fill='#1f2937'
+							/>
+						</g>
+					</PieChart>
+					<ScoreValue>{propertyScore}</ScoreValue>
+				</ScoreGaugeContainer>
+			</PropertyScoreSection>
 
 			{/* Bottom Sections - Charts and Carousel */}
 			<BottomSectionsWrapper>
@@ -590,6 +605,7 @@ export const DashboardTab = () => {
 				onClose={() => {
 					setShowTaskDialog(false);
 				}}
+				editingTaskId={editingTaskId}
 				editingTask={
 					editingTaskId ? allTasks.find((t) => t.id === editingTaskId) : null
 				}
