@@ -1,13 +1,17 @@
 import styled from 'styled-components';
 import { font_main } from '../../../../global.styles';
 import { Link } from 'react-router-dom';
-import { COLORS } from '../../../../constants/colors';
+
+const TOP_NAV_HEIGHT = '64px'; // Dynamic TopNav height
 
 export const DesktopWrapper = styled.div`
 	background-color: #fefefe;
 	display: flex;
 	flex-direction: column;
-	height: 100%; /* Take full available height */
+	height: calc(100vh - ${TOP_NAV_HEIGHT}); /* Subtract dynamic TopNav height */
+	max-height: calc(
+		100vh - ${TOP_NAV_HEIGHT}
+	); /* Prevent overflow beyond viewport minus TopNav */
 	flex: 1; /* Fill available space */
 	overflow-y: auto; /* Enable scrolling if content exceeds height */
 	overflow-x: hidden; /* Prevent horizontal scrolling */
@@ -181,7 +185,7 @@ export const MobileNavItem = styled(Link)`
 export const MenuSection = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 8px; /* Reduced gap to minimize spacing */
 	padding: 20px;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Divider added back above Favorites */
 	flex-shrink: 0; /* Prevent shrinking */
@@ -310,7 +314,6 @@ export const SectionContent = styled.div`
 `;
 
 export const BottomSections = styled.div`
-	margin-top: auto; /* Push to the bottom */
 	display: flex;
 	flex-direction: column;
 	gap: 20px;

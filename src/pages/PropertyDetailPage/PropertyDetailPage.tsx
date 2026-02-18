@@ -11,16 +11,16 @@ import { PropertyDetailPageProps } from '../../types/PropertyDetailPage.types';
 import { RootState } from '../../Redux/store/store';
 import { User } from '../../Redux/Slices/userSlice';
 
-import { useTaskHandlers } from './useTaskHandlers';
-import { useUnitHandlers } from './useUnitHandlers';
-import { usePropertyEditHandlers } from './usePropertyEditHandlers';
-import { useMaintenanceRequestHandlers } from './useMaintenanceRequestHandlers';
-import { useGetPropertySharesQuery } from '../../Redux/API/userSlice';
+import { useTaskHandlers } from 'pages/PropertyDetailPage/useTaskHandlers';
+import { useUnitHandlers } from 'pages/PropertyDetailPage/useUnitHandlers';
+import { usePropertyEditHandlers } from 'pages/PropertyDetailPage/usePropertyEditHandlers';
+import { useMaintenanceRequestHandlers } from 'pages/PropertyDetailPage/useMaintenanceRequestHandlers';
+import { useGetPropertySharesQuery } from 'Redux/API/userSlice';
 import {
 	useGetPropertiesQuery,
 	useUpdatePropertyMutation,
 	useGetUnitsQuery,
-} from '../../Redux/API/propertySlice';
+} from 'Redux/API/propertySlice';
 import { useGetContractorsByPropertyQuery } from '../../Redux/API/contractorSlice';
 import {
 	useGetMaintenanceHistoryByPropertyQuery,
@@ -45,13 +45,13 @@ import {
 	isValidPropertyImageFile,
 } from '../../utils/propertyImageUpload';
 import { getFamilyMembers } from '../../services/authService';
-import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
-import { FileUploader } from '../../Components/Library/FileUploader';
+import { TaskCompletionModal } from 'Components/TaskCompletionModal';
+import { FileUploader } from 'Components/Library/FileUploader';
 
-import { ConvertRequestToTaskModal } from '../../Components/ConvertRequestToTaskModal';
-import { SharePropertyModal } from '../../Components/SharePropertyModal';
-import { AddTenantModal } from '../../Components/AddTenantModal';
-import { DeleteConfirmationModal } from '../../Components/Library/Modal/DeleteConfirmationModal';
+import { ConvertRequestToTaskModal } from 'Components/ConvertRequestToTaskModal';
+import { SharePropertyModal } from 'Components/SharePropertyModal';
+import { AddTenantModal } from 'Components/AddTenantModal';
+import { DeleteConfirmationModal } from 'Components/Library/Modal/DeleteConfirmationModal';
 import {
 	Wrapper,
 	Header,

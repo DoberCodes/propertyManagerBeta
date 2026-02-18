@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../Redux/store';
-import { useDetailPageData } from '../../Hooks/useDetailPageData';
+import { useDetailPageData } from 'Hooks/useDetailPageData';
 import {
 	DetailPageLayout,
 	TabContent,
@@ -15,8 +15,8 @@ import {
 	FormSelect,
 	FormTextarea,
 	PrimaryButton,
-} from '../../Components/Library';
-import { Toolbar } from '../PropertyDetailPage/PropertyDetailPage.styles';
+} from 'Components/Library';
+import { Toolbar } from 'pages/PropertyDetailPage/PropertyDetailPage.styles';
 import { AddTenantModal } from '../../Components/AddTenantModal';
 import { MaintenanceRequestModal } from '../../Components/MaintenanceRequestModal';
 import {

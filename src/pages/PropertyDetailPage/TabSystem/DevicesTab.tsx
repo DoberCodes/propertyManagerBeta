@@ -7,15 +7,15 @@ import {
 	faWrench,
 } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../Redux/store';
-import { uploadDeviceFile } from '../../../utils/deviceFileUpload';
+import { RootState } from 'Redux/store';
+import { uploadDeviceFile } from 'utils/deviceFileUpload';
 import {
 	useGetDevicesQuery,
 	useCreateDeviceMutation,
 	useUpdateDeviceMutation,
 	useDeleteDeviceMutation,
-} from '../../../Redux/API/deviceSlice';
-import { useGetUnitsQuery } from '../../../Redux/API/propertySlice';
+} from 'Redux/API/deviceSlice';
+import { useGetUnitsQuery } from 'Redux/API/propertySlice';
 import {
 	SectionContainer,
 	SectionHeader,

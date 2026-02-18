@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../../Redux/store/store';
 import { setActiveRoute } from '../../../../Redux/Slices/navigationSlice';
-// subscription utils used via selectors now
 import { useRecentlyViewed } from '../../../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../../../Hooks/useFavorites';
-import { UserRole } from '../../../../constants/roles';
 import {
 	DesktopWrapper,
 	MenuSection,
@@ -16,17 +14,16 @@ import {
 	Section,
 	SectionContent,
 	BottomSections,
-	MobileBottomNav,
-	MobileNavItem,
 } from './SideNav.styles';
 import {
 	selectIsTenant,
 	selectCanAccessTeam,
 	selectCanAccessProperties,
-	selectCanAccessReadOnlyFeatures,
 	selectIsHomeowner,
 	selectIsContractor,
 } from '../../../../Redux/selectors/permissionSelectors';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog } from '@fortawesome/free-solid-svg-icons';
 
 export const SideNav = () => {
 	const location = useLocation();
@@ -51,11 +48,9 @@ export const SideNav = () => {
 	const isUserTenant = useSelector(selectIsTenant);
 	const canAccessTeam = useSelector(selectCanAccessTeam);
 	const canAccessProperties = useSelector(selectCanAccessProperties);
-	const canViewReportsPermission = useSelector(selectCanAccessReadOnlyFeatures);
-	const canExportDataPermission = useSelector(selectCanAccessReadOnlyFeatures);
-	const canViewPages = useSelector(selectCanAccessProperties);
 	const isHomeowner = useSelector(selectIsHomeowner);
 	const isContractor = useSelector(selectIsContractor);
+	const canViewPages = useSelector(selectCanAccessProperties); // Restored variable
 
 	const isActive = (path: string) => activeRoute === path;
 
@@ -202,87 +197,30 @@ export const SideNav = () => {
 						</div>
 					</SectionContent>
 				</Section>
+
+				{/* Settings Navigation */}
+				<Section>
+					<SectionContent>
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'center',
+								alignItems: 'center',
+								cursor: 'pointer',
+								padding: '10px',
+								transition: 'color 0.2s ease',
+								color: '#666666',
+							}}
+							onClick={() => navigate('/settings')}
+							onMouseEnter={(e) =>
+								(e.currentTarget.style.color = '#999999')
+							} /* Lighter gray on hover */
+							onMouseLeave={(e) => (e.currentTarget.style.color = '#666666')}>
+							<FontAwesomeIcon icon={faCog} size='lg' />
+						</div>
+					</SectionContent>
+				</Section>
 			</BottomSections>
 		</DesktopWrapper>
 	);
 };
-
-// export const MobileNav = () => {
-// 	const location = useLocation();
-// 	const dispatch = useDispatch<AppDispatch>();
-// 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
-// 	const activeRoute = useSelector(
-// 		(state: RootState) => state.navigation.activeRoute,
-// 	);
-
-// 	// Update Redux when location changes
-// 	React.useEffect(() => {
-// 		const hash = location.hash.replace('#', '');
-// 		// Extract the main route (e.g., '/dashboard' from '/dashboard' or '/property/:slug')
-// 		const mainRoute = '/' + hash.split('/')[1];
-// 		dispatch(setActiveRoute(mainRoute));
-// 	}, [location.hash, dispatch]);
-
-// 	// Check permissions based on subscription plan
-// 	const canAccessTeam = currentUser?.subscription
-// 		? canManageTeam(currentUser.subscription)
-// 		: false;
-// 	const canAccessProperties = currentUser?.subscription
-// 		? currentUser.subscription.plan !== 'free'
-// 		: false;
-// 	const canViewReportsPermission = currentUser?.subscription
-// 		? canAccessReadOnlyFeatures(currentUser.subscription)
-// 		: false;
-// 	const canExportDataPermission = currentUser?.subscription
-// 		? canAccessReadOnlyFeatures(currentUser.subscription)
-// 		: false;
-// 	const canViewPages = currentUser?.subscription
-// 		? currentUser.subscription.plan !== 'free'
-// 		: false;
-// 	const isUserTenant = currentUser ? currentUser.role === 'tenant' : false;
-// 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
-
-// 	const menuItems = [
-// 		{ label: 'Dashboard', path: '/dashboard', visible: !isUserTenant },
-// 		{
-// 			label: 'Properties',
-// 			path: '/properties',
-// 			visible: !isUserTenant && (canAccessProperties || canViewPages),
-// 		},
-// 		{
-// 			label: 'Team',
-// 			path: '/team',
-// 			visible: !isUserTenant && !isHomeowner && (canAccessTeam || canViewPages),
-// 		},
-// 		{
-// 			label: 'Report',
-// 			path: '/report',
-// 			visible: !isUserTenant && (canAccessProperties || canViewPages),
-// 		},
-// 		{
-// 			label: 'Tenant Profile',
-// 			path: '/tenant-profile',
-// 			visible:
-// 				currentUser?.userType === 'tenant' ||
-// 				currentUser?.userType === 'Tenant' ||
-// 				currentUser?.userType === 'Shared Tenant',
-// 		},
-// 	];
-
-// 	const isActive = (path: string) => activeRoute === path;
-// 	const visibleItems = menuItems.filter((item) => item.visible);
-
-// 	return (
-// 		<MobileBottomNav>
-// 			{visibleItems.map((item) => (
-// 				<MobileNavItem
-// 					key={item.label}
-// 					to={item.path}
-// 					className={isActive(item.path) ? 'active' : ''}
-// 					title={item.label}>
-// 					{item.label}
-// 				</MobileNavItem>
-// 			))}
-// 		</MobileBottomNav>
-// 	);
-// };

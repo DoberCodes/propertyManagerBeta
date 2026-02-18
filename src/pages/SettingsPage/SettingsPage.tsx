@@ -2,39 +2,39 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '../Redux/store/store';
+import { AppDispatch, RootState } from 'Redux/store/store';
 import {
 	getSubscriptionPlanDetails,
 	isTrialActive,
 	getTrialDaysRemaining,
 	isTrialExpired,
-} from '../utils/subscriptionUtils';
+} from 'utils/subscriptionUtils';
 import {
 	GenericModal,
 	FormGroup,
 	FormLabel,
 	FormInput,
-} from '../Components/Library';
-import { FeedbackForm } from '../Components/FeedbackForm';
-import { ExpiredTrialBanner } from '../Components/ExpiredTrialBanner/ExpiredTrialBanner';
-import { cancelSubscription } from '../services/stripeService';
+} from 'Components/Library';
+import { FeedbackForm } from 'Components/FeedbackForm';
+import { ExpiredTrialBanner } from 'Components/ExpiredTrialBanner/ExpiredTrialBanner';
+import { cancelSubscription } from 'services/stripeService';
 import {
 	updatePassword,
 	reauthenticateWithCredential,
 	EmailAuthProvider,
 	signOut,
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { auth } from 'config/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../config/firebase';
-import { useUpdateUserMutation } from '../Redux/API/userSlice';
-import { setCurrentUser } from '../Redux/Slices/userSlice';
+import { functions } from 'config/firebase';
+import { useUpdateUserMutation } from 'Redux/API/userSlice';
+import { setCurrentUser } from 'Redux/Slices/userSlice';
 import {
 	addFamilyMember,
 	removeFamilyMember,
 	getFamilyMembers,
-} from '../services/authService';
-import { NotificationPreferences } from '../Components/NotificationPreferences';
+} from 'services/authService';
+import { NotificationPreferences } from 'Components/NotificationPreferences';
 
 const Container = styled.div`
 	max-width: 100%;
@@ -268,7 +268,7 @@ const PasswordHelp = styled.div`
 	font-style: italic;
 `;
 
-const SettingsPage: React.FC = () => {
+export const SettingsPage: React.FC = () => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
@@ -1039,5 +1039,3 @@ const SettingsPage: React.FC = () => {
 		</Container>
 	);
 };
-
-export default SettingsPage;

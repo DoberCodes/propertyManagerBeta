@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../Redux/store/store';
-import { ZeroState } from '../../Components/Library/ZeroState';
-import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
+import { RootState } from 'Redux/store/store';
+import { ZeroState } from 'Components/Library/ZeroState';
+import { useGetPropertiesQuery } from 'Redux/API/propertySlice';
 import {
 	useGetSharedPropertiesForUserQuery,
 	useGetAllPropertySharesForUserQuery,
@@ -351,8 +351,6 @@ export const TasksPage = () => {
 									if (updatedRow.priority) {
 										updates.priority = updatedRow.priority;
 									}
-
-									// Note: AssignedTo editing is disabled in table view
 
 									// Handle logic for updated row, e.g., marking a task as completed
 									if (updatedRow.status === 'Completed') {

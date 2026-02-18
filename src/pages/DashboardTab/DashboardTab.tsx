@@ -9,28 +9,25 @@ import {
 } from 'recharts';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../Redux/store/store';
-import { ZeroState } from '../../Components/Library/ZeroState';
-import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
+import { RootState } from 'Redux/store/store';
+import { ZeroState } from 'Components/Library/ZeroState';
+import { useGetPropertiesQuery } from 'Redux/API/propertySlice';
 import {
 	useGetSharedPropertiesForUserQuery,
 	useGetAllPropertySharesForUserQuery,
 	useGetAllMaintenanceHistoryForUserQuery,
-} from '../../Redux/API/userSlice';
-import { getTenantPropertySlug } from '../../utils/permissions';
-import { selectIsTenant } from '../../Redux/selectors/permissionSelectors';
-import { filterTasksByRole } from '../../utils/dataFilters';
-import { getDefaultTempUnit } from '../../utils/geolocationUtils';
-import { getCurrentLocation } from '../../utils/geolocation';
-import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
-import { TrialWarningBanner } from '../../Components/TrialWarningBanner/TrialWarningBanner';
-import { ExpiredTrialBanner } from '../../Components/ExpiredTrialBanner/ExpiredTrialBanner';
-import {
-	getTrialDaysRemaining,
-	isTrialExpired,
-} from '../../utils/subscriptionUtils';
-import { handleCheckoutSuccess } from '../../services/stripeService';
-import { logout } from '../../Redux/Slices/userSlice';
+} from 'Redux/API/userSlice';
+import { getTenantPropertySlug } from 'utils/permissions';
+import { selectIsTenant } from 'Redux/selectors/permissionSelectors';
+import { filterTasksByRole } from 'utils/dataFilters';
+import { getDefaultTempUnit } from 'utils/geolocationUtils';
+import { getCurrentLocation } from 'utils/geolocation';
+import { TaskCompletionModal } from 'Components/TaskCompletionModal';
+import { TrialWarningBanner } from 'Components/TrialWarningBanner/TrialWarningBanner';
+import { ExpiredTrialBanner } from 'Components/ExpiredTrialBanner/ExpiredTrialBanner';
+import { getTrialDaysRemaining, isTrialExpired } from 'utils/subscriptionUtils';
+import { handleCheckoutSuccess } from 'services/stripeService';
+import { logout } from 'Redux/Slices/userSlice';
 import {
 	Wrapper,
 	BottomSectionsWrapper,
@@ -48,14 +45,11 @@ import {
 	ScoreGaugeContainer,
 	ScoreValue,
 } from './DashboardTab.styles';
-import { SeasonalMaintenance } from '../../Components/SeasonalMaintenance';
-import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
-import { TaskModal } from '../../Components/Library';
-import { TaskAssignModal } from '../../Components/Library/Modal/TaskAssignModal';
-import {
-	useGetTasksQuery,
-	useUpdateTaskMutation,
-} from '../../Redux/API/taskSlice';
+import { SeasonalMaintenance } from 'Components/SeasonalMaintenance';
+import { useTaskHandlers } from 'pages/PropertyDetailPage/useTaskHandlers';
+import { TaskModal } from 'Components/Library';
+import { TaskAssignModal } from 'Components/Library/Modal/TaskAssignModal';
+import { useGetTasksQuery, useUpdateTaskMutation } from 'Redux/API/taskSlice';
 
 export const DashboardTab = () => {
 	const navigate = useNavigate();

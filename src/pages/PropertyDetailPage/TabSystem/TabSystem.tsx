@@ -9,8 +9,8 @@ import { RequestsTab } from './RequestsTab';
 import { TenantsTab } from './TenantsTab';
 import { UnitsTab } from './UnitsTab';
 import { TabContentContainer, TabControlsContainer } from './index.styles';
-import { TabController } from '../../../Components/Library';
-import { Task } from '../../../types/Task.types';
+import { TabController } from 'Components/Library';
+import { Task } from 'types/Task.types';
 
 interface TabsProps {
 	property: any;

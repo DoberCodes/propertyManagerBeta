@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import DocumentViewer from '../Components/DocumentViewer';
+import DocumentViewer from '../../Components/DocumentViewer';
+import SEO from 'Components/SEO/SEO';
 
 const Container = styled.div`
 	max-width: 1000px;
@@ -130,6 +131,12 @@ const LegalPage: React.FC = () => {
 
 	return (
 		<Container>
+			<SEO
+				title="Legal — Maintley"
+				description="Terms of Service, Privacy Policy, and Maintenance Disclaimer for Maintley."
+				url={`${window.location.origin}/legal`}
+				keywords="terms of service, privacy policy, legal"
+			/>
 			<BackButton onClick={() => navigate(-1)}>← Back</BackButton>
 
 			<Title>Legal Documents</Title>

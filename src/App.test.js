@@ -1,3 +1,10 @@
+// mock axios early to prevent Jest trying to parse the ESM axios package
+jest.mock('axios', () => ({
+	get: jest.fn(),
+	post: jest.fn(),
+	create: jest.fn(() => ({ get: jest.fn(), post: jest.fn() })),
+}));
+
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from './Redux/store';

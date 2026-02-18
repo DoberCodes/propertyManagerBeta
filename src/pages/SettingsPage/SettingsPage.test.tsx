@@ -3,18 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import userEvent from '@testing-library/user-event';
-import SettingsPage from '../pages/SettingsPage';
-import { apiSlice } from '../Redux/API/apiSlice';
-import userSlice, { setCurrentUser, User } from '../Redux/Slices/userSlice';
+import { SettingsPage } from './SettingsPage';
+import { apiSlice } from '../../Redux/API/apiSlice';
+import userSlice, { setCurrentUser, User } from '../../Redux/Slices/userSlice';
 
 // Mock dependencies
-jest.mock('../services/authService', () => ({
+jest.mock('services/authService', () => ({
 	addFamilyMember: jest.fn(),
 	getFamilyMembers: jest.fn(),
 	removeFamilyMember: jest.fn(),
 }));
 
-jest.mock('../config/firebase', () => ({
+jest.mock('config/firebase', () => ({
 	auth: {},
 	db: {},
 }));
@@ -24,7 +24,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Mock the subscription utilities
-jest.mock('../utils/subscriptionUtils', () => ({
+jest.mock('utils/subscriptionUtils', () => ({
 	getSubscriptionPlanDetails: jest.fn(() => ({
 		name: 'Homeowner',
 		price: 9.99,
@@ -73,10 +73,9 @@ describe('SettingsPage Family Members', () => {
 		store = createMockStore();
 		store.dispatch(setCurrentUser(mockUser));
 
-		mockAddFamilyMember = require('../services/authService').addFamilyMember;
-		mockGetFamilyMembers = require('../services/authService').getFamilyMembers;
-		mockRemoveFamilyMember =
-			require('../services/authService').removeFamilyMember;
+		mockAddFamilyMember = require('services/authService').addFamilyMember;
+		mockGetFamilyMembers = require('services/authService').getFamilyMembers;
+		mockRemoveFamilyMember = require('services/authService').removeFamilyMember;
 
 		mockAddFamilyMember.mockClear();
 		mockGetFamilyMembers.mockClear();

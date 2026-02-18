@@ -31,11 +31,9 @@ export const TabController: React.FC<TabsProps> = ({
 	setActiveTab,
 }) => {
 	const isMobile = useSelector((state: RootState) => state.app.isMobile);
-	const isHomeowner = useSelector((state: RootState) =>
-		state.user.currentUser
-			? state.user.currentUser.subscription?.plan === 'homeowner'
-			: false,
-	);
+	// derive homeowner status from the passed-in `currentUser` prop so the
+	// component remains pure/testable (tests pass `currentUser` directly)
+	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
 	const isPropertyManager = currentUser ? !isHomeowner : true;
 	// Build tabs dynamically based on property attributes and user type
 	const baseTabs: tab[] = [

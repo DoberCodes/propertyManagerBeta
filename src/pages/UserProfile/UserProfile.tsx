@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState, AppDispatch } from '../../Redux/store';
-import { setCurrentUser } from '../../Redux/Slices/userSlice';
-import { useUpdateUserMutation } from '../../Redux/API/userSlice';
-import { FileUploader } from '../../Components/Library/FileUploader';
-import { uploadUserProfileImage } from '../../utils/userProfileImageUpload';
+import { RootState, AppDispatch } from 'Redux/store';
+import { setCurrentUser } from 'Redux/Slices/userSlice';
+import { useUpdateUserMutation } from 'Redux/API/userSlice';
+import { FileUploader } from 'Components/Library/FileUploader';
+import { uploadUserProfileImage } from 'utils/userProfileImageUpload';
 import {
 	PageHeaderSection,
 	PageTitle as StandardPageTitle,

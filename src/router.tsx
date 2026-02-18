@@ -12,9 +12,8 @@ import { LoginPage } from './pages/LoginPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoutes } from './ProtectedRoutes';
-import SettingsPage from './pages/SettingsPage';
-import { FeatureDocsPage } from './pages/FeatureDocsPage';
-import LegalPage from './pages/LegalPage';
+import { FeatureDocsPage } from './pages/FeatureDocs/FeatureDocsPage';
+import LegalPage from './pages/LegalPage/LegalPage';
 import { Layout } from './pages/Layout';
 import { DashboardTab } from './pages/DashboardTab';
 import { TasksPage } from './pages/TasksPage';
@@ -22,7 +21,6 @@ import { Properties } from './Components/PropertiesTab';
 import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { UnitDetailPage } from './pages/UnitDetailPage';
 import { SuiteDetailPage } from './pages/SuiteDetailPage/SuiteDetailPage';
-import { MaintenanceHistoryGroupPage } from './pages/MaintenanceHistoryGroupPage';
 import TeamPage from './pages/TeamPage';
 import { ReportPage } from './pages/ReportPage';
 import { UserProfile } from './pages/UserProfile';
@@ -35,6 +33,8 @@ import {
 	selectCanAccessTeam,
 } from './Redux/selectors/permissionSelectors';
 import PaywallPageIndex from './pages/PaywallPage';
+import { MaintenanceHistoryGroupPage } from 'pages/MaintenanceHistoryGroup';
+import { SettingsPage } from 'pages/SettingsPage';
 
 // Component to handle root route - redirects to login in mobile app
 const RootRoute = () => {

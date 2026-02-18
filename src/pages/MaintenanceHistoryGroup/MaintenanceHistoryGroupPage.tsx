@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useDetailPageData } from '../Hooks/useDetailPageData';
+import { useDetailPageData } from 'Hooks/useDetailPageData';
 import {
 	useDeleteMaintenanceHistoryMutation,
 	useGetMaintenanceHistoryByPropertyQuery,
-} from '../Redux/API/maintenanceSlice';
-import { useGetContractorsByPropertyQuery } from '../Redux/API/contractorSlice';
-import { useGetPropertySharesQuery } from '../Redux/API/userSlice';
-import { RootState } from '../Redux/store/store';
-import { getFamilyMembers } from '../services/authService';
+} from 'Redux/API/maintenanceSlice';
+import { useGetContractorsByPropertyQuery } from 'Redux/API/contractorSlice';
+import { useGetPropertySharesQuery } from 'Redux/API/userSlice';
+import { RootState } from 'Redux/store/store';
+import { getFamilyMembers } from 'services/authService';
 import {
 	SectionContainer,
 	SectionHeader,
-} from '../Components/Library/InfoCards/InfoCardStyles';
+} from 'Components/Library/InfoCards/InfoCardStyles';
 import {
 	GridContainer,
 	GridTable,
 	EmptyState,
-} from '../Components/Library/DataGrid/DataGridStyles';
-import { useGetTeamMembersQuery } from '../Redux/API/teamSlice';
+} from 'Components/Library/DataGrid/DataGridStyles';
+import { useGetTeamMembersQuery } from 'Redux/API/teamSlice';
 
 export const MaintenanceHistoryGroupPage: React.FC = () => {
 	const { slug, groupId } = useParams<{ slug: string; groupId: string }>();

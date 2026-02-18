@@ -1,7 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { COLORS } from '../constants/colors';
+import { COLORS } from '../../constants/colors';
+import SEO from 'Components/SEO/SEO';
+import { MobileCarousel } from 'Components/Library';
 
 const SubTitle = styled.h3`
 	font-size: 1.3rem;
@@ -151,16 +153,56 @@ const FeatureIcon = styled.span`
 	min-width: 32px;
 `;
 
+const CarouselWrapper = styled.div`
+	margin: 24px 0 40px 0;
+	max-width: 1100px;
+	margin-left: auto;
+	margin-right: auto;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+	background: white;
+`;
+
 export const FeatureDocsPage: React.FC = () => {
 	const navigate = useNavigate();
+
+	const screenshots = [
+		`${window.location.origin}/screenshots/screenshot-1.svg`,
+		`${window.location.origin}/screenshots/screenshot-2.svg`,
+		`${window.location.origin}/screenshots/screenshot-3.svg`,
+	];
+
 	return (
 		<Container>
+			<SEO
+				title="Features — Maintley"
+				description="Feature overview: property & unit management, tasks, reporting, team collaboration and mobile access."
+				url={`${window.location.origin}/features`}
+				image={screenshots[0]}
+				keywords="property maintenance, features, maintenance history, property manager"
+			/>
 			<Header>
 				<Title>Maintley Features</Title>
 				<HeaderSubtitle>
 					Everything you need to manage property maintenance efficiently
 				</HeaderSubtitle>
 			</Header>
+
+			<CarouselWrapper>
+				<MobileCarousel
+					items={screenshots.map((src, idx) => (
+						<img
+							key={idx}
+							src={src}
+							alt={`Maintley screenshot ${idx + 1}`}
+							style={{ width: '100%', display: 'block' }}
+						/>
+					))}
+					showIndicators
+					showNavigation
+				/>
+			</CarouselWrapper>
 
 			<LinkButton onClick={() => navigate('/dashboard')}>
 				← Back to Dashboard

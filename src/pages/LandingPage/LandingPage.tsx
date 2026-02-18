@@ -1,7 +1,7 @@
-import { FormGroup } from '../../Components/Library';
+import { FormGroup } from 'Components/Library';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LandingNavbar } from '../../Components/Library/LandingNavbar';
+import { LandingNavbar } from 'Components/Library/LandingNavbar';
 import HeroSection from './components/Hero';
 import MissionSectionComponent from './components/MissionSection';
 import FeaturesSectionComponent from './components/FeaturesSection';
@@ -49,6 +49,7 @@ import {
 
 import packageJson from '../../../package.json';
 import { getAPKFileSize, getAPKDownloadURL } from '../../utils/versionCheck';
+import SEO from 'Components/SEO/SEO';
 
 const formatBytes = (bytes: number) => {
 	var marker = 1024;
@@ -65,6 +66,28 @@ const formatBytes = (bytes: number) => {
 const LandingPageComponent = () => {
 	const navigate = useNavigate();
 	const apkDownloadUrl = getAPKDownloadURL();
+
+	// SEO — important for public landing page (site-wide defaults are in public/index.html)
+	const seo = {
+		title: 'Maintley — Maintenance & Property History',
+		description:
+			'Maintley helps property owners and managers capture, track and report maintenance — never lose a repair or invoice again.',
+		url: 'https://maintleyapp.com/',
+		image: `${window.location.origin}/Favicon.png`,
+		keywords:
+			'property maintenance, maintenance history, property manager, landlord tools',
+		structuredData: {
+			'@context': 'https://schema.org',
+			'@type': 'WebSite',
+			name: 'Maintley',
+			url: 'https://maintleyapp.com/',
+			potentialAction: {
+				'@type': 'SearchAction',
+				target: 'https://maintleyapp.com/?s={search_term_string}',
+				'query-input': 'required name=search_term_string',
+			},
+		},
+	};
 	// Use previous version (1.7.3) for the versioned APK download
 	const previousVersion = '1.7.3';
 	const versionedApkDownloadUrl = `https://github.com/DoberCodes/propertyManagerWebApp/releases/download/v${previousVersion}/app-release.apk`;
@@ -174,6 +197,15 @@ const LandingPageComponent = () => {
 
 	return (
 		<>
+			{/* Page-specific SEO */}
+			<SEO
+				title={seo.title}
+				description={seo.description}
+				url={seo.url}
+				image={seo.image}
+				keywords={seo.keywords}
+				structuredData={seo.structuredData}
+			/>
 			<LandingNavbar />
 			<Wrapper>
 				{/* Hero Section */}

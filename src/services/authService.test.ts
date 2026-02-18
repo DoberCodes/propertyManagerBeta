@@ -248,6 +248,14 @@ describe('Family Account Functionality', () => {
 		const mockGetDoc = require('firebase/firestore').getDoc;
 		const mockUpdateDoc = require('firebase/firestore').updateDoc;
 		const mockDoc = require('firebase/firestore').doc;
+		const mockHttpsCallable = require('firebase/functions').httpsCallable;
+
+		beforeEach(() => {
+			// mock cloud function used to delete a family member account
+			mockHttpsCallable.mockReturnValue(
+				jest.fn().mockResolvedValue({ data: { success: true } }),
+			);
+		});
 
 		it('should successfully remove a family member', async () => {
 			const mockAccountDoc = {
