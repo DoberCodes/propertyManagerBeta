@@ -6,6 +6,8 @@ import styled from 'styled-components';
 
 export const GridContainer = styled.div`
 	overflow-x: auto;
+	overflow-y: auto;
+	max-height: calc(100vh - 300px); /* Adjust height dynamically */
 `;
 
 export const GridTable = styled.table`

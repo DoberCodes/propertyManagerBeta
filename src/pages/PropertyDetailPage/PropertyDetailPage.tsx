@@ -62,6 +62,7 @@ import {
 	EmptyState,
 	TitleContainer,
 	EditableTitleInput,
+	ContentWrapper,
 } from './PropertyDetailPage.styles';
 
 import { DeviceModal } from '../../Components/Library/Modal';
@@ -72,6 +73,7 @@ import {
 import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
 import { TabSystem } from './TabSystem';
 import { UnitModal } from '../../Components/Library';
+import { Content } from 'pages/Layout/Layout.styles';
 
 export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	props,
@@ -816,146 +818,147 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					</div>
 				</HeaderContent>
 			</Header>
+			<ContentWrapper>
+				{/* Tab Navigation */}
+				<TabSystem
+					property={property}
+					currentUser={currentUser}
+					propertyMaintenanceRequests={propertyMaintenanceRequests}
+					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
+					propertyTasks={propertyTasks}
+					maintenanceHistoryRecords={maintenanceHistoryRecords}
+					propertyUnits={propertyUnits}
+					propertyContractors={propertyContractors}
+					familyMembers={familyMembers}
+					teamMembers={teamMembers}
+					assigneeOptions={assigneeOptions}
+					allTasks={[]}
+					handleAddMaintenanceHistory={handleAddMaintenanceHistory}
+					handleDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
+					setShowAddTenantModal={setShowAddTenantModal}
+					handleEditTenant={handleEditTenant}
+					handleDeleteTenant={handleDeleteTenant}
+					handleViewTenantPromo={handleViewTenantPromo}
+					handleCreateTask={handleCreateTask}
+					handleEditTask={handleEditTask}
+					hasCommercialSuites={hasCommercialSuites}
+					handleCreateUnit={handleCreateUnit}
+					handleDeleteUnit={handleDeleteUnit}
+					handleConvertRequestToTask={handleConvertRequestToTask}
+				/>
 
-			{/* Tab Navigation */}
-			<TabSystem
-				property={property}
-				currentUser={currentUser}
-				propertyMaintenanceRequests={propertyMaintenanceRequests}
-				canApproveMaintenanceRequest={canApproveMaintenanceRequest}
-				propertyTasks={propertyTasks}
-				maintenanceHistoryRecords={maintenanceHistoryRecords}
-				propertyUnits={propertyUnits}
-				propertyContractors={propertyContractors}
-				familyMembers={familyMembers}
-				teamMembers={teamMembers}
-				assigneeOptions={assigneeOptions}
-				allTasks={[]}
-				handleAddMaintenanceHistory={handleAddMaintenanceHistory}
-				handleDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
-				setShowAddTenantModal={setShowAddTenantModal}
-				handleEditTenant={handleEditTenant}
-				handleDeleteTenant={handleDeleteTenant}
-				handleViewTenantPromo={handleViewTenantPromo}
-				handleCreateTask={handleCreateTask}
-				handleEditTask={handleEditTask}
-				hasCommercialSuites={hasCommercialSuites}
-				handleCreateUnit={handleCreateUnit}
-				handleDeleteUnit={handleDeleteUnit}
-				handleConvertRequestToTask={handleConvertRequestToTask}
-			/>
+				{/* Add Device Dialog */}
+				<DeviceModal
+					isOpen={showDeviceDialog}
+					property={property}
+					onClose={() => setShowDeviceDialog(false)}
+					onSubmit={handleDeviceFormSubmit}
+					onFormChange={handleDeviceFormChange}
+					deviceFormData={deviceFormData}
+					units={propertyUnits}
+				/>
 
-			{/* Add Device Dialog */}
-			<DeviceModal
-				isOpen={showDeviceDialog}
-				property={property}
-				onClose={() => setShowDeviceDialog(false)}
-				onSubmit={handleDeviceFormSubmit}
-				onFormChange={handleDeviceFormChange}
-				deviceFormData={deviceFormData}
-				units={propertyUnits}
-			/>
+				{/* Unit Create Dialog */}
+				<UnitModal
+					isOpen={showUnitDialog}
+					formData={unitFormData}
+					onClose={() => setShowUnitDialog(false)}
+					onSubmit={handleUnitFormSubmit}
+					onChange={handleUnitFormChange}
+				/>
 
-			{/* Unit Create Dialog */}
-			<UnitModal
-				isOpen={showUnitDialog}
-				formData={unitFormData}
-				onClose={() => setShowUnitDialog(false)}
-				onSubmit={handleUnitFormSubmit}
-				onChange={handleUnitFormChange}
-			/>
+				{/* Convert Request to Task Modal */}
+				{convertingRequest && (
+					<ConvertRequestToTaskModal
+						isOpen={showConvertModal}
+						onClose={() => {
+							setShowConvertModal(false);
+							setConvertingRequest(null);
+						}}
+						onConvert={handleConvertToTask}
+						request={convertingRequest}
+						teamMembers={teamMembers.filter(
+							(m): m is TeamMember => m !== undefined,
+						)}
+					/>
+				)}
 
-			{/* Convert Request to Task Modal */}
-			{convertingRequest && (
-				<ConvertRequestToTaskModal
-					isOpen={showConvertModal}
-					onClose={() => {
-						setShowConvertModal(false);
-						setConvertingRequest(null);
+				{/* Share Property Modal */}
+				{property && (
+					<SharePropertyModal
+						open={showShareModal}
+						onClose={() => setShowShareModal(false)}
+						propertyId={property.id}
+						propertyTitle={property.title}
+						ownerId={currentUser!.id}
+						ownerEmail={currentUser!.email}
+					/>
+				)}
+
+				{/* Add Tenant Modal */}
+				{property && (
+					<AddTenantModal
+						open={showAddTenantModal}
+						onClose={() => setShowAddTenantModal(false)}
+						propertyId={property.id}
+					/>
+				)}
+
+				{/* Edit Tenant Modal */}
+				{property && editingTenant && (
+					<AddTenantModal
+						open={showEditTenantModal}
+						onClose={() => {
+							setShowEditTenantModal(false);
+							setEditingTenant(null);
+						}}
+						propertyId={property.id}
+						mode='edit'
+						tenant={editingTenant}
+					/>
+				)}
+
+				{/* Delete Task Confirmation Modal */}
+				<DeleteConfirmationModal
+					isOpen={deleteTaskModalOpen}
+					itemName={taskToDelete?.title || ''}
+					itemType='task'
+					onConfirm={() => {
+						confirmDeleteTask();
+						setDeleteTaskModalOpen(false);
+						setTaskToDelete(null);
 					}}
-					onConvert={handleConvertToTask}
-					request={convertingRequest}
-					teamMembers={teamMembers.filter(
-						(m): m is TeamMember => m !== undefined,
-					)}
-				/>
-			)}
-
-			{/* Share Property Modal */}
-			{property && (
-				<SharePropertyModal
-					open={showShareModal}
-					onClose={() => setShowShareModal(false)}
-					propertyId={property.id}
-					propertyTitle={property.title}
-					ownerId={currentUser!.id}
-					ownerEmail={currentUser!.email}
-				/>
-			)}
-
-			{/* Add Tenant Modal */}
-			{property && (
-				<AddTenantModal
-					open={showAddTenantModal}
-					onClose={() => setShowAddTenantModal(false)}
-					propertyId={property.id}
-				/>
-			)}
-
-			{/* Edit Tenant Modal */}
-			{property && editingTenant && (
-				<AddTenantModal
-					open={showEditTenantModal}
-					onClose={() => {
-						setShowEditTenantModal(false);
-						setEditingTenant(null);
+					onCancel={() => {
+						setDeleteTaskModalOpen(false);
+						setTaskToDelete(null);
 					}}
-					propertyId={property.id}
-					mode='edit'
-					tenant={editingTenant}
 				/>
-			)}
 
-			{/* Delete Task Confirmation Modal */}
-			<DeleteConfirmationModal
-				isOpen={deleteTaskModalOpen}
-				itemName={taskToDelete?.title || ''}
-				itemType='task'
-				onConfirm={() => {
-					confirmDeleteTask();
-					setDeleteTaskModalOpen(false);
-					setTaskToDelete(null);
-				}}
-				onCancel={() => {
-					setDeleteTaskModalOpen(false);
-					setTaskToDelete(null);
-				}}
-			/>
-
-			{/* Delete Tenant Confirmation Modal */}
-			<DeleteConfirmationModal
-				isOpen={showDeleteTenantModal}
-				itemName={tenantToDelete?.email || ''}
-				itemType='tenant'
-				onConfirm={handleConfirmDeleteTenant}
-				onCancel={() => {
-					setShowDeleteTenantModal(false);
-					setTenantToDelete(null);
-				}}
-			/>
-
-			{/* Task Completion Modal */}
-			{showTaskCompletionModal && completingTaskId && (
-				<TaskCompletionModal
-					taskId={completingTaskId}
-					taskTitle={
-						allTasks.find((t) => t.id === completingTaskId)?.title || ''
-					}
-					task={allTasks.find((t) => t.id === completingTaskId)}
-					onClose={() => setShowTaskCompletionModal(false)}
-					onSuccess={handleTaskCompletionSuccess}
+				{/* Delete Tenant Confirmation Modal */}
+				<DeleteConfirmationModal
+					isOpen={showDeleteTenantModal}
+					itemName={tenantToDelete?.email || ''}
+					itemType='tenant'
+					onConfirm={handleConfirmDeleteTenant}
+					onCancel={() => {
+						setShowDeleteTenantModal(false);
+						setTenantToDelete(null);
+					}}
 				/>
-			)}
+
+				{/* Task Completion Modal */}
+				{showTaskCompletionModal && completingTaskId && (
+					<TaskCompletionModal
+						taskId={completingTaskId}
+						taskTitle={
+							allTasks.find((t) => t.id === completingTaskId)?.title || ''
+						}
+						task={allTasks.find((t) => t.id === completingTaskId)}
+						onClose={() => setShowTaskCompletionModal(false)}
+						onSuccess={handleTaskCompletionSuccess}
+					/>
+				)}
+			</ContentWrapper>
 
 			<style>{`
 				.desktop-actions {

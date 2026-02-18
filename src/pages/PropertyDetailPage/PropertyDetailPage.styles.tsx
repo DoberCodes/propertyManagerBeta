@@ -4,7 +4,7 @@ export const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 0;
-	min-height: 100%;
+	height: 100%;
 	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 `;
 
@@ -52,6 +52,14 @@ export const Header = styled.div`
 		gap: 12px;
 		border-radius: 0 0 16px 16px;
 	}
+`;
+
+export const ContentWrapper = styled.div`
+	flex: 1;
+	padding: 20px;
+	background-color: #ffffff;
+	border-radius: 12px;
+	height: calc(100% - 220px);
 `;
 
 export const HeaderContent = styled.div`

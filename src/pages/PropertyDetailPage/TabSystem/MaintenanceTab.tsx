@@ -10,13 +10,7 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
-import {
-	Toolbar,
-	ToolbarButton,
-	EmptyState,
-	GridContainer,
-	GridTable,
-} from './index.styles';
+import { Toolbar, ToolbarButton, ContentWrapper } from './index.styles';
 import { getDeviceNameUtil } from '../PropertyDetailPage.utils';
 import {
 	FilterBar,
@@ -26,6 +20,12 @@ import {
 import { applyFilters } from '../../../utils/tableFilters';
 import { AddMaintenanceHistoryModal } from '../../../Components/Library/Modal/AddMaintenanceHistoryModal';
 import { useSelector } from 'react-redux';
+import {
+	ReusableTable,
+	Column,
+} from '../../../Components/Library/ReusableTable';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 
 export interface MaintenanceTabProps {
 	property: any;
@@ -75,9 +75,6 @@ export const MaintenanceTab = ({
 
 	const { isMobile } = useSelector((state: any) => state.app);
 
-	console.info(isMobile);
-	// Mobile detection
-
 	// Bulk selection handlers
 	const toggleRecordSelection = (recordId: string) => {
 		setSelectedRecordIds((prev) => {
@@ -91,22 +88,21 @@ export const MaintenanceTab = ({
 		});
 	};
 
-	const toggleGroupSelection = (records: any[]) => {
-		setSelectedRecordIds((prev) => {
-			const newSet = new Set(prev);
-			const recordIds = records
-				.filter((record) => record && record.id)
-				.map((record) => record.id);
-			const isAllSelected = recordIds.every((id) => newSet.has(id));
-			recordIds.forEach((id) => {
-				if (isAllSelected) {
-					newSet.delete(id);
-				} else {
-					newSet.add(id);
-				}
-			});
-			return newSet;
-		});
+	const handleGroupID = (record: any) => {
+		const getMaintenanceGroupId = (record: any): string | undefined => {
+			return record.maintenanceGroupId;
+		};
+
+		return getMaintenanceGroupId(record) || record.id;
+	};
+	const handleSelectionLink = (record) => {
+		const recordGroupId = handleGroupID(record);
+
+		return recordGroupId && !record.isLegacy
+			? `/property/${property.slug}/maintenance-history/${encodeURIComponent(
+					recordGroupId,
+			  )}`
+			: null;
 	};
 
 	const createMaintenanceGroupId = () => {
@@ -289,6 +285,7 @@ export const MaintenanceTab = ({
 				completedByName: resolveCompletedByName(record),
 				notes: record.completionNotes || record.notes,
 				isLegacy: false,
+				groupId: record.maintenanceGroupId, // Ensure groupId is included
 			})),
 			...(property.maintenanceHistory || []).map(
 				(record: any, index: number) => ({
@@ -297,6 +294,7 @@ export const MaintenanceTab = ({
 					title: record.description,
 					completedBy: getDeviceNameUtil(record.deviceId, property),
 					completedByName: getDeviceNameUtil(record.deviceId, property),
+					groupId: record.maintenanceGroupId || null, // Add groupId for legacy records
 					notes: '-',
 					isLegacy: true,
 				}),
@@ -304,6 +302,8 @@ export const MaintenanceTab = ({
 		],
 		[maintenanceHistoryRecords, property, resolveCompletedByName],
 	);
+
+	console.info('allMaintenanceRecords', allMaintenanceRecords);
 
 	// Apply filters to maintenance records
 	const filteredRecords = useMemo(() => {
@@ -385,23 +385,59 @@ export const MaintenanceTab = ({
 		[groupedRecords.groups],
 	);
 
+	const columns: Column<any>[] = [
+		{
+			header: 'Date',
+			key: 'completionDate',
+			render: (value) => (value ? new Date(value).toLocaleDateString() : '-'),
+		},
+		{ header: 'Title', key: 'title' },
+		{ header: 'Notes', key: 'notes' },
+		{
+			header: 'Actions',
+			key: 'actions',
+			render: (_, row) => (
+				<div style={{ display: 'flex', gap: '8px' }}>
+					{onDeleteMaintenanceHistory && (
+						<button
+							onClick={() => {
+								handleDeleteGroup(groupedRecords.groups[row.groupId] || [row]);
+							}}
+							style={{ color: 'red' }}>
+							<FontAwesomeIcon icon={faTrash} />
+						</button>
+					)}
+					<button
+						onClick={() => {
+							const slugLink = handleSelectionLink(row);
+							navigate(slugLink || '/');
+						}}
+						style={{ color: '#3b82f6' }}>
+						<FontAwesomeIcon icon={faEye} />
+					</button>
+				</div>
+			),
+		},
+	];
+
 	return (
 		<SectionContainer>
 			<SectionHeader>Maintenance History</SectionHeader>
 
 			{/* Toolbar with Add button */}
-			{onAddMaintenanceHistory && (
-				<Toolbar>
-					<ToolbarButton onClick={() => setShowAddModal(true)}>
-						+ Add History
-					</ToolbarButton>
-				</Toolbar>
-			)}
+			<Toolbar>
+				<ToolbarButton onClick={() => setShowAddModal(true)}>
+					+ Add History
+				</ToolbarButton>
+			</Toolbar>
 
 			{/* Bulk Action Toolbar */}
 			{canBulkEdit && selectedRecordIds.size > 0 && (
 				<Toolbar
-					style={{ background: '#eff6ff', borderBottom: '2px solid #3b82f6' }}>
+					style={{
+						background: '#eff6ff',
+						borderBottom: '2px solid #3b82f6',
+					}}>
 					<div
 						style={{
 							display: 'flex',
@@ -410,7 +446,11 @@ export const MaintenanceTab = ({
 							flex: 1,
 						}}>
 						<span
-							style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>
+							style={{
+								fontSize: '14px',
+								fontWeight: '600',
+								color: '#1e40af',
+							}}>
 							{selectedRecordIds.size} record
 							{selectedRecordIds.size !== 1 ? 's' : ''} selected
 						</span>
@@ -498,12 +538,10 @@ export const MaintenanceTab = ({
 					/>
 				)}
 			</div>
-
-			{Object.keys(groupedRecords.groups).length > 0 ||
-			groupedRecords.ungrouped.length > 0 ? (
-				isMobile ? (
-					<div>
-						{/* Display grouped records first */}
+			<ContentWrapper>
+				{isMobile ? (
+					<div
+						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 						{Object.entries(groupedRecords.groups).map(([groupId, records]) => (
 							<MaintenanceHistoryGroup
 								key={groupId}
@@ -537,259 +575,14 @@ export const MaintenanceTab = ({
 						))}
 					</div>
 				) : (
-					<GridContainer>
-						<GridTable>
-							<thead>
-								<tr>
-									{canBulkEdit && <th></th>}
-									<th>Date</th>
-									{property?.propertyType === 'Multi-Family' && <th>Unit</th>}
-									<th>Task</th>
-									<th>Completed By</th>
-									<th>Notes</th>
-									<th>Files</th>
-									{onDeleteMaintenanceHistory && <th>Actions</th>}
-								</tr>
-							</thead>
-							<tbody>
-								{/* Display grouped records first */}
-								{Object.entries(groupedRecords.groups).map(
-									([groupId, records]) => {
-										const groupLink = `/property/${
-											property.slug
-										}/maintenance-history/${encodeURIComponent(groupId)}`;
-										return (
-											<tr
-												key={groupId}
-												style={{ backgroundColor: '#f9fafb' }}
-												onDoubleClick={() => {
-													navigate(groupLink);
-												}}>
-												<td
-													colSpan={
-														(property?.propertyType === 'Multi-Family'
-															? 7
-															: 6) + (canBulkEdit ? 1 : 0)
-													}
-													style={{ padding: '12px' }}>
-													<div
-														style={{
-															display: 'flex',
-															alignItems: 'center',
-															fontWeight: '600',
-														}}>
-														{canBulkEdit && (
-															<input
-																type='checkbox'
-																checked={records.every((record) =>
-																	selectedRecordIds.has(record.id),
-																)}
-																onChange={() => toggleGroupSelection(records)}
-																style={{ marginRight: '8px' }}
-															/>
-														)}
-														<span style={{ marginRight: '8px' }}>🔄</span>
-														{records[0].title} ({records.length} instances)
-														<button
-															onClick={() => navigate(groupLink)}
-															style={{
-																marginLeft: '12px',
-																fontSize: '12px',
-																color: 'white',
-																background: '#3b82f6',
-																padding: '4px 8px',
-																borderRadius: '4px',
-																border: 'none',
-																cursor: 'pointer',
-															}}>
-															View details
-														</button>
-														{onDeleteMaintenanceHistory && (
-															<button
-																onClick={() => handleDeleteGroup(records)}
-																style={{
-																	marginLeft: '8px',
-																	fontSize: '12px',
-																	color: 'white',
-																	background: '#ef4444',
-																	padding: '4px 8px',
-																	borderRadius: '4px',
-																	border: 'none',
-																	cursor: 'pointer',
-																}}>
-																Delete group
-															</button>
-														)}
-														<span
-															style={{
-																marginLeft: 'auto',
-																fontSize: '12px',
-																color: '#6b7280',
-															}}>
-															Latest:{' '}
-															{new Date(
-																records[0].completionDate,
-															).toLocaleDateString()}
-														</span>
-													</div>
-													{/* Show the last two instances in the group */}
-													<div style={{ marginTop: '8px' }}>
-														{records.slice(0, 2).map((record) => (
-															<div
-																key={record.id}
-																style={{
-																	marginBottom: '4px',
-																	paddingLeft: '24px',
-																}}>
-																<span style={{ fontSize: '14px' }}>
-																	{new Date(
-																		record.completionDate,
-																	).toLocaleDateString()}{' '}
-																	- {record.completedByName || 'Unknown'}
-																	{record.completionNotes &&
-																		` - ${record.completionNotes}`}
-																</span>
-															</div>
-														))}
-														{records.length > 2 && (
-															<div
-																style={{
-																	marginTop: '6px',
-																	paddingLeft: '24px',
-																	fontSize: '12px',
-																	color: '#6b7280',
-																}}>
-																Showing last 2. View details for full history.
-															</div>
-														)}
-													</div>
-												</td>
-											</tr>
-										);
-									},
-								)}
-								{/* Display ungrouped records */}
-								{groupedRecords.ungrouped.map((record: any) => {
-									// Find the unit name for this record (only for Multi-Family properties)
-									const unitForRecord =
-										property?.propertyType === 'Multi-Family' && record.unitId
-											? units.find((unit: any) => unit.id === record.unitId)
-											: null;
-									const unitDisplay = unitForRecord
-										? unitForRecord.unitNumber ||
-										  unitForRecord.address ||
-										  'Unit'
-										: 'Property';
-									const recordGroupId =
-										getMaintenanceGroupId(record) || record.id;
-									const recordLink =
-										recordGroupId && !record.isLegacy
-											? `/property/${
-													property.slug
-											  }/maintenance-history/${encodeURIComponent(
-													recordGroupId,
-											  )}`
-											: null;
-
-									return (
-										<tr
-											key={record.id || `record-${Math.random()}`}
-											onDoubleClick={() => {
-												if (recordLink) {
-													navigate(recordLink);
-												}
-											}}>
-											{canBulkEdit && (
-												<td>
-													<input
-														type='checkbox'
-														checked={selectedRecordIds.has(record.id)}
-														onChange={() => toggleRecordSelection(record.id)}
-													/>
-												</td>
-											)}
-											<td>{record.completionDate || '-'}</td>
-											{property?.propertyType === 'Multi-Family' && (
-												<td>{unitDisplay}</td>
-											)}
-											<td>
-												<strong>{record.title || 'Task'}</strong>
-												{record.notes && record.notes !== '-' && (
-													<>
-														<br />
-														<small style={{ color: '#666' }}>
-															{record.notes}
-														</small>
-													</>
-												)}
-											</td>
-											<td>
-												{record.completedByName || record.completedBy || '-'}
-											</td>
-											<td>{record.completionNotes || record.notes || '-'}</td>
-											<td>
-												{record.completionFile && !record.isLegacy ? (
-													<a
-														href={record.completionFile.url}
-														target='_blank'
-														rel='noopener noreferrer'
-														style={{ color: '#22c55e' }}>
-														📎 {record.completionFile.name}
-													</a>
-												) : (
-													'-'
-												)}
-											</td>
-											{onDeleteMaintenanceHistory && (
-												<td>
-													{recordLink && (
-														<button
-															onClick={() => {
-																navigate(recordLink);
-															}}
-															style={{
-																padding: '4px 8px',
-																background: '#3b82f6',
-																color: 'white',
-																border: 'none',
-																borderRadius: '4px',
-																cursor: 'pointer',
-																fontSize: '12px',
-																marginRight: '6px',
-															}}>
-															View details
-														</button>
-													)}
-													<button
-														onClick={() =>
-															onDeleteMaintenanceHistory(record.id)
-														}
-														style={{
-															padding: '4px 8px',
-															background: '#ef4444',
-															color: 'white',
-															border: 'none',
-															borderRadius: '4px',
-															cursor: 'pointer',
-															fontSize: '12px',
-														}}>
-														Delete
-													</button>
-												</td>
-											)}
-										</tr>
-									);
-								})}
-							</tbody>
-						</GridTable>
-					</GridContainer>
-				)
-			) : (
-				<EmptyState>
-					<p>No maintenance history for this property</p>
-				</EmptyState>
-			)}
-
+					<ReusableTable
+						columns={columns}
+						rowData={maintenanceHistoryRecords}
+						emptyMessage='No maintenance history available.'
+						showCheckbox={canBulkEdit}
+					/>
+				)}
+			</ContentWrapper>
 			{/* Add Maintenance History Modal */}
 			{showAddModal && (
 				<AddMaintenanceHistoryModal

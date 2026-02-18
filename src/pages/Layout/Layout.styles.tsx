@@ -1,11 +1,10 @@
 import styled from 'styled-components';
-import { nav_height } from '../../global.styles';
 
 export const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	min-height: 100vh; /* Ensure at least full viewport height */
+	height: 100vh; /* Ensure full viewport height */
 	padding-bottom: env(safe-area-inset-bottom);
 
 	@media (max-width: 1024px) {
@@ -16,23 +15,20 @@ export const Wrapper = styled.div`
 export const Main = styled.div`
 	display: flex;
 	flex: 1;
-	height: calc(
-		100vh - ${nav_height}
-	); /* Use fixed height to ensure full viewport usage */
+	height: 100%; /* Use full height of Wrapper */
 	overflow: hidden;
 	flex-direction: row;
-	min-height: 100vh; /* Allow flex items to shrink below their minimum content size */
 
 	@media (max-width: 1024px) {
 		flex-direction: column;
-		height: calc(100vh - ${nav_height} - 70px);
+		height: 100%;
 	}
 `;
 
 export const Sidebar = styled.div`
 	width: 250px;
 	min-width: 250px;
-	height: 100vh; /* Ensure sidebar spans full height */
+	height: 100%; /* Match height of Main */
 	flex-shrink: 0; /* Prevent sidebar from shrinking */
 	overflow-y: auto;
 	border-right: 1px solid #e5e7eb;
@@ -54,7 +50,7 @@ export const Content = styled.div`
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	height: calc(100vh);
+	height: 100%; /* Match height of Main */
 	overflow-y: auto;
 	padding: 20px;
 	background-color: #fafafa; /* match TeamPage off-white */

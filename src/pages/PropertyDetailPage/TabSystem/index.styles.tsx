@@ -2,7 +2,7 @@ import { styled } from 'styled-components';
 import { ContractorCategory } from '../../../types/Contractor.types';
 
 export const HeaderContainer = styled.div`
-	display: flex;
+	display: block;
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 1.5rem;
@@ -24,6 +24,19 @@ export const HeaderContainer = styled.div`
 			flex-basis: 100%;
 			text-align: center;
 		}
+	}
+`;
+
+export const ContentWrapper = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding: 20px;
+	height: 80%;
+	background-color: #f8f9fa;
+	overflow: scroll;
+	@media (max-width: 480px) {
+		padding: 15px;
 	}
 `;
 
@@ -366,7 +379,6 @@ export const DesktopTableWrapper = styled.div`
 
 export const GridContainer = styled.div`
 	width: 100%;
-	overflow-x: auto;
 	border: 1px solid #e0e0e0;
 	border-radius: 6px;
 
@@ -542,7 +554,6 @@ export const TabControlsContainer = styled.div`
 export const TabContentContainer = styled.div`
 	padding: 1.5rem;
 	flex: 1;
-	min-height: 0;
 
 	@media (max-width: 1024px) {
 	}

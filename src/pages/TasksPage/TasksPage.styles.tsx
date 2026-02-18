@@ -5,7 +5,7 @@ export const Wrapper = styled.div`
 	flex-direction: column;
 	gap: 20px;
 	padding: 20px;
-	min-height: 100vh;
+	height: 100%; /* Adjusted to prevent unnecessary scrolling */
 	background-color: #f8f9fa;
 `;
 

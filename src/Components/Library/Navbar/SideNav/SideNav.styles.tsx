@@ -187,7 +187,6 @@ export const MenuSection = styled.div`
 	flex-direction: column;
 	gap: 8px; /* Reduced gap to minimize spacing */
 	padding: 20px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Divider added back above Favorites */
 	flex-shrink: 0; /* Prevent shrinking */
 
 	@media (max-width: 1024px) {
@@ -255,8 +254,8 @@ export const Section = styled.div`
 	flex-direction: column;
 	gap: 10px;
 	padding: 20px;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Divider moved here */
 	flex-shrink: 0; /* Prevent shrinking */
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
 	&:last-of-type {
 		border-bottom: none;
@@ -317,6 +316,7 @@ export const BottomSections = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	margin-top: auto; /* Push to bottom */
 	padding: 20px;
 	flex-shrink: 0; /* Prevent shrinking */
 

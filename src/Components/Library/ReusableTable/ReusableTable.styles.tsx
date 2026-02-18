@@ -40,6 +40,8 @@ export const ActionButton = styled.button`
 
 export const TableContainer = styled.div`
 	overflow-x: auto;
+	overflow-y: auto; /* Enable vertical scrolling */
+	max-height: 400px; /* Set a maximum height for the table */
 	border: 1px solid #e0e0e0;
 	border-radius: 4px;
 	background-color: #fff;

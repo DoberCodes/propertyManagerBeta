@@ -257,44 +257,46 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 						</div>
 					</div>
 
-					<GridContainer>
-						<GridTable>
-							<thead>
-								<tr>
-									<th>Date</th>
-									<th>Completed By</th>
-									<th>Notes</th>
-									<th>Attachments</th>
-								</tr>
-							</thead>
-							<tbody>
-								{groupRecords.map((record: any) => (
-									<tr key={record.id}>
-										<td>
-											{record.completionDate
-												? new Date(record.completionDate).toLocaleDateString()
-												: '-'}
-										</td>
-										<td>{getCompletedByDisplay(record)}</td>
-										<td>{record.completionNotes || record.notes || '-'}</td>
-										<td>
-											{record.completionFile?.url ? (
-												<a
-													href={record.completionFile.url}
-													target='_blank'
-													rel='noopener noreferrer'
-													style={{ color: '#22c55e' }}>
-													📎 {record.completionFile.name}
-												</a>
-											) : (
-												'-'
-											)}
-										</td>
+					<div style={{ height: 'calc(100vh - 150px)', overflow: 'hidden' }}>
+						<GridContainer>
+							<GridTable>
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Completed By</th>
+										<th>Notes</th>
+										<th>Attachments</th>
 									</tr>
-								))}
-							</tbody>
-						</GridTable>
-					</GridContainer>
+								</thead>
+								<tbody>
+									{groupRecords.map((record: any) => (
+										<tr key={record.id}>
+											<td>
+												{record.completionDate
+													? new Date(record.completionDate).toLocaleDateString()
+													: '-'}
+											</td>
+											<td>{getCompletedByDisplay(record)}</td>
+											<td>{record.completionNotes || record.notes || '-'}</td>
+											<td>
+												{record.completionFile?.url ? (
+													<a
+														href={record.completionFile.url}
+														target='_blank'
+														rel='noopener noreferrer'
+														style={{ color: '#22c55e' }}>
+														📎 {record.completionFile.name}
+													</a>
+												) : (
+													'-'
+												)}
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</GridTable>
+						</GridContainer>
+					</div>
 
 					<div
 						style={{

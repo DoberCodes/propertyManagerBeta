@@ -90,22 +90,21 @@ export const SideNav = () => {
 	return (
 		<DesktopWrapper>
 			<MenuSection>
-				<SectionTitle>Navigation</SectionTitle>
-				<MenuNav>
-					{desktopMenuItems
-						.filter((item) => item.visible)
-						.map((item) => (
-							<MenuItem
-								key={item.label}
-								to={item.path}
-								className={isActive(item.path) ? 'active' : ''}>
-								{item.label}
-							</MenuItem>
-						))}
-				</MenuNav>
-			</MenuSection>
-			{/* Bottom Sections */}
-			<BottomSections>
+				<Section>
+					<SectionTitle>Navigation</SectionTitle>
+					<MenuNav>
+						{desktopMenuItems
+							.filter((item) => item.visible)
+							.map((item) => (
+								<MenuItem
+									key={item.label}
+									to={item.path}
+									className={isActive(item.path) ? 'active' : ''}>
+									{item.label}
+								</MenuItem>
+							))}
+					</MenuNav>
+				</Section>
 				{/* Favorites Section */}
 				<Section>
 					<SectionTitle>Favorites</SectionTitle>
@@ -177,7 +176,9 @@ export const SideNav = () => {
 						)}
 					</SectionContent>
 				</Section>
+			</MenuSection>
 
+			<BottomSections>
 				{/* Features Section */}
 				<Section>
 					<SectionTitle>Help & Resources</SectionTitle>
@@ -196,20 +197,17 @@ export const SideNav = () => {
 							📋 View All Features
 						</div>
 					</SectionContent>
-				</Section>
 
-				{/* Settings Navigation */}
-				<Section>
+					{/* Settings Navigation */}
 					<SectionContent>
 						<div
 							style={{
 								display: 'flex',
-								justifyContent: 'center',
-								alignItems: 'center',
-								cursor: 'pointer',
-								padding: '10px',
-								transition: 'color 0.2s ease',
+								padding: '8px 0',
+								fontSize: '13px',
 								color: '#666666',
+								cursor: 'pointer',
+								transition: 'color 0.2s ease',
 							}}
 							onClick={() => navigate('/settings')}
 							onMouseEnter={(e) =>
@@ -217,6 +215,7 @@ export const SideNav = () => {
 							} /* Lighter gray on hover */
 							onMouseLeave={(e) => (e.currentTarget.style.color = '#666666')}>
 							<FontAwesomeIcon icon={faCog} size='lg' />
+							<div style={{ marginLeft: '4px' }}>Settings</div>
 						</div>
 					</SectionContent>
 				</Section>
