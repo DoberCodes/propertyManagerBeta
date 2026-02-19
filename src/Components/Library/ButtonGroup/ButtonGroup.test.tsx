@@ -1,79 +1,77 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ButtonGroup } from './ButtonGroup';
 
 describe('ButtonGroup Component', () => {
 	it('should render children correctly', () => {
-		const { getByText } = render(
+		render(
 			<ButtonGroup>
 				<button>Button 1</button>
 				<button>Button 2</button>
 			</ButtonGroup>,
 		);
 
-		expect(getByText('Button 1')).toBeInTheDocument();
-		expect(getByText('Button 2')).toBeInTheDocument();
+		expect(screen.getByText('Button 1')).toBeInTheDocument();
+		expect(screen.getByText('Button 2')).toBeInTheDocument();
 	});
-
 	it('should apply default styles', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup>
 				<button>Test</button>
 			</ButtonGroup>,
 		);
 
-		const buttonGroup = container.firstChild as HTMLElement;
-		const styles = window.getComputedStyle(buttonGroup);
+		const buttonGroup = screen.getByRole('group');
 
-		expect(styles.display).toBe('flex');
+		expect(getComputedStyle(buttonGroup).display).toBe('flex');
 	});
 
 	it('should apply custom gap prop', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup gap='20px'>
 				<button>Test</button>
 			</ButtonGroup>,
 		);
 
-		const buttonGroup = container.firstChild as HTMLElement;
+		const buttonGroup = screen.getByRole('group');
 		expect(buttonGroup).toBeInTheDocument();
 	});
 
 	it('should apply custom justify prop', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup justify='center'>
 				<button>Test</button>
 			</ButtonGroup>,
 		);
 
-		const buttonGroup = container.firstChild as HTMLElement;
+		const buttonGroup = screen.getByRole('group');
 		expect(buttonGroup).toBeInTheDocument();
 	});
 
 	it('should apply custom marginTop prop', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup marginTop='24px'>
 				<button>Test</button>
 			</ButtonGroup>,
 		);
 
-		const buttonGroup = container.firstChild as HTMLElement;
+		const buttonGroup = screen.getByRole('group');
 		expect(buttonGroup).toBeInTheDocument();
 	});
 
 	it('should apply responsive prop', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup responsive>
 				<button>Test</button>
 			</ButtonGroup>,
 		);
 
-		const buttonGroup = container.firstChild as HTMLElement;
+		const buttonGroup = screen.getByRole('group');
 		expect(buttonGroup).toBeInTheDocument();
 	});
 
 	it('should handle multiple props together', () => {
-		const { container, getByText } = render(
+		render(
 			<ButtonGroup
 				gap='16px'
 				justify='space-between'
@@ -85,25 +83,25 @@ describe('ButtonGroup Component', () => {
 			</ButtonGroup>,
 		);
 
-		expect(getByText('Action 1')).toBeInTheDocument();
-		expect(getByText('Action 2')).toBeInTheDocument();
-		expect(getByText('Action 3')).toBeInTheDocument();
-		expect(container.firstChild).toBeInTheDocument();
+		expect(screen.getByText('Action 1')).toBeInTheDocument();
+		expect(screen.getByText('Action 2')).toBeInTheDocument();
+		expect(screen.getByText('Action 3')).toBeInTheDocument();
+		expect(screen.getByRole('group')).toBeInTheDocument();
 	});
 
 	it('should render without any props', () => {
-		const { container } = render(
+		render(
 			<ButtonGroup>
 				<button>Default</button>
 			</ButtonGroup>,
 		);
 
-		expect(container.firstChild).toBeInTheDocument();
+		expect(screen.getByRole('group')).toBeInTheDocument();
 	});
 
 	it('should render empty children', () => {
-		const { container } = render(<ButtonGroup>{null}</ButtonGroup>);
+		render(<ButtonGroup>{null}</ButtonGroup>);
 
-		expect(container.firstChild).toBeInTheDocument();
+		expect(screen.getByRole('group')).toBeInTheDocument();
 	});
 });

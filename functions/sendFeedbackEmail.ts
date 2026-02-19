@@ -1,8 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import sgMail from '@sendgrid/mail';
-import * as fs from 'fs';
-import * as path from 'path';
 
 if (!admin.apps.length) {
 	admin.initializeApp();

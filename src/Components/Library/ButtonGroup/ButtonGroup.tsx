@@ -18,7 +18,9 @@ interface ButtonGroupProps {
 	responsive?: boolean;
 }
 
-export const ButtonGroup = styled.div<ButtonGroupProps>`
+export const ButtonGroup = styled.div.attrs({
+	role: 'group',
+})<ButtonGroupProps>`
 	display: flex;
 	gap: ${(props) => props.gap || '12px'};
 	justify-content: ${(props) => props.justify || 'flex-end'};
