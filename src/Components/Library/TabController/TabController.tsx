@@ -1,8 +1,9 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../Redux/store/store';
-import { FormOptions, FormSelect } from '../Modal/ModalStyles';
 import { DropdownButton } from '../DropdownButton/DropdownButton';
+import { useDispatch } from 'react-redux';
+import { setActiveTab } from '../../../Redux/Slices/appSlice';
 
 export interface TabsContextProps {
 	property: any;
@@ -11,26 +12,23 @@ export interface TabsContextProps {
 	canApproveMaintenanceRequest: (role: any) => boolean;
 }
 
-interface TabsProps extends TabsContextProps {
-	activeTab: string;
-	setActiveTab: (tab: string) => void;
-}
-
 export interface tab {
 	label: string;
 	value: string;
 	badgeCount?: number;
 }
 
-export const TabController: React.FC<TabsProps> = ({
+export const TabController: React.FC<TabsContextProps> = ({
 	property,
 	currentUser,
 	propertyMaintenanceRequests,
 	canApproveMaintenanceRequest,
-	activeTab,
-	setActiveTab,
 }) => {
+	const dispatch = useDispatch();
 	const isMobile = useSelector((state: RootState) => state.app.isMobile);
+	const activeTab =
+		useSelector((state: RootState) => state.app.activeTab) || 'details'; // Default to 'details' if no active tab is set
+
 	// derive homeowner status from the passed-in `currentUser` prop so the
 	// component remains pure/testable (tests pass `currentUser` directly)
 	const isHomeowner = currentUser?.subscription?.plan === 'homeowner';
@@ -74,6 +72,10 @@ export const TabController: React.FC<TabsProps> = ({
 
 	const tabs = tabsForProperty;
 
+	const handleTabChange = (tab: string) => {
+		dispatch(setActiveTab(tab)); // Persist the active tab in Redux
+	};
+
 	if (isMobile) {
 		return (
 			<div
@@ -85,7 +87,7 @@ export const TabController: React.FC<TabsProps> = ({
 				}}>
 				<DropdownButton
 					activeTab={activeTab}
-					SetActiveTab={setActiveTab}
+					SetActiveTab={handleTabChange}
 					availableTabs={tabs}
 				/>
 			</div>
@@ -111,7 +113,7 @@ export const TabController: React.FC<TabsProps> = ({
 						position: 'relative',
 						whiteSpace: 'nowrap',
 					}}
-					onClick={() => setActiveTab(tab.value)}>
+					onClick={() => handleTabChange(tab.value)}>
 					{tab.label}
 					{tab.badgeCount && tab.badgeCount > 0 && (
 						<span

@@ -31,10 +31,14 @@ import {
 export const TasksPage = () => {
 	const navigate = useNavigate();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
-	const teamMembers = useSelector((state: RootState) =>
-		state.team.groups
-			.flatMap((group) => group.members || [])
-			.filter((member): member is typeof member => member !== undefined),
+	// Select groups from state and derive team members with useMemo
+	const teamGroups = useSelector((state: RootState) => state.team.groups);
+	const teamMembers = useMemo(
+		() =>
+			teamGroups
+				.flatMap((group) => group.members || [])
+				.filter((member): member is typeof member => member !== undefined),
+		[teamGroups],
 	);
 
 	// Fetch tasks and properties from Firebase
@@ -329,7 +333,6 @@ export const TasksPage = () => {
 								rowData={filteredTasks}
 								columns={columns}
 								actions={taskActions}
-								onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
 								onRowSelect={(selectedRows) => {
 									setSelectedRows(new Set(selectedRows));
 								}}

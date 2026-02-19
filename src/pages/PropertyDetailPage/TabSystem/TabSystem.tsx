@@ -11,6 +11,8 @@ import { UnitsTab } from './UnitsTab';
 import { TabContentContainer, TabControlsContainer } from './index.styles';
 import { TabController } from 'Components/Library';
 import { Task } from 'types/Task.types';
+import { RootState } from 'Redux/store/store';
+import { useSelector } from 'react-redux';
 
 interface TabsProps {
 	property: any;
@@ -63,50 +65,32 @@ export const TabSystem = ({
 	handleConvertRequestToTask,
 	hasCommercialSuites,
 }: TabsProps) => {
-	const [activeTab, setActiveTab] = React.useState('details');
+	const activeTab = useSelector((state: RootState) => state.app.activeTab); // Default to 'details' if no active tab is set
 
-	return (
-		<>
-			<TabControlsContainer>
-				<TabController
-					property={property}
-					currentUser={currentUser}
-					propertyMaintenanceRequests={propertyMaintenanceRequests}
-					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
-					activeTab={activeTab}
-					setActiveTab={setActiveTab}
-				/>
-			</TabControlsContainer>
+	console.info('Rendering TabSystem with activeTab:', activeTab); // Debug log for activeTab
 
-			<TabContentContainer>
-				{/* Details Tab */}
-				{activeTab === 'details' && (
-					<DetailsTab property={property} teamMembers={[]} />
-				)}
-
-				{/* Devices Tab */}
-				{activeTab === 'devices' &&
-					(() => {
-						return <DevicesTab property={property} />;
-					})()}
-
-				{/* Suites Tab */}
-				{activeTab === 'suites' &&
+	const renderTabContent = () => {
+		switch (activeTab) {
+			case 'details':
+				return <DetailsTab property={property} teamMembers={[]} />;
+			case 'devices':
+				return <DevicesTab property={property} />;
+			case 'suites':
+				return (
 					property?.propertyType !== 'Commercial' &&
-					property?.hasSuites && <SuitesTab property={property} />}
-
-				{/* Tasks Tab */}
-				{activeTab === 'tasks' && (
+					property?.hasSuites && <SuitesTab property={property} />
+				);
+			case 'tasks':
+				return (
 					<TasksTab
 						property={property}
 						propertyTasks={propertyTasks}
 						currentUser={currentUser}
 						assigneeOptions={assigneeOptions}
 					/>
-				)}
-
-				{/* Maintenance History Tab */}
-				{activeTab === 'maintenance' && (
+				);
+			case 'maintenance':
+				return (
 					<MaintenanceTab
 						property={property}
 						maintenanceHistoryRecords={maintenanceHistoryRecords}
@@ -118,10 +102,9 @@ export const TabSystem = ({
 						onAddMaintenanceHistory={handleAddMaintenanceHistory}
 						onDeleteMaintenanceHistory={handleDeleteMaintenanceHistory}
 					/>
-				)}
-
-				{/* Tenants Tab */}
-				{activeTab === 'tenants' &&
+				);
+			case 'tenants':
+				return (
 					property?.isRental &&
 					!hasCommercialSuites && (
 						<TenantsTab
@@ -132,33 +115,49 @@ export const TabSystem = ({
 							onDeleteTenant={handleDeleteTenant}
 							onViewTenantPromo={handleViewTenantPromo}
 						/>
-					)}
-				{/* Units Tab */}
-				{activeTab === 'units' && property?.propertyType === 'Multi-Family' && (
-					<UnitsTab
-						property={property}
-						units={propertyUnits}
-						handleCreateUnit={handleCreateUnit}
-						handleDeleteUnit={handleDeleteUnit}
-					/>
-				)}
+					)
+				);
+			case 'units':
+				return (
+					property?.propertyType === 'Multi-Family' && (
+						<UnitsTab
+							property={property}
+							units={propertyUnits}
+							handleCreateUnit={handleCreateUnit}
+							handleDeleteUnit={handleDeleteUnit}
+						/>
+					)
+				);
+			case 'requests':
+				return (
+					property?.isRental && (
+						<RequestsTab
+							propertyMaintenanceRequests={propertyMaintenanceRequests}
+							currentUser={currentUser}
+							canApproveMaintenanceRequest={canApproveMaintenanceRequest}
+							handleConvertRequestToTask={handleConvertRequestToTask}
+						/>
+					)
+				);
+			case 'contractors':
+				return <ContractorsTab propertyId={property?.id || ''} />;
+			default:
+				return null;
+		}
+	};
 
-				{/* Maintenance Requests Tab */}
-				{activeTab === 'requests' && property?.isRental && (
-					<RequestsTab
-						propertyMaintenanceRequests={propertyMaintenanceRequests}
-						currentUser={currentUser}
-						canApproveMaintenanceRequest={canApproveMaintenanceRequest}
-						handleConvertRequestToTask={handleConvertRequestToTask}
-					/>
-				)}
+	return (
+		<>
+			<TabControlsContainer>
+				<TabController
+					property={property}
+					currentUser={currentUser}
+					propertyMaintenanceRequests={propertyMaintenanceRequests}
+					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
+				/>
+			</TabControlsContainer>
 
-				{/* Contractors Tab */}
-				{activeTab === 'contractors' &&
-					(() => {
-						return <ContractorsTab propertyId={property?.id || ''} />;
-					})()}
-			</TabContentContainer>
+			<TabContentContainer>{renderTabContent()}</TabContentContainer>
 		</>
 	);
 };

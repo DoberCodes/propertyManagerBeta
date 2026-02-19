@@ -76,8 +76,11 @@ export const Properties = () => {
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const canAccessProperties = useSelector(selectCanAccessProperties);
 	const isHomeowner = useSelector(selectIsHomeowner);
-	const teamMembers = useSelector((state: RootState) =>
-		state.team.groups.flatMap((group) => group.members),
+	// Select team groups and derive members with memoization to avoid new references
+	const teamGroups = useSelector((state: RootState) => state.team.groups);
+	const teamMembers = useMemo(
+		() => teamGroups.flatMap((group) => group.members || []),
+		[teamGroups],
 	);
 
 	// Read property groups from Redux store (populated by DataLoader)

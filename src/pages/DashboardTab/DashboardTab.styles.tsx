@@ -3,9 +3,8 @@ import styled from 'styled-components';
 export const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
-	padding: 20px;
-	min-height: 100%;
+	gap: 30px;
+	padding: 40px;
 
 	@media (max-width: 1024px) {
 		padding: 15px;
@@ -242,10 +241,10 @@ export const Table = styled.table`
 
 export const BottomSectionsWrapper = styled.div`
 	display: flex;
-	flex-direction: column;
 	gap: 20px;
+	justify-content: center;
 	flex-shrink: 0;
-
+	width: 100%;
 	@media (max-width: 1024px) {
 		gap: 14px;
 	}
@@ -280,6 +279,7 @@ export const Section = styled.div`
 	overflow: hidden;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 	height: 100%;
+	width: 100%;
 	min-height: clamp(200px, 25vh, 320px);
 
 	&.mobile-seasonal {

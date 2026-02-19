@@ -4,21 +4,9 @@ import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../Redux/store';
 import { selectCanAccessTeam } from '../../Redux/selectors/permissionSelectors';
-import { filterTeamMembersByRole } from '../../utils/dataFilters';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import {
-	addTeamGroup,
-	deleteTeamGroup,
-	updateTeamGroupName,
-	toggleTeamGroupEditName,
-	addTeamMember,
-	updateTeamMember,
-	deleteTeamMember,
-	TeamMember,
-	TeamGroup,
-} from '../../Redux/Slices/teamSlice';
-import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
+import { TeamMember } from '../../Redux/Slices/teamSlice';
 import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import {
 	PageHeaderSection,
@@ -41,8 +29,6 @@ import {
 } from '../../utils/teamMemberFileUpload';
 import {
 	Wrapper,
-	PageHeader,
-	PageTitle,
 	AddTeamGroupButton,
 	TeamGroupSection,
 	TeamGroupHeader,
@@ -54,7 +40,6 @@ import {
 	TeamMemberCard,
 	TeamMemberActions,
 	TeamMemberActionButton,
-	TeamMemberImage,
 	TeamMemberImagePlaceholder,
 	TeamMemberName,
 	TeamMemberTitle,
@@ -68,23 +53,17 @@ import {
 	RightColumn,
 	ImageUploadSection,
 	ImagePreview,
-	ImageUploadInput,
-	ImageUploadButton,
 	SectionTitle,
 	PropertyMultiSelect,
 	PropertyCheckbox,
 	QuickTaskHistory,
 	TaskHistoryItem,
 	FileUploadSection,
-	FileUploadInput,
-	FileUploadButton,
 	FileList,
 	FileItem,
 	DialogFooter,
-	DialogButton,
 	CancelButton,
 	SaveButton,
-	EmptyState,
 } from './TeamPage.styles';
 import { WarningDialog } from '../../Components/Library/WarningDialog';
 import {
@@ -109,18 +88,6 @@ const ROLE_OPTIONS = [
 	{ value: 'leasing', label: 'Leasing Agent' },
 	{ value: 'admin', label: 'Administrator' },
 ];
-
-interface FormData {
-	firstName: string;
-	lastName: string;
-	email: string;
-	phone: string;
-	role: string;
-	address: string;
-	notes: string;
-	linkedProperties: number[];
-	enableInvitationCode?: boolean;
-}
 
 // Styled info text for read-only property assignment message
 const InfoText = styled.div`
@@ -158,14 +125,18 @@ const formatExpirationDate = (expiresAt: string) => {
 };
 
 export default function TeamPage() {
-	const dispatch = useDispatch<AppDispatch>();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
 	// Use RTK Query hooks directly instead of Redux cache to avoid synchronization issues
 	const { data: teamGroups = [] } = useGetTeamGroupsQuery();
 	const { data: teamMembers = [] } = useGetTeamMembersQuery();
-	const properties = useSelector((state: RootState) =>
-		state.propertyData.groups.flatMap((g) => g.properties || []),
+	// Select property groups and derive properties with memoization
+	const propertyGroups = useSelector(
+		(state: RootState) => state.propertyData.groups,
+	);
+	const properties = useMemo(
+		() => propertyGroups.flatMap((g) => g.properties || []),
+		[propertyGroups],
 	);
 
 	// Firebase mutations

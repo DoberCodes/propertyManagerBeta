@@ -238,7 +238,6 @@ export const SuiteDetailPage: React.FC = () => {
 										key: 'notes',
 									},
 								]}
-								onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
 								showCheckbox={false}
 							/>
 						</SectionContainer>

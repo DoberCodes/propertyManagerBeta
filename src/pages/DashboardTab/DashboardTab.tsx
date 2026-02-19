@@ -56,10 +56,14 @@ export const DashboardTab = () => {
 	const location = useLocation();
 	const dispatch = useDispatch();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
-	const teamMembers = useSelector((state: RootState) =>
-		state.team.groups
-			.flatMap((group) => group.members || [])
-			.filter((member): member is typeof member => member !== undefined),
+	// Select team groups and derive members with memoization to avoid new references
+	const teamGroups = useSelector((state: RootState) => state.team.groups);
+	const teamMembers = useMemo(
+		() =>
+			teamGroups
+				.flatMap((group) => group.members || [])
+				.filter((member): member is typeof member => member !== undefined),
+		[teamGroups],
 	);
 
 	// Fetch tasks and properties from Firebase
@@ -124,8 +128,6 @@ export const DashboardTab = () => {
 		];
 	}, [allTasks, allMaintenanceHistory]);
 
-	const COLORS = ['#34d399', '#60a5fa', '#f87171'];
-
 	// Redirect tenants to their assigned property
 	const isUserTenant = useSelector(selectIsTenant);
 
@@ -147,11 +149,6 @@ export const DashboardTab = () => {
 			if (location) {
 				setUserLocation(location);
 				// Set default temp unit based on location
-				const defaultUnit = getDefaultTempUnit(
-					location.latitude,
-					location.longitude,
-				);
-				setTempUnit(defaultUnit);
 			}
 		};
 		getLocation();
@@ -187,7 +184,6 @@ export const DashboardTab = () => {
 
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
-	const [tempUnit, setTempUnit] = useState<'C' | 'F'>('C');
 	const [userLocation, setUserLocation] = useState<{
 		latitude: number;
 		longitude: number;
@@ -216,10 +212,6 @@ export const DashboardTab = () => {
 
 		return assignees;
 	}, [teamMembers]);
-
-	const handleTempUnit = (unit: 'C' | 'F') => {
-		setTempUnit(unit);
-	};
 
 	// Task status counts for banner display
 	const taskStatusCounts = useMemo(() => {
@@ -398,94 +390,7 @@ export const DashboardTab = () => {
 				</ScoreGaugeContainer>
 			</PropertyScoreSection>
 
-			{/* Bottom Sections - Charts and Carousel */}
-			<BottomSectionsWrapper>
-				{/* Top Row: Efficiency Chart */}
-				<TopChartsContainer>
-					<Section>
-						<SectionTitle>Efficiency Chart</SectionTitle>
-						<SectionContent>
-							{efficiencyData.every((item) => item.value === 0) ? (
-								<ZeroState
-									title='No tasks yet'
-									description='No data available'
-									icon='📊'></ZeroState>
-							) : (
-								<ResponsiveContainer width='100%' height={200}>
-									<PieChart>
-										<Pie
-											data={efficiencyData}
-											dataKey='value'
-											nameKey='name'
-											cx='50%'
-											cy='50%'
-											outerRadius={60}
-											label>
-											{efficiencyData.map((_, index) => (
-												<Cell
-													key={`cell-${index}`}
-													fill={COLORS[index % COLORS.length]}
-												/>
-											))}
-										</Pie>
-										<Tooltip />
-										<Legend />
-									</PieChart>
-								</ResponsiveContainer>
-							)}
-						</SectionContent>
-					</Section>
-					<Section>
-						<SectionTitle>
-							<h3>Seasonal Maintenance Tips</h3>
-							<TempToggle>
-								<button
-									className={tempUnit === 'C' ? 'active' : ''}
-									onClick={() => handleTempUnit('C')}>
-									°C
-								</button>
-								<button
-									className={tempUnit === 'F' ? 'active' : ''}
-									onClick={() => handleTempUnit('F')}>
-									°F
-								</button>
-							</TempToggle>
-						</SectionTitle>
-
-						<SectionContent>
-							<SeasonalMaintenance
-								tempUnit={tempUnit}
-								location={userLocation}
-							/>
-						</SectionContent>
-					</Section>
-				</TopChartsContainer>
-
-				{/* Task Carousel Section - Mobile Only */}
-
-				{/* Seasonal Maintenance - Mobile Only (Below Carousel) */}
-				<Section className='mobile-seasonal'>
-					<SectionTitle>
-						<h3>Seasonal Maintenance Tips</h3>
-						<TempToggle>
-							<button
-								className={tempUnit === 'C' ? 'active' : ''}
-								onClick={() => handleTempUnit('C')}>
-								°C
-							</button>
-							<button
-								className={tempUnit === 'F' ? 'active' : ''}
-								onClick={() => handleTempUnit('F')}>
-								°F
-							</button>
-						</TempToggle>
-					</SectionTitle>
-
-					<SectionContent>
-						<SeasonalMaintenance tempUnit={tempUnit} location={userLocation} />
-					</SectionContent>
-				</Section>
-			</BottomSectionsWrapper>
+			<SeasonalMaintenance location={userLocation} />
 
 			{/* Task Completion Modal */}
 			{showTaskCompletionModal && completingTaskId && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faArrowLeft,
@@ -10,6 +10,7 @@ import {
 import { PropertyDetailPageProps } from '../../types/PropertyDetailPage.types';
 import { RootState } from '../../Redux/store/store';
 import { User } from '../../Redux/Slices/userSlice';
+import { resetActiveTab } from '../../Redux/Slices/appSlice';
 
 import { useTaskHandlers } from 'pages/PropertyDetailPage/useTaskHandlers';
 import { useUnitHandlers } from 'pages/PropertyDetailPage/useUnitHandlers';
@@ -82,6 +83,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const { slug } = useParams<{ slug: string }>();
 	// Get current user
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const dispatch = useDispatch();
+
+	// Reset active tab when leaving PropertyDetailPage
+	useEffect(() => {
+		return () => {
+			dispatch(resetActiveTab());
+		};
+	}, [dispatch]);
 	const isUserTenant = useSelector(selectIsTenant);
 
 	const { isFavorite, toggleFavorite } = useFavorites(currentUser!.id);

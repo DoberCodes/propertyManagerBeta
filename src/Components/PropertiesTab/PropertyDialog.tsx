@@ -9,7 +9,7 @@ import {
 	ModalFooter as DialogFooter,
 	PrimaryButton as SaveButton,
 	SecondaryButton as CancelButton,
-	SecondaryButton as SecondaryButton,
+	SecondaryButton,
 	SmallButton as AddButton,
 } from '../Library';
 import {

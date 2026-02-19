@@ -12,7 +12,6 @@ import {
 	FormGroup,
 	FormLabel,
 	FormInput,
-	FormSelect,
 	FormTextarea,
 	PrimaryButton,
 } from 'Components/Library';
@@ -407,7 +406,6 @@ export const UnitDetailPage: React.FC = () => {
 										key: 'notes',
 									},
 								]}
-								onRowDoubleClick={(taskId) => navigate(`/task/${taskId}`)}
 								showCheckbox={false}
 							/>
 						</SectionContainer>

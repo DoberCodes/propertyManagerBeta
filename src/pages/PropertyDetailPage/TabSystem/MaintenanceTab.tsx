@@ -1,31 +1,29 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
 	GenericModal,
 	FormGroup,
 	FormLabel,
 	FormSelect,
-} from '../../../Components/Library';
+} from 'Components/Library';
 import {
 	SectionContainer,
 	SectionHeader,
-} from '../../../Components/Library/InfoCards/InfoCardStyles';
+} from 'Components/Library/InfoCards/InfoCardStyles';
 import { Toolbar, ToolbarButton, ContentWrapper } from './index.styles';
 import { getDeviceNameUtil } from '../PropertyDetailPage.utils';
 import {
 	FilterBar,
 	FilterConfig,
 	FilterValues,
-} from '../../../Components/Library/FilterBar';
-import { applyFilters } from '../../../utils/tableFilters';
-import { AddMaintenanceHistoryModal } from '../../../Components/Library/Modal/AddMaintenanceHistoryModal';
+} from 'Components/Library/FilterBar';
+import { applyFilters } from 'utils/tableFilters';
+import { AddMaintenanceHistoryModal } from 'Components/Library/Modal/AddMaintenanceHistoryModal';
 import { useSelector } from 'react-redux';
-import {
-	ReusableTable,
-	Column,
-} from '../../../Components/Library/ReusableTable';
+import { ReusableTable, Column } from 'Components/Library/ReusableTable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
+import { UnifiedMaintenanceHistory } from 'Components/UnifiedMaintenanceHistory';
 
 export interface MaintenanceTabProps {
 	property: any;
@@ -74,19 +72,6 @@ export const MaintenanceTab = ({
 	const canBulkEdit = Boolean(onUpdateMaintenanceHistory);
 
 	const { isMobile } = useSelector((state: any) => state.app);
-
-	// Bulk selection handlers
-	const toggleRecordSelection = (recordId: string) => {
-		setSelectedRecordIds((prev) => {
-			const newSet = new Set(prev);
-			if (newSet.has(recordId)) {
-				newSet.delete(recordId);
-			} else {
-				newSet.add(recordId);
-			}
-			return newSet;
-		});
-	};
 
 	const handleGroupID = (record: any) => {
 		const getMaintenanceGroupId = (record: any): string | undefined => {
@@ -218,6 +203,13 @@ export const MaintenanceTab = ({
 		[completedByLookup],
 	);
 
+	const handleNavigation = (record: any) => {
+		const slugLink = handleSelectionLink(record);
+		if (slugLink) {
+			navigate(slugLink);
+		}
+	};
+
 	// Filter configuration for maintenance history
 	const maintenanceFilters: FilterConfig[] = [
 		// Only show unit filter for Multi-Family properties
@@ -302,8 +294,6 @@ export const MaintenanceTab = ({
 		],
 		[maintenanceHistoryRecords, property, resolveCompletedByName],
 	);
-
-	console.info('allMaintenanceRecords', allMaintenanceRecords);
 
 	// Apply filters to maintenance records
 	const filteredRecords = useMemo(() => {
@@ -542,36 +532,22 @@ export const MaintenanceTab = ({
 				{isMobile ? (
 					<div
 						style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-						{Object.entries(groupedRecords.groups).map(([groupId, records]) => (
-							<MaintenanceHistoryGroup
-								key={groupId}
-								groupId={groupId}
-								records={records}
-								units={units}
-								propertySlug={property.slug}
-								onDelete={onDeleteMaintenanceHistory}
-								selectedRecordIds={selectedRecordIds}
-								onToggleRecordSelection={
-									canBulkEdit ? toggleRecordSelection : undefined
-								}
-								onDeleteGroup={
-									onDeleteMaintenanceHistory ? handleDeleteGroup : undefined
-								}
-							/>
-						))}
-						{/* Display ungrouped records */}
-						{groupedRecords.ungrouped.map((record) => (
-							<MaintenanceHistoryCard
-								key={record.id}
-								record={record}
-								units={units}
-								propertySlug={property.slug}
-								onDelete={onDeleteMaintenanceHistory}
-								isSelected={selectedRecordIds.has(record.id)}
-								onSelectionChange={
-									canBulkEdit ? toggleRecordSelection : undefined
-								}
-							/>
+						{filteredRecords.map((record) => (
+							<div key={record.id}>
+								<UnifiedMaintenanceHistory
+									records={
+										record.groupId
+											? groupedRecords.groups[record.groupId] || [record]
+											: [record]
+									}
+									units={units}
+									onNavigate={handleNavigation}
+									onDelete={onDeleteMaintenanceHistory}
+									onDeleteGroup={
+										onDeleteMaintenanceHistory ? handleDeleteGroup : undefined
+									}
+								/>
+							</div>
 						))}
 					</div>
 				) : (
@@ -579,6 +555,7 @@ export const MaintenanceTab = ({
 						columns={columns}
 						rowData={maintenanceHistoryRecords}
 						emptyMessage='No maintenance history available.'
+						onRowDoubleClick={handleNavigation}
 						showCheckbox={canBulkEdit}
 					/>
 				)}
@@ -630,330 +607,5 @@ export const MaintenanceTab = ({
 				</GenericModal>
 			)}
 		</SectionContainer>
-	);
-};
-
-// Maintenance History Card Component for Mobile Carousel
-interface MaintenanceHistoryCardProps {
-	record: any;
-	units: any[];
-	propertySlug: string;
-	onDelete?: (id: string) => void;
-	isGroupedView?: boolean;
-	groupRecords?: any[];
-	isSelected?: boolean;
-	onSelectionChange?: (recordId: string) => void;
-}
-
-interface MaintenanceHistoryGroupProps {
-	groupId: string;
-	records: any[];
-	units: any[];
-	propertySlug: string;
-	onDelete?: (historyId: string) => void;
-	selectedRecordIds?: Set<string>;
-	onToggleRecordSelection?: (recordId: string) => void;
-	onDeleteGroup?: (records: any[]) => void;
-}
-
-const MaintenanceHistoryGroup: React.FC<MaintenanceHistoryGroupProps> = ({
-	groupId,
-	records,
-	units,
-	propertySlug,
-	onDelete,
-	selectedRecordIds = new Set(),
-	onToggleRecordSelection,
-	onDeleteGroup,
-}) => {
-	const navigate = useNavigate();
-	const [isExpanded, setIsExpanded] = useState(false);
-	const latestRecord = records[0]; // Records are sorted by date, newest first
-	const groupLink = `/property/${propertySlug}/maintenance-history/${encodeURIComponent(
-		groupId,
-	)}`;
-
-	const getUnitName = (unitId?: string) => {
-		if (!unitId) return '';
-		const unit = units.find((u) => u.id === unitId);
-		return unit ? unit.unitName : '';
-	};
-
-	return (
-		<div
-			style={{
-				background: 'white',
-				borderRadius: '8px',
-				padding: '16px',
-				boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-				border: '1px solid #e5e7eb',
-				marginBottom: '16px',
-			}}>
-			{/* Group Header */}
-			<div
-				style={{
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					cursor: 'pointer',
-					marginBottom: isExpanded ? '16px' : '0',
-				}}
-				onClick={() => setIsExpanded(!isExpanded)}>
-				<div>
-					<h3
-						style={{
-							margin: '0 0 4px 0',
-							fontSize: '16px',
-							fontWeight: '600',
-						}}>
-						🔄 {latestRecord.title} ({records.length} instances)
-					</h3>
-					<p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-						Latest: {new Date(latestRecord.completionDate).toLocaleDateString()}
-						{latestRecord.unitId && (
-							<span style={{ marginLeft: '8px', fontWeight: '500' }}>
-								• {getUnitName(latestRecord.unitId)}
-							</span>
-						)}
-					</p>
-				</div>
-				<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-					{onDeleteGroup && (
-						<button
-							onClick={(e) => {
-								e.stopPropagation();
-								onDeleteGroup(records);
-							}}
-							style={{
-								fontSize: '12px',
-								color: '#ef4444',
-								background: 'none',
-								border: 'none',
-								padding: 0,
-								cursor: 'pointer',
-							}}>
-							Delete group
-						</button>
-					)}
-					<button
-						onClick={(e) => {
-							e.stopPropagation();
-							navigate(groupLink);
-						}}
-						style={{
-							fontSize: '12px',
-							color: '#3b82f6',
-							background: 'none',
-							border: 'none',
-							padding: 0,
-							cursor: 'pointer',
-						}}>
-						View details
-					</button>
-					<span style={{ fontSize: '18px', color: '#6b7280' }}>
-						{isExpanded ? '▼' : '▶'}
-					</span>
-				</div>
-			</div>
-
-			{isExpanded && (
-				<>
-					{records.slice(0, 2).map((record) => (
-						<MaintenanceHistoryCard
-							key={record.id}
-							record={record}
-							units={units}
-							propertySlug={propertySlug}
-							onDelete={onDelete}
-							isGroupedView={true}
-							groupRecords={records}
-							isSelected={selectedRecordIds.has(record.id)}
-							onSelectionChange={onToggleRecordSelection}
-						/>
-					))}
-					{records.length > 2 && (
-						<div
-							style={{
-								marginTop: '6px',
-								fontSize: '12px',
-								color: '#6b7280',
-							}}>
-							Showing last 2. View details for full history.
-						</div>
-					)}
-				</>
-			)}
-		</div>
-	);
-};
-
-const MaintenanceHistoryCard: React.FC<MaintenanceHistoryCardProps> = ({
-	record,
-	units,
-	propertySlug,
-	onDelete,
-	isGroupedView: _isGroupedView = false,
-	groupRecords: _groupRecords = [],
-	isSelected = false,
-	onSelectionChange,
-}) => {
-	const navigate = useNavigate();
-
-	const getMaintenanceGroupId = (record: any): string | undefined => {
-		return record.maintenanceGroupId;
-	};
-
-	const recordGroupId = getMaintenanceGroupId(record) || record.id;
-	const recordLink =
-		recordGroupId && !record.isLegacy
-			? `/property/${propertySlug}/maintenance-history/${encodeURIComponent(
-					recordGroupId,
-			  )}`
-			: null;
-
-	const getUnitName = (unitId?: string) => {
-		if (!unitId) return '';
-		const unit = units.find((u) => u.id === unitId);
-		return unit ? unit.unitName : '';
-	};
-
-	return (
-		<>
-			<div
-				style={{
-					background: isSelected ? '#eff6ff' : 'white',
-					borderRadius: '8px',
-					padding: '16px',
-					boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-					border: isSelected ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-				}}>
-				{/* Header */}
-				<div
-					style={{
-						marginBottom: '12px',
-						display: 'flex',
-						alignItems: 'flex-start',
-						gap: '12px',
-					}}>
-					{onSelectionChange && (
-						<input
-							type='checkbox'
-							checked={isSelected}
-							onChange={() => onSelectionChange(record.id)}
-							style={{
-								marginTop: '2px',
-								cursor: 'pointer',
-								width: '18px',
-								height: '18px',
-							}}
-						/>
-					)}
-					<div style={{ flex: 1 }}>
-						<h3
-							style={{
-								margin: '0 0 4px 0',
-								fontSize: '16px',
-								fontWeight: '600',
-							}}>
-							{record.title}
-						</h3>
-						<p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-							{new Date(record.completionDate).toLocaleDateString()}
-							{record.unitId && (
-								<span style={{ marginLeft: '8px', fontWeight: '500' }}>
-									• {getUnitName(record.unitId)}
-								</span>
-							)}
-						</p>
-					</div>
-				</div>
-
-				{/* Completed By */}
-				{record.completedByName && (
-					<div style={{ marginBottom: '8px' }}>
-						<span style={{ fontSize: '14px', fontWeight: '500' }}>
-							Completed by:
-						</span>
-						<span
-							style={{ marginLeft: '4px', fontSize: '14px', color: '#374151' }}>
-							{record.completedByName}
-						</span>
-					</div>
-				)}
-
-				{/* Notes */}
-				{record.completionNotes && (
-					<div style={{ marginBottom: '8px' }}>
-						<span style={{ fontSize: '14px', fontWeight: '500' }}>Notes:</span>
-						<p
-							style={{
-								margin: '4px 0 0 0',
-								fontSize: '14px',
-								color: '#374151',
-							}}>
-							{record.completionNotes}
-						</p>
-					</div>
-				)}
-
-				{/* File Attachment */}
-				{record.completionFile && (
-					<div style={{ marginBottom: '8px' }}>
-						<span style={{ fontSize: '14px', fontWeight: '500' }}>
-							Attachment:
-						</span>
-						<a
-							href={record.completionFile.url}
-							target='_blank'
-							rel='noopener noreferrer'
-							style={{
-								marginLeft: '4px',
-								fontSize: '14px',
-								color: '#3b82f6',
-								textDecoration: 'none',
-							}}>
-							📎 {record.completionFile.name}
-						</a>
-					</div>
-				)}
-
-				{/* Action Buttons */}
-				<div style={{ marginTop: '12px', textAlign: 'right' }}>
-					{recordLink && (
-						<button
-							onClick={() => {
-								navigate(recordLink);
-							}}
-							style={{
-								padding: '4px 8px',
-								background: '#3b82f6',
-								color: 'white',
-								border: 'none',
-								borderRadius: '4px',
-								cursor: 'pointer',
-								fontSize: '12px',
-								marginRight: '6px',
-							}}>
-							View details
-						</button>
-					)}
-					{onDelete && (
-						<button
-							onClick={() => onDelete!(record.id)}
-							style={{
-								padding: '6px 12px',
-								background: '#ef4444',
-								color: 'white',
-								border: 'none',
-								borderRadius: '4px',
-								cursor: 'pointer',
-								fontSize: '12px',
-							}}>
-							Delete
-						</button>
-					)}
-				</div>
-			</div>
-		</>
 	);
 };

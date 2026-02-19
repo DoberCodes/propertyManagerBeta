@@ -4,11 +4,11 @@ export const Wrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	height: 100%;
+	flex: 1 1 auto;
 	padding: 16px;
 	margin: 10px 20px;
 	justify-content: flex-start;
-	overflow: hidden;
+	min-height: 0;
 
 	@media (max-width: 1024px) {
 		padding: 15px;
@@ -71,6 +71,7 @@ export const GroupsContainer = styled.div`
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 	height: fit-content;
+	padding-bottom: 16px;
 	gap: 40px;
 	flex: 1;
 	align-items: start;

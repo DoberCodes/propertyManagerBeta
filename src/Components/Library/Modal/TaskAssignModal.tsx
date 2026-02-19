@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useMemo } from 'react';
 import { RootState } from '../../../Redux/store';
 import GenericModal from './GenericModal';
 import { FormGroup, FormLabel, FormSelect } from './ModalStyles';
@@ -45,8 +46,11 @@ export const TaskAssignModal = (props: TaskAssignModalProps) => {
 			props.selectedAssignee ?? { id: '', name: '', email: '' },
 		);
 	}, [props.selectedAssignee]);
-	const teamMembers = useSelector((state: RootState) =>
-		state.team.groups.flatMap((group) => group.members),
+	// Select team groups and memoize derived members to avoid returning new references
+	const teamGroups = useSelector((state: RootState) => state.team.groups);
+	const teamMembers = useMemo(
+		() => teamGroups.flatMap((group) => group.members || []),
+		[teamGroups],
 	);
 
 	const [familyMembers, setFamilyMembers] = useState<any[]>([]);

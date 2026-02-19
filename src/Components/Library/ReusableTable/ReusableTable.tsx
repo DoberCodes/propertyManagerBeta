@@ -29,12 +29,14 @@ export interface ReusableTableProps<T = any> {
 	rowData: T[];
 	onRowSelect?: (selectedRowIds: Set<string>) => void;
 	onRowEdit?: (rowIndex: number, updatedRow: T) => void;
+	handleRowDoubleClick?: boolean;
 	onRowDoubleClick?: (rowId: string) => void;
 	selectedRows?: Set<string>;
 	onSelectAll?: (checked: boolean, selectedRowIds: string[]) => void;
 	onRowUpdate?: (updatedRow: T) => void;
 	showCheckbox?: boolean;
 	actions?: Action<T>[];
+	isEditable?: boolean;
 	showActionsColumn?: boolean;
 	emptyMessage?: string;
 }
@@ -54,9 +56,11 @@ export const ReusableTable = <T extends { id: string }>({
 	onSelectAll,
 	onRowUpdate,
 	showCheckbox = true,
+	handleRowDoubleClick = false,
 	actions = [],
 	showActionsColumn = true,
 	emptyMessage = 'No data available',
+	isEditable = false,
 }: ReusableTableProps<T>) => {
 	const handleRowSelect = (rowId: string) => {
 		const updatedSelection = new Set(selectedRows);
@@ -110,7 +114,11 @@ export const ReusableTable = <T extends { id: string }>({
 					</thead>
 					<tbody>
 						{rowData.map((row, index) => (
-							<tr key={index} onDoubleClick={() => onRowDoubleClick?.(row.id)}>
+							<tr
+								key={index}
+								onDoubleClick={() =>
+									handleRowDoubleClick && onRowDoubleClick?.(row.id)
+								}>
 								{showCheckbox && (
 									<td>
 										<input
@@ -150,7 +158,7 @@ export const ReusableTable = <T extends { id: string }>({
 														</option>
 													))}
 												</select>
-											) : (
+											) : isEditable ? (
 												<div
 													contentEditable
 													suppressContentEditableWarning
@@ -164,6 +172,12 @@ export const ReusableTable = <T extends { id: string }>({
 														? JSON.stringify(value)
 														: value}
 												</div>
+											) : (
+												<span>
+													{typeof value === 'object' && value !== null
+														? JSON.stringify(value)
+														: value}
+												</span>
 											)}
 										</td>
 									);
