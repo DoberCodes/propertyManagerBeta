@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { COLORS } from 'constants/colors';
 
 export const Wrapper = styled.div`
 	display: flex;
@@ -499,18 +500,18 @@ export const TaskStatusBanner = styled.div<{
 export const TaskStatusCount = styled.div<{
 	$type: 'overdue' | 'upcoming' | 'completed';
 }>`
-	font-size: 32px;
-	font-weight: 700;
+	font-size: 40px;
+	font-weight: 800;
 	color: ${(props) => {
 		switch (props.$type) {
 			case 'overdue':
-				return '#ef4444';
+				return COLORS.errorDark || '#ef4444';
 			case 'upcoming':
-				return '#f59e0b';
+				return COLORS.warningDark || '#f59e0b';
 			case 'completed':
-				return '#10b981';
+				return COLORS.successDark || '#10b981';
 			default:
-				return '#6b7280';
+				return COLORS.textPrimary || '#6b7280';
 		}
 	}};
 	margin-bottom: 8px;
@@ -663,14 +664,14 @@ export const ScoreNeedle = styled.div<{ $score: number }>`
 `;
 
 export const ScoreValue = styled.div`
-	font-size: 48px;
-	font-weight: 700;
-	color: #1f2937;
+	font-size: 64px;
+	font-weight: 900;
+	color: ${COLORS.gray900};
 	text-align: center;
 	margin-top: 8px;
 
 	@media (max-width: 480px) {
-		font-size: 36px;
+		font-size: 48px;
 		margin-top: 6px;
 	}
 `;

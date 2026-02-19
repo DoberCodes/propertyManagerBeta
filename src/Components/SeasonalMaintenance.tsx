@@ -167,7 +167,9 @@ export const SeasonalMaintenance = ({ location }: SeasonalMaintenanceProps) => {
 														: card.priorityLevel === 'medium'
 														? 'Moderate'
 														: 'Low'
-												}>
+												}
+												$season={card.season}
+											>
 												{priorityText}
 											</PriorityPill>
 										</OverlayBadge>

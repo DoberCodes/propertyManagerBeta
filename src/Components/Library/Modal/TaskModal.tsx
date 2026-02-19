@@ -380,25 +380,25 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				<ModalTabContainer>
 					<ModalTab
 						type='button'
-						active={activeTab === 'details'}
+						$active={activeTab === 'details'}
 						onClick={() => setActiveTab('details')}>
 						Task Details
 					</ModalTab>
 					<ModalTab
 						type='button'
-						active={activeTab === 'schedule'}
+						$active={activeTab === 'schedule'}
 						onClick={() => setActiveTab('schedule')}>
 						📅 Recurrence Schedule
 					</ModalTab>
 					<ModalTab
 						type='button'
-						active={activeTab === 'notifications'}
+						$active={activeTab === 'notifications'}
 						onClick={() => setActiveTab('notifications')}>
 						🔔 Notifications
 					</ModalTab>
 				</ModalTabContainer>
 
-				<ModalTabContent active={activeTab === 'details'}>
+				<ModalTabContent $active={activeTab === 'details'}>
 					<FormGrid>
 						<FormGroup>
 							<FormLabel>Task Name *</FormLabel>
@@ -526,7 +526,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					</FormGrid>
 				</ModalTabContent>
 
-				<ModalTabContent active={activeTab === 'schedule'}>
+				<ModalTabContent $active={activeTab === 'schedule'}>
 					<FormGrid>
 						<FormGroup>
 							<FormLabel>Recurrence Frequency *</FormLabel>
@@ -594,7 +594,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					</FormGrid>
 				</ModalTabContent>
 
-				<ModalTabContent active={activeTab === 'notifications'}>
+				<ModalTabContent $active={activeTab === 'notifications'}>
 					<FormGrid>
 						<FormGroupFull>
 							<div

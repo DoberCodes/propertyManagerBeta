@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { COLORS } from 'constants/colors';
 
 export const AnimatedTip = styled.p`
 	font-size: 1.1rem;
@@ -21,7 +22,6 @@ export const AnimatedTip = styled.p`
 export const Container = styled.div`
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 	padding: 0;
 	display: flex;
 	flex-direction: column;
@@ -222,7 +222,7 @@ export const TipsHeader = styled.div`
 	margin-bottom: 10px;
 	font-size: 1.15rem;
 	font-weight: 800;
-	border-left: 4px solid #0ea5a8;
+	border-left: 4px solid ${COLORS.primary};
 	padding-left: 14px;
 `;
 
@@ -244,9 +244,8 @@ export const Card = styled.div`
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
 	min-height: 380px;
-	box-shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
+	box-shadow: ${COLORS.shadowLg};
 	position: relative;
 	transition: transform 220ms ease, box-shadow 220ms ease;
 	&:hover {
@@ -258,9 +257,9 @@ export const Card = styled.div`
 export const CardImageWrapper = styled.div`
 	position: relative;
 	width: 100%;
-	height: 190px;
+	height: 300px;
 	overflow: visible;
-	background: #f3f4f6;
+	background: ${COLORS.gray100};
 	img {
 		width: 100%;
 		height: 100%;
@@ -277,33 +276,36 @@ export const OverlayBadge = styled.div<{ $season?: string }>`
 	bottom: -24px;
 	margin: 0 auto;
 	height: 52px;
-	border-radius: 0 0 12px 12px;
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: space-around;
 	padding: 0 18px;
 	font-size: 13px;
 	box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
-	z-index: 3;
+	z-index: 34;
 	background: ${({ $season }) =>
 		$season === 'spring'
-			? 'linear-gradient(90deg,#e6fffa,#ecfdf5)'
+			? `linear-gradient(90deg, ${COLORS.successLight})`
 			: $season === 'summer'
-			? 'linear-gradient(90deg,#fff7ed,#ffedd5)'
+			? `linear-gradient(90deg, ${COLORS.warningLight})`
 			: $season === 'fall'
-			? 'linear-gradient(90deg,#fff7ed,#ffefec)'
-			: 'linear-gradient(90deg,#eef2ff,#e5f0ff)'};
+			? `linear-gradient(90deg, ${COLORS.warningLight})`
+			: $season === 'winter'
+			? `linear-gradient(90deg, ${COLORS.infoLight})`
+			: `linear-gradient(90deg, ${COLORS.infoLight})`};
 	color: ${({ $season }) =>
 		$season === 'spring'
-			? '#065f46'
+			? COLORS.successDark
 			: $season === 'summer'
-			? '#92400e'
+			? COLORS.warningDark
 			: $season === 'fall'
-			? '#7c2d12'
-			: '#0f172a'};
+			? COLORS.errorDark
+			: $season === 'winter'
+			? COLORS.infoDark
+			: COLORS.gray900};
 `;
 
-export const PriorityPill = styled.span<{ level?: string }>`
+export const PriorityPill = styled.span<{ level?: string; $season?: string }>`
 	padding: 6px 10px;
 	border-radius: 12px;
 	font-size: 12px;
@@ -311,30 +313,66 @@ export const PriorityPill = styled.span<{ level?: string }>`
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	/* base color by priority */
 	color: ${({ level }) =>
 		level === 'High'
-			? '#6b1a1a'
+			? COLORS.errorDark
 			: level === 'Moderate'
-			? '#7a4300'
-			: '#374151'};
-	background: ${({ level }) =>
-		level === 'High'
-			? 'rgba(185,28,28,0.10)'
+			? COLORS.warningDark
+			: COLORS.gray700};
+	/* tint by season for subtle cohesion */
+	background: ${({ level, $season }) => {
+		const baseHigh = 'rgba(239,68,68,0.06)';
+		const baseMed = 'rgba(245,158,11,0.06)';
+		const baseLow = 'rgba(107,114,128,0.06)';
+		// seasonal overlay tints
+		if ($season === 'spring') {
+			return level === 'High'
+				? 'rgba(185,28,28,0.06)'
+				: level === 'Moderate'
+				? 'rgba(20,184,166,0.06)'
+				: 'rgba(107,114,128,0.06)';
+		}
+		if ($season === 'summer') {
+			return level === 'High'
+				? baseHigh
+				: level === 'Moderate'
+				? 'rgba(245,158,11,0.08)'
+				: baseLow;
+		}
+		if ($season === 'fall') {
+			return level === 'High'
+				? 'rgba(185,28,28,0.06)'
+				: level === 'Moderate'
+				? 'rgba(180,83,9,0.08)'
+				: baseLow;
+		}
+		// winter
+		if ($season === 'winter') {
+			return level === 'High'
+				? 'rgba(239,68,68,0.04)'
+				: level === 'Moderate'
+				? 'rgba(59,130,246,0.06)'
+				: 'rgba(107,114,128,0.06)';
+		}
+		return level === 'High'
+			? baseHigh
 			: level === 'Moderate'
-			? 'rgba(180,83,9,0.10)'
-			: 'rgba(107,114,128,0.08)'};
+			? baseMed
+			: baseLow;
+	}};
 	border: 1px solid
 		${({ level }) =>
 			level === 'High'
-				? '#b91c1c'
+				? COLORS.error
 				: level === 'Moderate'
-				? '#b45309'
-				: 'rgba(99,102,106,0.25)'};
+				? COLORS.warning
+				: 'rgba(99,102,106,0.12)'};
 	box-shadow: none;
 `;
 
 export const CardTitle = styled.h4`
-	margin: 8px 0 12px 0;
+	margin: 0 0 12px 0;
 	font-size: 1.25rem;
 	color: #0f172a;
 	text-align: center;
@@ -345,7 +383,7 @@ export const CardTitle = styled.h4`
 		display: block;
 		width: 48px;
 		height: 3px;
-		background: #0f172a;
+		background: ${COLORS.gray900};
 		margin: 8px auto 0 auto;
 		border-radius: 2px;
 	}
@@ -368,17 +406,22 @@ export const CardFooter = styled.div`
 	text-align: right;
 `;
 
-export const FooterRow = styled.div`
+export const FooterRow = styled.div<{ $season?: string }>`
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: 0 18px;
 	height: 64px;
-	background: linear-gradient(
-		90deg,
-		rgba(14, 165, 168, 0.02),
-		rgba(14, 165, 168, 0.01)
-	);
+	background: ${({ $season }) =>
+		$season === 'spring'
+			? `linear-gradient(90deg, ${COLORS.successLight})`
+			: $season === 'summer'
+			? `linear-gradient(90deg, ${COLORS.warningLight})`
+			: $season === 'fall'
+			? `linear-gradient(90deg, ${COLORS.warningLight})`
+			: $season === 'winter'
+			? `linear-gradient(90deg, ${COLORS.infoLight})`
+			: `linear-gradient(90deg, ${COLORS.infoLight})`};
 `;
 
 export const FooterLeft = styled.div`
@@ -395,8 +438,8 @@ export const SmallBadge = styled.span`
 	display: inline-block;
 	padding: 8px 16px;
 	border-radius: 999px;
-	background: #eef2ff;
-	color: #3730a3;
+	background: ${COLORS.infoLight};
+	color: ${COLORS.infoDark};
 	font-weight: 700;
 	font-size: 13px;
 	letter-spacing: 0.2px;
@@ -413,7 +456,7 @@ export const Controls = styled.div`
 
 export const PageBadge = styled.div`
 	background: white;
-	color: #0ea5a8;
+	color: ${COLORS.primary};
 	padding: 6px 12px;
 	border-radius: 16px;
 	font-weight: 800;

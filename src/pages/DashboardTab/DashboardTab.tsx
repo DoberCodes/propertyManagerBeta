@@ -389,7 +389,6 @@ export const DashboardTab = () => {
 					<ScoreValue>{propertyScore}</ScoreValue>
 				</ScoreGaugeContainer>
 			</PropertyScoreSection>
-
 			<SeasonalMaintenance location={userLocation} />
 
 			{/* Task Completion Modal */}

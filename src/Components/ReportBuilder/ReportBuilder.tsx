@@ -3,6 +3,11 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../Redux/store/store';
 import { canAccessReadOnlyFeatures } from '../../utils/subscriptionUtils';
 import {
+	selectCanAccessTeam,
+	selectCanViewAllPages,
+	selectIsHomeowner,
+} from '../../Redux/selectors/permissionSelectors';
+import {
 	useGetPropertiesQuery,
 	useGetAllUnitsQuery,
 } from '../../Redux/API/propertySlice';
@@ -98,6 +103,17 @@ type ReportType =
 
 export const ReportBuilder: React.FC = () => {
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
+	const canManageTeam = useSelector(selectCanAccessTeam);
+	const canViewPages = useSelector(selectCanViewAllPages);
+	const isHomeowner = useSelector(selectIsHomeowner);
+	const canAccessTeamReport = !!currentUser && canManageTeam && canViewPages;
+
+	// Helper: homeowners may only access Single Family properties in reports
+	const isSingleFamilyProperty = (ptype?: string) => {
+		if (!ptype) return false;
+		const normalized = String(ptype).toLowerCase().replace(/[-_]/g, ' ').trim();
+		return normalized.includes('single');
+	};
 	const [reportType, setReportType] = useState<ReportType>('');
 	const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
 	const [filters, setFilters] = useState<any>({
@@ -230,7 +246,7 @@ export const ReportBuilder: React.FC = () => {
 	].includes(reportType);
 
 	// Get preview data based on report type
-	const previewData = useMemo(() => {
+	const previewData = useMemo<any[]>(() => {
 		let data: any[] = [];
 
 		if (reportType === 'tasks') {
@@ -238,7 +254,7 @@ export const ReportBuilder: React.FC = () => {
 		} else if (reportType === 'maintenance-requests') {
 			data = maintenanceRequests;
 		} else if (reportType === 'team') {
-			data = firebaseTeamMembers;
+			data = canAccessTeamReport ? firebaseTeamMembers : [];
 		} else if (reportType === 'contractors') {
 			data = contractorsData;
 		} else if (reportType === 'suites') {
@@ -261,52 +277,56 @@ export const ReportBuilder: React.FC = () => {
 				};
 			});
 		} else if (reportType === 'employee-efficiency') {
-			// Calculate employee efficiency metrics
-			data = firebaseTeamMembers.map((member: any) => {
-				const memberTasks = tasks.filter(
-					(t: any) => t.assignedTo === member.id,
-				);
-				const completed = memberTasks.filter(
-					(t: any) => t.status === 'Completed',
-				);
+			// Calculate employee efficiency metrics (restricted to users who can access team)
+			if (!canAccessTeamReport) {
+				data = [];
+			} else {
+				data = firebaseTeamMembers.map((member: any) => {
+					const memberTasks = tasks.filter(
+						(t: any) => t.assignedTo === member.id,
+					);
+					const completed = memberTasks.filter(
+						(t: any) => t.status === 'Completed',
+					);
 
-				const avgDays =
-					memberTasks.length > 0
-						? memberTasks
-								.filter((t: any) => t.completionDate && t.dueDate)
-								.reduce((acc: number, t: any) => {
-									const due = new Date(t.dueDate).getTime();
-									const comp = new Date(t.completionDate!).getTime();
-									return acc + (comp - due) / (1000 * 60 * 60 * 24);
-								}, 0) / memberTasks.length
-						: 0;
-
-				return {
-					employeeId: member.id as any,
-					firstName: member.firstName,
-					lastName: member.lastName,
-					email: member.email,
-					title: member.title,
-					totalTasksAssigned: memberTasks.length,
-					tasksCompleted: completed.length,
-					tasksInProgress: memberTasks.filter(
-						(t: any) => t.status === 'In Progress',
-					).length,
-					tasksPending: memberTasks.filter((t: any) => t.status === 'Pending')
-						.length,
-					completionRate:
+					const avgDays =
 						memberTasks.length > 0
-							? Math.round((completed.length / memberTasks.length) * 100)
-							: 0,
-					averageCompletionDays: Math.round(avgDays),
-					lastTaskCompletionDate:
-						completed.length > 0
-							? new Date(
-									completed[completed.length - 1].completionDate!,
-							  ).toLocaleDateString()
-							: 'N/A',
-				} as EmployeeEfficiencyMetrics;
-			});
+							? memberTasks
+									.filter((t: any) => t.completionDate && t.dueDate)
+									.reduce((acc: number, t: any) => {
+										const due = new Date(t.dueDate).getTime();
+										const comp = new Date(t.completionDate!).getTime();
+										return acc + (comp - due) / (1000 * 60 * 60 * 24);
+									}, 0) / memberTasks.length
+							: 0;
+
+					return {
+						employeeId: member.id as any,
+						firstName: member.firstName,
+						lastName: member.lastName,
+						email: member.email,
+						title: member.title,
+						totalTasksAssigned: memberTasks.length,
+						tasksCompleted: completed.length,
+						tasksInProgress: memberTasks.filter(
+							(t: any) => t.status === 'In Progress',
+						).length,
+						tasksPending: memberTasks.filter((t: any) => t.status === 'Pending')
+							.length,
+						completionRate:
+							memberTasks.length > 0
+								? Math.round((completed.length / memberTasks.length) * 100)
+								: 0,
+						averageCompletionDays: Math.round(avgDays),
+						lastTaskCompletionDate:
+							completed.length > 0
+								? new Date(
+										completed[completed.length - 1].completionDate!,
+								  ).toLocaleDateString()
+								: 'N/A',
+					} as EmployeeEfficiencyMetrics;
+				});
+			}
 		} else if (reportType === 'property-summary') {
 			// Calculate property summary metrics
 			data = properties.map((prop: any) => {
@@ -367,6 +387,46 @@ export const ReportBuilder: React.FC = () => {
 		} else if (shouldShowPropertyFilter && filters.propertyId) {
 			// Apply property filter to other report types that have property data
 			data = data.filter((item: any) => item.propertyId === filters.propertyId);
+		}
+
+		// Enforce homeowner restriction: homeowners may only see Single Family property data
+		if (isHomeowner) {
+			const propertyRelatedReports: ReportType[] = [
+				'tasks',
+				'maintenance-requests',
+				'contractors',
+				'suites',
+				'units',
+				'devices',
+				'maintenance-history',
+				'property-shares',
+				'property-summary',
+			];
+
+			if (propertyRelatedReports.includes(reportType)) {
+				data = data.filter((item: any) => {
+					// property-summary items are property objects with propertyType
+					if (reportType === 'property-summary' && item.propertyType) {
+						return isSingleFamilyProperty(item.propertyType);
+					}
+
+					// Items that directly include a propertyType
+					if (item.propertyType)
+						return isSingleFamilyProperty(item.propertyType);
+
+					// Try common property id locations
+					const propId =
+						item.propertyId ||
+						item.location?.propertyId ||
+						item.property?.id ||
+						item.propertyId;
+					if (!propId) return false; // exclude items not tied to a property
+
+					const prop = properties.find((p: any) => p.id === propId);
+					if (!prop) return false;
+					return isSingleFamilyProperty(prop.propertyType);
+				});
+			}
 		}
 
 		return data;
@@ -435,13 +495,23 @@ export const ReportBuilder: React.FC = () => {
 			return;
 		}
 
+		// Permission guard for team-related reports
+		if (
+			(reportType === 'team' || reportType === 'employee-efficiency') &&
+			!canAccessTeamReport
+		) {
+			alert('You do not have permission to run this report.');
+			return;
+		}
+
 		switch (reportType) {
 			case 'tasks':
 				generateTaskReport(previewData, selectedColumns);
 				break;
 			case 'maintenance-requests':
+				// use previewData (already filtered/scoped) instead of raw maintenanceRequests
 				generateMaintenanceRequestReport(
-					maintenanceRequests,
+					previewData,
 					selectedColumns,
 					filters.status || filters.priority || filters.propertyId
 						? filters
@@ -514,7 +584,9 @@ export const ReportBuilder: React.FC = () => {
 							<option value=''>-- Choose a report type --</option>
 							<option value='tasks'>Task Report</option>
 							<option value='maintenance-requests'>Maintenance Requests</option>
-							<option value='team'>Team Members</option>
+							{canAccessTeamReport && (
+								<option value='team'>Team Members</option>
+							)}
 							<option value='contractors'>Contractors</option>
 							<option value='suites'>Suites</option>
 							<option value='units'>Units</option>
@@ -522,7 +594,9 @@ export const ReportBuilder: React.FC = () => {
 							<option value='maintenance-history'>Maintenance History</option>
 							<option value='tenant-profiles'>Tenant Profiles</option>
 							<option value='property-shares'>Property Shares</option>
-							<option value='employee-efficiency'>Employee Efficiency</option>
+							{canAccessTeamReport && (
+								<option value='employee-efficiency'>Employee Efficiency</option>
+							)}
 							<option value='property-summary'>Property Summary</option>
 						</Select>
 					</FormGroup>
@@ -572,11 +646,17 @@ export const ReportBuilder: React.FC = () => {
 											setFilters({ ...filters, propertyId: e.target.value })
 										}>
 										<option value=''>All Properties</option>
-										{properties.map((prop) => (
-											<option key={prop.id} value={prop.id}>
-												{prop.title}
-											</option>
-										))}
+										{properties
+											.filter(
+												(prop) =>
+													!isHomeowner ||
+													isSingleFamilyProperty(prop.propertyType),
+											)
+											.map((prop) => (
+												<option key={prop.id} value={prop.id}>
+													{prop.title}
+												</option>
+											))}
 									</Select>
 								</FormGroup>
 							)}

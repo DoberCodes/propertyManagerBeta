@@ -31,6 +31,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isSubmitted, setIsSubmitted] = useState(false);
+	const [ticketId, setTicketId] = useState<string | null>(null);
 	const [error, setError] = useState('');
 
 	const [submitFeedback] = useSubmitFeedbackMutation();
@@ -47,7 +48,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 		setIsSubmitting(true);
 
 		try {
-			await submitFeedback({
+			const res = await submitFeedback({
 				...formData,
 				userId: currentUser?.id,
 				userEmail: formData.userEmail || currentUser?.email,
@@ -56,6 +57,8 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 						? `${currentUser.firstName} ${currentUser.lastName}`
 						: currentUser?.email?.split('@')[0],
 			}).unwrap();
+
+			if (res && res.id) setTicketId(res.id);
 
 			setIsSubmitted(true);
 			setTimeout(() => {
@@ -79,6 +82,11 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 					Your feedback has been submitted successfully. We'll review it and get
 					back to you if needed.
 				</SuccessMessage>
+				{ticketId && (
+					<SuccessMessage style={{ marginTop: 10 }}>
+						Ticket ID: <code>{ticketId}</code>
+					</SuccessMessage>
+				)}
 			</SuccessContainer>
 		);
 	}

@@ -408,7 +408,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 					{devices.map((_, i) => (
 						<MobileDot
 							key={i}
-							active={i === carouselIndex}
+							$active={i === carouselIndex}
 							onClick={() => setCarouselIndex(i)}
 						/>
 					))}

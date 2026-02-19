@@ -167,7 +167,7 @@ export const UnitsTab: React.FC<UnitsTabProps> = ({
 					{(units || []).map((_, i) => (
 						<MobileDot
 							key={i}
-							active={i === carouselIndex}
+							$active={i === carouselIndex}
 							onClick={() => setCarouselIndex(i)}
 						/>
 					))}

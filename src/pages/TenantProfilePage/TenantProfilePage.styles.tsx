@@ -47,15 +47,15 @@ export const TabContainer = styled.div`
 	}
 `;
 
-export const Tab = styled.button<{ active: boolean }>`
+export const Tab = styled.button<{ $active: boolean }>`
 	padding: 1rem 1.5rem;
 	border: none;
 	background: none;
 	font-size: 1rem;
 	font-weight: 600;
-	color: ${(props) => (props.active ? COLORS.primary : COLORS.textSecondary)};
+	color: ${(props) => (props.$active ? COLORS.primary : COLORS.textSecondary)};
 	border-bottom: 3px solid
-		${(props) => (props.active ? COLORS.primary : 'transparent')};
+		${(props) => (props.$active ? COLORS.primary : 'transparent')};
 	cursor: pointer;
 	transition: all 0.2s ease;
 	white-space: nowrap;

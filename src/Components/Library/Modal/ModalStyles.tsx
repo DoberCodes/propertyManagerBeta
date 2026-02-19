@@ -591,15 +591,15 @@ export const ModalTabContainer = styled.div`
 	gap: 0.5rem;
 `;
 
-export const ModalTab = styled.button<{ active: boolean }>`
+export const ModalTab = styled.button<{ $active: boolean }>`
 	padding: 0.75rem 1.5rem;
 	background: ${(props) =>
-		props.active ? COLORS.primaryLight : 'transparent'};
-	color: ${(props) => (props.active ? COLORS.primary : COLORS.gray600)};
+		props.$active ? COLORS.primaryLight : 'transparent'};
+	color: ${(props) => (props.$active ? COLORS.primary : COLORS.gray600)};
 	border: none;
 	border-bottom: 2px solid
-		${(props) => (props.active ? COLORS.primary : 'transparent')};
-	font-weight: ${(props) => (props.active ? '600' : '500')};
+		${(props) => (props.$active ? COLORS.primary : 'transparent')};
+	font-weight: ${(props) => (props.$active ? '600' : '500')};
 	font-size: 0.95rem;
 	cursor: pointer;
 	transition: all 0.2s;
@@ -607,8 +607,8 @@ export const ModalTab = styled.button<{ active: boolean }>`
 
 	&:hover {
 		background: ${(props) =>
-			props.active ? COLORS.primaryLight : COLORS.gray100};
-		color: ${(props) => (props.active ? COLORS.primary : COLORS.gray800)};
+			props.$active ? COLORS.primaryLight : COLORS.gray100};
+		color: ${(props) => (props.$active ? COLORS.primary : COLORS.gray800)};
 	}
 
 	&:focus {
@@ -617,6 +617,6 @@ export const ModalTab = styled.button<{ active: boolean }>`
 	}
 `;
 
-export const ModalTabContent = styled.div<{ active: boolean }>`
-	display: ${(props) => (props.active ? 'block' : 'none')};
+export const ModalTabContent = styled.div<{ $active: boolean }>`
+	display: ${(props) => (props.$active ? 'block' : 'none')};
 `;

@@ -516,12 +516,12 @@ export const MobileDots = styled.div`
 	gap: 6px;
 `;
 
-export const MobileDot = styled.button<{ active?: boolean }>`
+export const MobileDot = styled.button<{ $active?: boolean }>`
 	width: 8px;
 	height: 8px;
 	border-radius: 999px;
 	border: none;
-	background: ${(props) => (props.active ? '#22c55e' : '#d1d5db')};
+	background: ${(props) => (props.$active ? '#22c55e' : '#d1d5db')};
 	cursor: pointer;
 `;
 

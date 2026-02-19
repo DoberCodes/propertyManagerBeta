@@ -221,13 +221,13 @@ export const IndicatorDots = styled.div`
 	}
 `;
 
-export const Dot = styled.button<{ active: boolean }>`
+export const Dot = styled.button<{ $active: boolean }>`
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
 	border: none;
 	cursor: pointer;
-	background: ${(props) => (props.active ? '#3b82f6' : '#d1d5db')};
+	background: ${(props) => (props.$active ? '#3b82f6' : '#d1d5db')};
 	transition: all 0.2s ease;
 	padding: 0;
 	display: flex;
@@ -235,7 +235,7 @@ export const Dot = styled.button<{ active: boolean }>`
 	justify-content: center;
 
 	&:hover {
-		background: ${(props) => (props.active ? '#2563eb' : '#9ca3af')};
+		background: ${(props) => (props.$active ? '#2563eb' : '#9ca3af')};
 	}
 `;
 

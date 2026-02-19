@@ -388,37 +388,37 @@ export const TenantProfilePage: React.FC = () => {
 
 					<TabContainer>
 						<Tab
-							active={activeTab === 'personal'}
+							$active={activeTab === 'personal'}
 							onClick={() => setActiveTab('personal')}>
 							Personal Info
 						</Tab>
 						<Tab
-							active={activeTab === 'financial'}
+							$active={activeTab === 'financial'}
 							onClick={() => setActiveTab('financial')}>
 							Financial
 						</Tab>
 						<Tab
-							active={activeTab === 'employment'}
+							$active={activeTab === 'employment'}
 							onClick={() => setActiveTab('employment')}>
 							Employment
 						</Tab>
 						<Tab
-							active={activeTab === 'rental'}
+							$active={activeTab === 'rental'}
 							onClick={() => setActiveTab('rental')}>
 							Rental History
 						</Tab>
 						<Tab
-							active={activeTab === 'references'}
+							$active={activeTab === 'references'}
 							onClick={() => setActiveTab('references')}>
 							References
 						</Tab>
 						<Tab
-							active={activeTab === 'pets'}
+							$active={activeTab === 'pets'}
 							onClick={() => setActiveTab('pets')}>
 							Pets
 						</Tab>
 						<Tab
-							active={activeTab === 'emergency'}
+							$active={activeTab === 'emergency'}
 							onClick={() => setActiveTab('emergency')}>
 							Emergency Contacts
 						</Tab>

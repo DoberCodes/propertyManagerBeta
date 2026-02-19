@@ -5,6 +5,8 @@ import { Provider } from 'react-redux';
 import { store } from './Redux/store';
 import App from './App';
 import GlobalStyles from './global.styles';
+import { StyleSheetManager } from 'styled-components';
+import isPropValid from '@emotion/is-prop-valid';
 if (process.env.NODE_ENV === 'development') {
 	import('./utils/testFirebase');
 }
@@ -17,8 +19,13 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
 	<React.StrictMode>
 		<Provider store={store}>
-			<GlobalStyles />
-			<App />
+			<StyleSheetManager
+				shouldForwardProp={(prop: string) =>
+					isPropValid(prop) && prop !== 'variant'
+				}>
+				<GlobalStyles />
+				<App />
+			</StyleSheetManager>
 		</Provider>
 	</React.StrictMode>,
 );
