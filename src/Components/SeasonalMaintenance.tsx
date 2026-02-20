@@ -41,20 +41,9 @@ export const SeasonalMaintenance = ({ location }: SeasonalMaintenanceProps) => {
 		setError(null);
 	}, [location]);
 
-	// determine current season
-	const getCurrentSeason = () => {
-		const month = new Date().getMonth();
-		if (month >= 2 && month <= 4) return 'spring';
-		if (month >= 5 && month <= 7) return 'summer';
-		if (month >= 8 && month <= 10) return 'fall';
-		return 'winter';
-	};
-
-	const currentSeason = getCurrentSeason();
-
-	// only show cards for the current season (fallback to all if none)
-	const filteredCards = cards.filter((c) => c.season === currentSeason);
-	const effectiveCards = filteredCards.length ? filteredCards : cards;
+	// show all seasonal tips (do not filter by current season)
+	// leaving season values on cards so the UI can still tint/label by season
+	const effectiveCards = cards;
 
 	const pages = Math.max(1, Math.ceil(effectiveCards.length / cardsPerPage));
 	const visibleCards = effectiveCards.slice(
@@ -74,7 +63,10 @@ export const SeasonalMaintenance = ({ location }: SeasonalMaintenanceProps) => {
 	useEffect(() => {
 		const update = () => {
 			const w = window.innerWidth;
-			setCardsPerPage(w < 900 ? 1 : 3);
+			// responsive: 1 on small, 3 on medium, 4 on large desktop
+			if (w < 900) setCardsPerPage(1);
+			else if (w < 1200) setCardsPerPage(3);
+			else setCardsPerPage(4);
 		};
 		update();
 		window.addEventListener('resize', update);
@@ -168,8 +160,7 @@ export const SeasonalMaintenance = ({ location }: SeasonalMaintenanceProps) => {
 														? 'Moderate'
 														: 'Low'
 												}
-												$season={card.season}
-											>
+												$season={card.season}>
 												{priorityText}
 											</PriorityPill>
 										</OverlayBadge>

@@ -207,10 +207,16 @@ export const TipsContainer = styled.div`
 	background: #ffffff;
 	border: 1px solid rgba(16, 24, 40, 0.04);
 	border-radius: 12px;
-	padding: 20px;
+	padding: 24px;
 	box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
-	max-width: 1200px;
+	/* wider layout on large screens */
+	max-width: 1400px;
 	margin: 0 auto;
+
+	@media (min-width: 1600px) {
+		max-width: 1600px;
+		padding: 32px;
+	}
 `;
 
 export const TipsHeader = styled.div`
@@ -228,9 +234,13 @@ export const TipsHeader = styled.div`
 
 export const CardGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(4, 1fr);
 	gap: 18px;
 	padding: 6px 0 0 0;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
 
 	@media (max-width: 900px) {
 		grid-template-columns: repeat(1, 1fr);

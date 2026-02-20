@@ -23,7 +23,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'gutters',
 		title: 'Inspect Your Gutters',
-		image: '/Assets/TipsImages/Rooftop.jpg',
+		image: 'Assets/TipsImages/gutters.png',
 		bullets: [
 			'Clear visible debris to promote proper drainage',
 			'Look for signs of leaks or loose sections',
@@ -38,7 +38,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'grading',
 		title: 'Check Exterior Drainage & Grading',
-		image: '',
+		image: 'Assets/TipsImages/drainage.png',
 		bullets: [
 			'Ensure soil slopes away from the foundation',
 			'Extend downspouts away from the home',
@@ -53,7 +53,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'waterleak',
 		title: 'Check for Hidden Water Leaks',
-		image: '',
+		image: 'Assets/TipsImages/waterleak.png',
 		bullets: [
 			'Monitor water bills for unusual increases',
 			'Inspect under sinks and around toilets for moisture',
@@ -68,7 +68,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'caulking',
 		title: 'Inspect Caulking & Seals',
-		image: '',
+		image: 'Assets/TipsImages/caulking.png',
 		bullets: [
 			'Check tubs, showers, and sinks for cracked caulk',
 			'Reseal areas showing gaps or discoloration',
@@ -83,7 +83,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'sump',
 		title: 'Sump Pump & Basement Check',
-		image: '',
+		image: 'Assets/TipsImages/sumppump.png',
 		bullets: [
 			'Test pump operation and backup systems periodically',
 			'Look for signs of excess moisture',
@@ -102,7 +102,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'safety',
 		title: 'Test Smoke & CO Detectors',
-		image: '',
+		image: 'Assets/TipsImages/SmokeDetector.jpg',
 		bullets: [
 			'Test detectors regularly and replace batteries as needed',
 			'Ensure units are installed on each level',
@@ -117,7 +117,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'dryervent',
 		title: 'Dryer Vent Inspection',
-		image: '',
+		image: 'Assets/TipsImages/Dryer.jpg',
 		bullets: [
 			'Clean lint traps regularly',
 			'Inspect exterior vent for blockages',
@@ -132,7 +132,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'chimney',
 		title: 'Chimney & Fireplace Service',
-		image: '',
+		image: 'Assets/TipsImages/Fireplace.jpg',
 		bullets: [
 			'Have chimney professionally cleaned and inspected annually',
 			'Ensure dampers operate properly',
@@ -147,7 +147,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'electrical',
 		title: 'Electrical System Check',
-		image: '',
+		image: 'Assets/TipsImages/electrical.png',
 		bullets: [
 			'Watch for breaker trips or unusual heat',
 			'Replace damaged cords',
@@ -166,7 +166,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'roof',
 		title: 'Roof Condition Check',
-		image: 'Assets/TipsImages/roofshingles.jpg',
+		image: 'Assets/TipsImages/shingles.png',
 		bullets: [
 			'Visually inspect shingles from the ground',
 			'Look for attic moisture or staining',
@@ -181,7 +181,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'deck',
 		title: 'Deck & Porch Care',
-		image: 'Assets/TipsImages/Deck.jpg',
+		image: 'Assets/TipsImages/deck.png',
 		bullets: [
 			'Inspect for rot or loose fasteners',
 			'Clean and reseal wood surfaces',
@@ -196,7 +196,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'trees',
 		title: 'Tree & Branch Inspection',
-		image: 'Assets/TipsImages/Tree.jpg',
+		image: 'Assets/TipsImages/branches.png',
 		bullets: [
 			'Trim weak branches near structures',
 			'Remove dead limbs',
@@ -230,7 +230,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'waterheater',
 		title: 'Water Heater Maintenance',
-		image: '',
+		image: 'Assets/TipsImages/waterheater.png',
 		bullets: [
 			'Check for leaks around the unit',
 			'Consider professional flushing',
@@ -245,7 +245,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'appliances',
 		title: 'Appliance Performance Check',
-		image: '',
+		image: 'Assets/TipsImages/appliances.png',
 		bullets: [
 			'Clean refrigerator coils',
 			'Inspect washing machine hoses',
@@ -264,7 +264,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'freeze',
 		title: 'Cold Weather Preparation',
-		image: '',
+		image: 'Assets/TipsImages/winter.jpg',
 		bullets: [
 			'Disconnect outdoor hoses',
 			'Shut off exterior water lines if applicable',
@@ -283,7 +283,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'documentation',
 		title: 'Review Insurance & Home Records',
-		image: '',
+		image: 'Assets/TipsImages/Home.jpg',
 		bullets: [
 			'Verify insurance coverage limits',
 			'Organize maintenance records',
@@ -298,7 +298,7 @@ export const seasonalTipCards: SeasonalCard[] = [
 	{
 		id: 'emergency',
 		title: 'Review Emergency Preparedness',
-		image: '',
+		image: 'Assets/TipsImages/emergency.png',
 		bullets: [
 			'Confirm fire extinguishers are accessible',
 			'Review evacuation procedures',
