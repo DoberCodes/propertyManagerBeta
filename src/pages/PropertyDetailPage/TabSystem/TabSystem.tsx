@@ -26,6 +26,10 @@ interface TabsProps {
 	propertyContractors: any[];
 	familyMembers: any[];
 	allTasks: Task[];
+	// unit filtering support for multifamily properties
+	unitOptions?: { label: string; value: string }[];
+	selectedUnitId?: string;
+	onSelectUnit?: (id: string) => void;
 	assigneeOptions?: { label: string; value: string; email?: string }[];
 	handleAddMaintenanceHistory: (history: any) => void;
 	handleDeleteMaintenanceHistory: (historyId: string) => void;
@@ -53,7 +57,10 @@ export const TabSystem = ({
 	propertyContractors,
 	familyMembers,
 	allTasks,
-	assigneeOptions = [],
+	unitOptions = [],
+	selectedUnitId,
+	onSelectUnit,
+	// assigneeOptions intentionally not used here
 	handleAddMaintenanceHistory,
 	handleDeleteMaintenanceHistory,
 	setShowAddTenantModal,
@@ -86,7 +93,9 @@ export const TabSystem = ({
 						property={property}
 						propertyTasks={propertyTasks}
 						currentUser={currentUser}
-						assigneeOptions={assigneeOptions}
+						unitOptions={unitOptions}
+						selectedUnitId={selectedUnitId}
+						onSelectUnit={onSelectUnit}
 					/>
 				);
 			case 'maintenance':
@@ -110,6 +119,9 @@ export const TabSystem = ({
 						<TenantsTab
 							property={property}
 							currentUser={currentUser}
+							unitOptions={unitOptions}
+							selectedUnitId={selectedUnitId}
+							onSelectUnit={onSelectUnit}
 							setShowAddTenantModal={setShowAddTenantModal}
 							onEditTenant={handleEditTenant}
 							onDeleteTenant={handleDeleteTenant}
@@ -134,6 +146,9 @@ export const TabSystem = ({
 						<RequestsTab
 							propertyMaintenanceRequests={propertyMaintenanceRequests}
 							currentUser={currentUser}
+							unitOptions={unitOptions}
+							selectedUnitId={selectedUnitId}
+							onSelectUnit={onSelectUnit}
 							canApproveMaintenanceRequest={canApproveMaintenanceRequest}
 							handleConvertRequestToTask={handleConvertRequestToTask}
 						/>
@@ -152,6 +167,9 @@ export const TabSystem = ({
 				<TabController
 					property={property}
 					currentUser={currentUser}
+					unitOptions={unitOptions}
+					selectedUnitId={selectedUnitId}
+					onSelectUnit={onSelectUnit}
 					propertyMaintenanceRequests={propertyMaintenanceRequests}
 					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
 				/>

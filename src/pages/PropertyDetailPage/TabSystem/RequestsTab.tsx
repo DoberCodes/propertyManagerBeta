@@ -4,6 +4,7 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
+import { FormSelect } from '../../../Components/Library/Modal/ModalStyles';
 import {
 	ReusableTable,
 	Column,
@@ -21,6 +22,9 @@ import { UserRole } from '../../../constants/roles';
 export const RequestsTab: React.FC<RequestsTabProps> = ({
 	propertyMaintenanceRequests,
 	currentUser,
+	unitOptions = [],
+	selectedUnitId,
+	onSelectUnit,
 	canApproveMaintenanceRequest,
 	handleConvertRequestToTask,
 }) => {
@@ -104,14 +108,36 @@ export const RequestsTab: React.FC<RequestsTabProps> = ({
 		},
 	];
 
+	// optionally filter by selected unit
+	const filteredRequests = React.useMemo(() => {
+		if (!selectedUnitId) return propertyMaintenanceRequests;
+		return propertyMaintenanceRequests.filter(
+			(req) => req.unit === selectedUnitId || req.unitId === selectedUnitId,
+		);
+	}, [propertyMaintenanceRequests, selectedUnitId]);
+
 	return (
 		<SectionContainer>
 			<SectionHeader>Maintenance Requests</SectionHeader>
+			{unitOptions.length > 0 && (
+				<FormSelect
+					name='unitFilter'
+					value={selectedUnitId || ''}
+					onChange={(e) => onSelectUnit && onSelectUnit(e.target.value)}
+					style={{ marginBottom: '12px' }}>
+					<option value=''>All units</option>
+					{unitOptions.map((u) => (
+						<option key={u.value} value={u.value}>
+							{u.label}
+						</option>
+					))}
+				</FormSelect>
+			)}
 
-			{propertyMaintenanceRequests.length > 0 ? (
+			{filteredRequests.length > 0 ? (
 				<ReusableTable
 					columns={columns}
-					rowData={propertyMaintenanceRequests}
+					rowData={filteredRequests}
 					actions={actions}
 					emptyMessage='No maintenance requests'
 				/>

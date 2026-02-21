@@ -397,17 +397,32 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		}
 	}, [hasCommercialSuites, activeTab]);
 
-	// Filter tasks for this property
+	// --- UNIT FILTER SUPPORT ------------------------------------------------
+	// compute options from property units (multifamily)
+	const unitOptions = useMemo(() => {
+		if (!property?.units) return [];
+		return property.units.map((u: any) => ({ label: u.name, value: u.id }));
+	}, [property]);
+
+	// track currently selected unit for filtering tasks
+	const [selectedUnitId, setSelectedUnitId] = useState<string>('');
+
+	// Filter tasks for this property (and optionally unit)
 	const propertyTasks = useMemo(() => {
 		if (!property) return [];
 		// Match by property ID if it exists, otherwise try matching by title
-		const allPropertyTasks = allTasks.filter(
+		let allPropertyTasks = allTasks.filter(
 			(task) =>
 				task.propertyId === property.id || task.property === property.title,
 		);
+		if (selectedUnitId) {
+			allPropertyTasks = allPropertyTasks.filter(
+				(task) => task.unitId === selectedUnitId,
+			);
+		}
 		// Filter out completed tasks - they should show in Maintenance History instead
 		return allPropertyTasks.filter((task) => task.status !== 'Completed');
-	}, [property, allTasks]);
+	}, [property, allTasks, selectedUnitId]);
 
 	const { data: maintenanceHistoryRecords = [] } =
 		useGetMaintenanceHistoryByPropertyQuery(property?.id || '', {
@@ -835,6 +850,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 					propertyMaintenanceRequests={propertyMaintenanceRequests}
 					canApproveMaintenanceRequest={canApproveMaintenanceRequest}
 					propertyTasks={propertyTasks}
+					unitOptions={unitOptions}
+					selectedUnitId={selectedUnitId}
+					onSelectUnit={setSelectedUnitId}
 					maintenanceHistoryRecords={maintenanceHistoryRecords}
 					propertyUnits={propertyUnits}
 					propertyContractors={propertyContractors}

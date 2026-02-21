@@ -13,8 +13,6 @@ import {
 	CardTitle,
 	CardList,
 	FooterRow,
-	FooterLeft,
-	FooterRight,
 	SmallBadge,
 	Controls,
 	PageBadge,
@@ -65,7 +63,8 @@ export const SeasonalMaintenance = ({ location }: SeasonalMaintenanceProps) => {
 			const w = window.innerWidth;
 			// responsive: 1 on small, 3 on medium, 4 on large desktop
 			if (w < 900) setCardsPerPage(1);
-			else if (w < 1200) setCardsPerPage(3);
+			else if (w < 1200) setCardsPerPage(2);
+			else if (w < 2000) setCardsPerPage(3);
 			else setCardsPerPage(4);
 		};
 		update();

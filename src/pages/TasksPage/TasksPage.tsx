@@ -12,7 +12,12 @@ import { filterTasksByRole } from '../../utils/dataFilters';
 import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
 import { ReusableTable } from '../../Components/Library/ReusableTable';
 import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
-import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+	faEdit,
+	faTrash,
+	faUserPlus,
+	faPlus,
+} from '@fortawesome/free-solid-svg-icons';
 import { Column, Action } from '../../Components/Library/ReusableTable';
 import { StatusBadge } from '../PropertyDetailPage/TabSystem/index.styles';
 import { MobileTaskCarousel, TaskModal } from '../../Components/Library';
@@ -27,6 +32,14 @@ import {
 	FilterSection,
 	CarouselSection,
 } from './TasksPage.styles';
+
+import {
+	FilterBar,
+	FilterConfig,
+	FilterValues,
+} from 'Components/Library/FilterBar';
+import { applyFilters } from '../../utils/tableFilters';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export const TasksPage = () => {
 	const navigate = useNavigate();
@@ -74,6 +87,17 @@ export const TasksPage = () => {
 	const [showTaskCompletionModal, setShowTaskCompletionModal] = useState(false);
 	const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 	const [taskDaysFilter, setTaskDaysFilter] = useState<number>(30);
+	const [filters, setFilters] = useState<FilterValues>({});
+	const [showFilters, setShowFilters] = useState(false);
+	// track the property id for the task we're assigning so the modal can fetch contractors immediately
+	const [assigningTaskPropertyId, setAssigningTaskPropertyId] =
+		useState<string>('');
+
+	// create task handler used by buttons
+	const handleCreateTask = () => {
+		taskHandlers.setEditingTaskId('');
+		taskHandlers.setShowTaskDialog(true);
+	};
 
 	const isMobile = useSelector((state: RootState) => state.app.isMobile);
 
@@ -101,6 +125,85 @@ export const TasksPage = () => {
 		return assignees;
 	}, [teamMembers]);
 
+	// options used by the filter bar dropdown
+	const assigneeFilterOptions = useMemo(() => {
+		const map = new Map<string, string>();
+		allTasks.forEach((task) => {
+			let id: string | undefined;
+			let name: string | undefined;
+
+			if (task.assignedTo && typeof task.assignedTo === 'object') {
+				id = task.assignedTo.id;
+				name =
+					task.assignedTo.name || task.assignedTo.email || task.assignedTo.id;
+			} else if (task.assignee) {
+				id = task.assignee;
+				name = task.assignee;
+			}
+
+			if (id && name && !map.has(id)) {
+				map.set(id, name);
+			}
+		});
+		return Array.from(map, ([value, label]) => ({ value, label }));
+	}, [allTasks]);
+
+	// property options for filtering on the main tasks page
+	const propertyFilterOptions = useMemo(() => {
+		return allProperties.map((p) => ({ value: p.id, label: p.title }));
+	}, [allProperties]);
+
+	const taskFilters: FilterConfig[] = [
+		{
+			key: 'propertyId',
+			label: 'Property',
+			type: 'select',
+			options: [
+				{ value: '', label: 'All properties' },
+				...propertyFilterOptions,
+			],
+		},
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'select',
+			options: [
+				{ value: 'Pending', label: 'Pending' },
+				{ value: 'In Progress', label: 'In Progress' },
+				{ value: 'Awaiting Approval', label: 'Awaiting Approval' },
+				{ value: 'Completed', label: 'Completed' },
+				{ value: 'Rejected', label: 'Rejected' },
+				{ value: 'Overdue', label: 'Overdue' },
+				{ value: 'Hold', label: 'Hold' },
+			],
+		},
+		{
+			key: 'priority',
+			label: 'Priority',
+			type: 'select',
+			options: [
+				{ value: 'Low', label: 'Low' },
+				{ value: 'Medium', label: 'Medium' },
+				{ value: 'High', label: 'High' },
+				{ value: 'Urgent', label: 'Urgent' },
+			],
+		},
+		{
+			key: 'assignedTo',
+			label: 'Assigned To',
+			type: 'select',
+			options: [
+				{ value: 'unassigned', label: 'Unassigned' },
+				...assigneeFilterOptions,
+			],
+		},
+		{
+			key: 'dueDate',
+			label: 'Due Date',
+			type: 'daterange',
+		},
+	];
+
 	// Get active tasks for display
 	const filteredTasks = useMemo(() => {
 		const filtered = filterTasksByRole(
@@ -123,33 +226,48 @@ export const TasksPage = () => {
 			return dueDate >= now && dueDate <= futureDate;
 		});
 
-		// Sort by due date (ascending), then by priority (descending)
-		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
-
-		const sorted = tasksWithinRange.sort((a, b) => {
-			// Primary: Sort by due date (soonest first)
-			const dateA = new Date(a.dueDate!).getTime();
-			const dateB = new Date(b.dueDate!).getTime();
-			if (dateA !== dateB) {
-				return dateA - dateB;
-			}
-
-			// Secondary: Sort by priority (highest first)
-			const priorityA =
-				priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
-			const priorityB =
-				priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
-			return priorityB - priorityA;
-		});
-
-		// Enrich tasks with propertyTitle for display in table
-		return sorted.map((task) => {
+		// Enrich tasks for display
+		const enriched = tasksWithinRange.map((task) => {
 			const property = allProperties.find((p) => p.id === task.propertyId);
 			return {
 				...task,
 				propertyTitle: property?.title || task.property || 'Unknown Property',
 				assignedToNames: task.assignedTo?.name || '',
 			};
+		});
+
+		// apply filter bar criteria
+		const afterFilters = applyFilters(enriched, filters, {
+			textFields: ['title', 'notes'],
+			selectFields: [
+				{ field: 'propertyId', filterKey: 'propertyId' },
+				{ field: 'status', filterKey: 'status' },
+				{ field: 'priority', filterKey: 'priority' },
+				{
+					field: 'assignedTo',
+					filterKey: 'assignedTo',
+					valueGetter: (task: any) =>
+						task.assignedTo && typeof task.assignedTo === 'object'
+							? task.assignedTo.id
+							: task.assignee,
+				},
+			],
+			dateRangeFields: [{ field: 'dueDate', filterKey: 'dueDate' }],
+		});
+
+		// Sort by due date then priority
+		const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+		return afterFilters.sort((a, b) => {
+			const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+			const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+			if (dateA !== dateB) {
+				return dateA - dateB;
+			}
+			const priorityA =
+				priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+			const priorityB =
+				priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+			return priorityB - priorityA;
 		});
 	}, [
 		allTasks,
@@ -158,6 +276,7 @@ export const TasksPage = () => {
 		allProperties,
 		taskDaysFilter,
 		propertyShares,
+		filters,
 	]);
 
 	// Count of active tasks (before timeframe filtering)
@@ -208,7 +327,9 @@ export const TasksPage = () => {
 			label: 'Assign',
 			icon: faUserPlus,
 			onClick: (task: any) => {
+				// capture both id and property up front to avoid race condition
 				taskHandlers.setAssigningTaskId(task.id);
+				setAssigningTaskPropertyId(task.propertyId || '');
 				taskHandlers.setShowTaskAssignDialog(true);
 			},
 		},
@@ -279,21 +400,100 @@ export const TasksPage = () => {
 	return (
 		<Wrapper>
 			{/* Task Filter Section */}
-			<FilterSection>
-				<label htmlFor='task-days-filter'>Show tasks due within:</label>
-				<select
-					id='task-days-filter'
-					value={taskDaysFilter}
-					onChange={(e) => setTaskDaysFilter(Number(e.target.value))}>
-					<option value={7}>7 days</option>
-					<option value={14}>14 days</option>
-					<option value={30}>30 days</option>
-					<option value={60}>60 days</option>
-					<option value={90}>90 days</option>
-				</select>
-			</FilterSection>
+			<div style={{ marginBottom: '16px' }}>
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						gap: '8px',
+						marginBottom: showFilters ? '12px' : '0',
+					}}>
+					<input
+						type='text'
+						placeholder='Search history, notes...'
+						value={(filters.search as string) || ''}
+						onChange={(e) =>
+							setFilters((prev) => ({
+								...prev,
+								search: e.target.value,
+							}))
+						}
+						style={{
+							flex: 1,
+							padding: '8px 12px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							fontSize: '14px',
+						}}
+					/>
+					<button
+						onClick={() => setShowFilters(!showFilters)}
+						style={{
+							padding: '8px 10px',
+							border: '1px solid #e5e7eb',
+							borderRadius: '4px',
+							background: '#f9fafb',
+							cursor: 'pointer',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							whiteSpace: 'nowrap',
+						}}
+						title={showFilters ? 'Hide filters' : 'Show filters'}>
+						{showFilters ? '▲ Hide Filters' : '▼ Filters'}
+					</button>
+				</div>
+				{showFilters && (
+					<>
+						<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
+						{/* desktop add button below filter bar */}
+						{!isMobile && (
+							<div style={{ marginTop: '12px', textAlign: 'right' }}>
+								<button
+									onClick={handleCreateTask}
+									style={{
+										background: '#3b82f6',
+										color: 'white',
+										border: 'none',
+										padding: '8px 12px',
+										borderRadius: '4px',
+										fontSize: '16px',
+										cursor: 'pointer',
+									}}
+									title='Create new task'>
+									<FontAwesomeIcon icon={faPlus} />
+								</button>
+							</div>
+						)}
+					</>
+				)}
+			</div>
+
 			{isMobile ? (
 				<CarouselSection>
+					{/* floating create button for mobile view */}
+					<button
+						onClick={handleCreateTask}
+						style={{
+							position: 'fixed',
+							bottom: '80px',
+							right: '20px',
+							width: '60px',
+							height: '60px',
+							borderRadius: '50%',
+							backgroundColor: '#3b82f6',
+							color: 'white',
+							fontSize: '28px',
+							border: 'none',
+							boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+							zIndex: 1000,
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}
+						aria-label='Create task'>
+						<FontAwesomeIcon icon={faPlus} />
+					</button>
 					<MobileTaskCarousel
 						tasks={carouselTasks}
 						onTaskComplete={handleTaskCompletion}
@@ -400,24 +600,9 @@ export const TasksPage = () => {
 							? allTasks.find((t) => t.id === assigningTaskId)
 							: null
 					}
-					propertyId={
-						assigningTaskId
-							? allTasks.find((t) => t.id === assigningTaskId)?.propertyId || ''
-							: ''
-					}
+					propertyId={assigningTaskPropertyId}
 					selectedAssignee={null}
-				/>
-			)}
-
-			{showTaskCompletionModal && completingTaskId && (
-				<TaskCompletionModal
-					taskId={completingTaskId}
-					taskTitle={
-						allTasks.find((t) => t.id === completingTaskId)?.title || ''
-					}
-					task={allTasks.find((t) => t.id === completingTaskId)}
-					onClose={() => setShowTaskCompletionModal(false)}
-					onSuccess={handleTaskCompletionSuccess}
+					assigneeOptions={assigneeOptions}
 				/>
 			)}
 		</Wrapper>

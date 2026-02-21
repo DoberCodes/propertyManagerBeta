@@ -379,6 +379,7 @@ export const ModalSecondaryButton = styled(ModalButton)`
 
 // Form Components for Modals
 export const FormGroup = styled.div`
+	width: 100%;
 	margin-bottom: 1.5rem;
 
 	&:last-of-type {
@@ -391,6 +392,7 @@ export const FormGroup = styled.div`
 `;
 
 export const FormGrid = styled.div`
+	width: 100%; /* ensure grid takes full container width */
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 1.25rem 1.5rem;
@@ -453,7 +455,8 @@ export const FormInput = styled.input`
 `;
 
 export const FormSelect = styled.select`
-	width: auto;
+	width: 100%;
+	max-width: 100%;
 	border: 1.5px solid ${COLORS.gray300};
 	border-radius: 6px;
 	font-size: 14px;

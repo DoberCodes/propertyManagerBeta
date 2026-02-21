@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+	faEdit,
+	faTrash,
+	faUserPlus,
+	faCheckCircle,
+} from '@fortawesome/free-solid-svg-icons';
 import { TasksTabProps } from '../../../types/PropertyDetailPage.types';
 import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
+import { FormSelect } from '../../../Components/Library/Modal/ModalStyles';
 import { GridContainer } from './index.styles';
 import {
 	FilterBar,
@@ -46,6 +52,9 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 	property,
 	currentUser,
 	assigneeOptions = [],
+	unitOptions = [],
+	selectedUnitId,
+	onSelectUnit,
 }) => {
 	const [filters, setFilters] = useState<FilterValues>({});
 	const [showFilters, setShowFilters] = useState(false);
@@ -150,6 +159,11 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 			label: 'Assign',
 			icon: faUserPlus,
 			onClick: (task: Task) => handleAssignTask(task),
+		},
+		{
+			label: 'Complete',
+			icon: faCheckCircle,
+			onClick: (task: Task) => handleCompleteTask(task),
 		},
 		{
 			label: 'Delete',
@@ -295,62 +309,66 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 					}>
 					+ Create Task
 				</ToolbarButton>
-				<ToolbarButton
-					disabled={!selectedTask}
-					onClick={() => selectedTask && handleCompleteTask(selectedTask)}
-					style={{ backgroundColor: '#22c55e' }}>
-					Mark as Complete
-				</ToolbarButton>
+				{unitOptions.length > 0 && (
+					<FormSelect
+						name='unitFilter'
+						value={selectedUnitId || ''}
+						onChange={(e) => onSelectUnit && onSelectUnit(e.target.value)}
+						style={{ marginLeft: '12px' }}>
+						<option value=''>All units</option>
+						{unitOptions.map((u) => (
+							<option key={u.value} value={u.value}>
+								{u.label}
+							</option>
+						))}
+					</FormSelect>
+				)}
 			</Toolbar>
-
-			{/* Collapsable Filter Section */}
-			<div style={{ marginBottom: '16px' }}>
-				<div
+			<div
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					gap: '8px',
+					marginBottom: showFilters ? '12px' : '0',
+				}}>
+				<input
+					type='text'
+					placeholder='Search tasks...'
+					value={(filters.search as string) || ''}
+					onChange={(e) =>
+						setFilters((prev) => ({
+							...prev,
+							search: e.target.value,
+						}))
+					}
 					style={{
+						flex: 1,
+						padding: '8px 12px',
+						border: '1px solid #e5e7eb',
+						borderRadius: '4px',
+						fontSize: '14px',
+					}}
+				/>
+				<button
+					onClick={() => setShowFilters(!showFilters)}
+					style={{
+						padding: '8px 10px',
+						border: '1px solid #e5e7eb',
+						borderRadius: '4px',
+						background: '#f9fafb',
+						cursor: 'pointer',
 						display: 'flex',
 						alignItems: 'center',
-						gap: '8px',
-						marginBottom: showFilters ? '12px' : '0',
-					}}>
-					<input
-						type='text'
-						placeholder='Search tasks...'
-						value={(filters.search as string) || ''}
-						onChange={(e) =>
-							setFilters((prev) => ({
-								...prev,
-								search: e.target.value,
-							}))
-						}
-						style={{
-							flex: 1,
-							padding: '8px 12px',
-							border: '1px solid #e5e7eb',
-							borderRadius: '4px',
-							fontSize: '14px',
-						}}
-					/>
-					<button
-						onClick={() => setShowFilters(!showFilters)}
-						style={{
-							padding: '8px 10px',
-							border: '1px solid #e5e7eb',
-							borderRadius: '4px',
-							background: '#f9fafb',
-							cursor: 'pointer',
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							whiteSpace: 'nowrap',
-						}}
-						title={showFilters ? 'Hide filters' : 'Show filters'}>
-						{showFilters ? '▲ Hide Filters' : '▼ Filters'}
-					</button>
-				</div>
-				{showFilters && (
-					<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
-				)}
+						justifyContent: 'center',
+						whiteSpace: 'nowrap',
+					}}
+					title={showFilters ? 'Hide filters' : 'Show filters'}>
+					{showFilters ? '▲ Hide Filters' : '▼ Filters'}
+				</button>
 			</div>
+			{showFilters && (
+				<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
+			)}
 
 			{filteredTasks.length > 0 ? (
 				<>
@@ -464,6 +482,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 				editingTaskId={isEditing ? selectedTask?.id : undefined}
 				isEditing={isEditing}
 				propertyId={property?.id || ''}
+				unitId={selectedUnitId}
+				unitOptions={unitOptions}
 				assigneeOptions={assigneeOptions}
 				currentUser={currentUser}
 				onSaved={(updatedTask) => {

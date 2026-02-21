@@ -238,8 +238,12 @@ export const CardGrid = styled.div`
 	gap: 18px;
 	padding: 6px 0 0 0;
 
-	@media (max-width: 1200px) {
+	@media (max-width: 2000px) {
 		grid-template-columns: repeat(3, 1fr);
+	}
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
 	}
 
 	@media (max-width: 900px) {

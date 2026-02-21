@@ -51,6 +51,9 @@ export interface TasksTabProps {
 	property: any;
 	currentUser?: any;
 	assigneeOptions?: { label: string; value: string; email?: string }[];
+	unitOptions?: { label: string; value: string }[];
+	selectedUnitId?: string;
+	onSelectUnit?: (unitId: string) => void;
 }
 
 export interface MaintenanceTabProps {
@@ -80,6 +83,9 @@ export interface MaintenanceTabProps {
 export interface TenantsTabProps {
 	property: any;
 	currentUser: any;
+	unitOptions?: { label: string; value: string }[];
+	selectedUnitId?: string;
+	onSelectUnit?: (unitId: string) => void;
 	setShowAddTenantModal: (show: boolean) => void;
 	onEditTenant: (tenant: any) => void;
 	onDeleteTenant: (tenant: any) => void;
@@ -100,6 +106,9 @@ export interface SuitesTabProps {
 export interface RequestsTabProps {
 	propertyMaintenanceRequests: any[];
 	currentUser: any;
+	unitOptions?: { label: string; value: string }[];
+	selectedUnitId?: string;
+	onSelectUnit?: (unitId: string) => void;
 	canApproveMaintenanceRequest: (role: any) => boolean;
 	handleConvertRequestToTask: (requestId: string) => void;
 }

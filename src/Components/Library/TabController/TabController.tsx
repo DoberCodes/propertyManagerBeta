@@ -10,6 +10,10 @@ export interface TabsContextProps {
 	currentUser: any;
 	propertyMaintenanceRequests: any[];
 	canApproveMaintenanceRequest: (role: any) => boolean;
+	// optional unit filtering support
+	unitOptions?: { label: string; value: string }[];
+	selectedUnitId?: string;
+	onSelectUnit?: (id: string) => void;
 }
 
 export interface tab {

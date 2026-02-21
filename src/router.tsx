@@ -16,7 +16,7 @@ import { FeatureDocsPage } from './pages/FeatureDocs/FeatureDocsPage';
 import LegalPage from './pages/LegalPage/LegalPage';
 import { Layout } from './pages/Layout';
 import { DashboardTab } from './pages/DashboardTab';
-import { TasksPage } from './pages/TasksPage';
+import { TasksPage } from './pages/TasksPage/TasksPage';
 import { Properties } from './Components/PropertiesTab';
 import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { UnitDetailPage } from './pages/UnitDetailPage';

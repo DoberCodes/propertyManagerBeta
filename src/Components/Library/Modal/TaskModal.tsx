@@ -43,6 +43,9 @@ interface TaskFormData {
 	enableNotifications?: boolean;
 	notifications?: TaskNotification[];
 	linkedMaintenanceHistoryIds?: string[];
+	// new optional fields for cross‑property/unit tasks
+	propertyId?: string;
+	unitId?: string;
 }
 
 interface EditTaskModalProps {
@@ -53,6 +56,10 @@ interface EditTaskModalProps {
 	editingTask?: any | null; // full task object for editing
 	initialTask?: Partial<TaskFormData> | null;
 	propertyId?: string | null;
+	// when the caller wants the user to choose a property/unit
+	propertyOptions?: { label: string; value: string }[];
+	unitId?: string | null;
+	unitOptions?: { label: string; value: string }[];
 	onClose: () => void;
 	onSaved?: (updatedTask?: any) => void; // called after successful create/update
 	statusOptions?: string[];
@@ -82,6 +89,9 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 	priorityOptions = ['Low', 'Medium', 'High', 'Urgent'],
 	assigneeOptions = [],
 	currentUser = null,
+	propertyOptions = [],
+	unitOptions = [],
+	unitId = null,
 	taskTitlePlaceholder = 'Task title',
 }) => {
 	// modal-owned form state (defaults)
@@ -99,8 +109,10 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 			enableNotifications: false,
 			notifications: [],
 			linkedMaintenanceHistoryIds: [],
+			propertyId: propertyId || '',
+			unitId: unitId || '',
 		}),
-		[],
+		[propertyId, unitId],
 	);
 
 	const dispatch = useDispatch();
@@ -174,6 +186,12 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				notifications: (editingTask as any).notifications || [],
 				linkedMaintenanceHistoryIds:
 					(editingTask as any).linkedMaintenanceHistoryIds || [],
+				propertyId:
+					(editingTask as any).propertyId ||
+					(editingTask as any).property?.id ||
+					propertyId ||
+					'',
+				unitId: (editingTask as any).unitId || unitId || '',
 			});
 			return;
 		}
@@ -195,6 +213,12 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				notifications: (foundTask as any).notifications || [],
 				linkedMaintenanceHistoryIds:
 					(foundTask as any).linkedMaintenanceHistoryIds || [],
+				propertyId:
+					(foundTask as any).propertyId ||
+					(foundTask as any).property?.id ||
+					propertyId ||
+					'',
+				unitId: (foundTask as any).unitId || unitId || '',
 			});
 			return;
 		}
@@ -204,12 +228,17 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 
 	const handleChange = (e: React.ChangeEvent<any>) => {
 		const { name, value, type, checked } = e.target as any;
+		let newValue: any;
+		if (name === 'recurrenceInterval') {
+			newValue = value === '' ? undefined : parseInt(value, 10);
+		} else {
+			newValue = type === 'checkbox' ? checked : value;
+		}
 		setFormState((prev) => ({
 			...prev,
-			[name]: type === 'checkbox' ? checked : value,
+			[name]: newValue,
 		}));
 	};
-
 	// keep legacy `onChange` variable name for backward-compatible internal usage
 	const onChange = handleChange;
 	// keep legacy `fd` variable name for backwards-compatibility inside this component
@@ -324,8 +353,8 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				onClose();
 			} else {
 				let newTaskRaw: any = {
-					propertyId: propertyId,
 					...formState,
+					propertyId: formState.propertyId || propertyId || '',
 					userId: currentUser?.id || '',
 					property: '',
 				};
@@ -400,6 +429,24 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 
 				<ModalTabContent $active={activeTab === 'details'}>
 					<FormGrid>
+						{propertyOptions.length > 0 && (
+							<FormGroup>
+								<FormLabel>Property *</FormLabel>
+								<FormSelect
+									name='propertyId'
+									value={formState.propertyId || ''}
+									onChange={handleChange}
+									required>
+									<option value=''>Select a property...</option>
+									{propertyOptions.map((opt) => (
+										<option key={opt.value} value={opt.value}>
+											{opt.label}
+										</option>
+									))}
+								</FormSelect>
+							</FormGroup>
+						)}
+
 						<FormGroup>
 							<FormLabel>Task Name *</FormLabel>
 							<FormInput
@@ -452,6 +499,23 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 								))}
 							</FormSelect>
 						</FormGroup>
+
+						{unitOptions.length > 0 && (
+							<FormGroup>
+								<FormLabel>Unit</FormLabel>
+								<FormSelect
+									name='unitId'
+									value={formState.unitId || ''}
+									onChange={handleChange}>
+									<option value=''>(none)</option>
+									{unitOptions.map((opt) => (
+										<option key={opt.value} value={opt.value}>
+											{opt.label}
+										</option>
+									))}
+								</FormSelect>
+							</FormGroup>
+						)}
 
 						{assigneeOptions.length > 0 && (
 							<FormGroup>
@@ -552,7 +616,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 								<FormInput
 									type='number'
 									name='recurrenceInterval'
-									value={formState.recurrenceInterval || 1}
+									value={formState.recurrenceInterval ?? ''}
 									onChange={onChange}
 									min='1'
 									max='365'

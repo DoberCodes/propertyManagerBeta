@@ -1,16 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import {
-	PieChart,
-	Pie,
-	Cell,
-	Tooltip,
-	Legend,
-	ResponsiveContainer,
-} from 'recharts';
+import { PieChart, Pie, Cell } from 'recharts';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from 'Redux/store/store';
-import { ZeroState } from 'Components/Library/ZeroState';
 import { useGetPropertiesQuery } from 'Redux/API/propertySlice';
 import {
 	useGetSharedPropertiesForUserQuery,
@@ -20,7 +12,6 @@ import {
 import { getTenantPropertySlug } from 'utils/permissions';
 import { selectIsTenant } from 'Redux/selectors/permissionSelectors';
 import { filterTasksByRole } from 'utils/dataFilters';
-import { getDefaultTempUnit } from 'utils/geolocationUtils';
 import { getCurrentLocation } from 'utils/geolocation';
 import { TaskCompletionModal } from 'Components/TaskCompletionModal';
 import { TrialWarningBanner } from 'Components/TrialWarningBanner/TrialWarningBanner';
@@ -30,12 +21,6 @@ import { handleCheckoutSuccess } from 'services/stripeService';
 import { logout } from 'Redux/Slices/userSlice';
 import {
 	Wrapper,
-	BottomSectionsWrapper,
-	TopChartsContainer,
-	Section,
-	SectionTitle,
-	SectionContent,
-	TempToggle,
 	TaskStatusBanners,
 	TaskStatusBanner,
 	TaskStatusCount,
@@ -406,9 +391,7 @@ export const DashboardTab = () => {
 
 			<TaskModal
 				isOpen={showTaskDialog}
-				onClose={() => {
-					setShowTaskDialog(false);
-				}}
+				onClose={() => setShowTaskDialog(false)}
 				editingTaskId={editingTaskId}
 				editingTask={
 					editingTaskId ? allTasks.find((t) => t.id === editingTaskId) : null
@@ -416,10 +399,15 @@ export const DashboardTab = () => {
 				isEditing={!!editingTaskId}
 				assigneeOptions={assigneeOptions}
 				currentUser={currentUser}
+				propertyOptions={allProperties.map((p) => ({
+					label: p.title,
+					value: p.id,
+				}))}
 			/>
 
 			<TaskAssignModal
 				isOpen={showTaskAssignDialog}
+				onClose={() => setShowTaskAssignDialog(false)}
 				task={
 					assigningTaskId
 						? allTasks.find((t) => t.id === assigningTaskId)
@@ -430,7 +418,6 @@ export const DashboardTab = () => {
 						? allTasks.find((t) => t.id === assigningTaskId)?.propertyId || ''
 						: ''
 				}
-				onClose={() => setShowTaskAssignDialog(false)}
 				selectedAssignee={
 					assigningTaskId
 						? allTasks.find((t) => t.id === assigningTaskId)?.assignedTo
