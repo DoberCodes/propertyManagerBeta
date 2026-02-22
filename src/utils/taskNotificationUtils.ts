@@ -24,7 +24,6 @@ export const getDefaultTaskNotifications = (): TaskNotification[] => {
 			type: 'reminder',
 			daysBeforeDue: days,
 			enabled: true,
-			customMessage: undefined, // Use default message
 		});
 	});
 
@@ -35,7 +34,6 @@ export const getDefaultTaskNotifications = (): TaskNotification[] => {
 			type: 'overdue',
 			daysBeforeDue: -week * 7, // Negative for after due date
 			enabled: true,
-			customMessage: undefined, // Use default message
 		});
 	}
 

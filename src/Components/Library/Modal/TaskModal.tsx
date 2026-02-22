@@ -318,6 +318,19 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					return;
 				}
 				let updatesRaw: any = { ...formState };
+				// clean nested undefined in notifications to avoid Firestore errors
+				if (
+					updatesRaw.notifications &&
+					Array.isArray(updatesRaw.notifications)
+				) {
+					updatesRaw.notifications = updatesRaw.notifications.map((n: any) => {
+						const copy = { ...n };
+						Object.keys(copy).forEach((k) => {
+							if (copy[k] === undefined) delete copy[k];
+						});
+						return copy;
+					});
+				}
 
 				// Convert assignedTo from string (user ID) to object format
 				if (updatesRaw.assignedTo && assigneeOptions) {
@@ -358,6 +371,19 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 					userId: currentUser?.id || '',
 					property: '',
 				};
+				// sanitize notifications objects
+				if (
+					newTaskRaw.notifications &&
+					Array.isArray(newTaskRaw.notifications)
+				) {
+					newTaskRaw.notifications = newTaskRaw.notifications.map((n: any) => {
+						const copy = { ...n };
+						Object.keys(copy).forEach((k) => {
+							if (copy[k] === undefined) delete copy[k];
+						});
+						return copy;
+					});
+				}
 
 				// Convert assignedTo from string (user ID) to object format
 				if (newTaskRaw.assignedTo && assigneeOptions) {
