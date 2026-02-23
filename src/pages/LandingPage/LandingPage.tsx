@@ -222,10 +222,10 @@ const LandingPageComponent = () => {
 						</StoryText>
 						<StoryText>
 							Our founder saw firsthand how local homeowners, small landlords,
-							and hands-on business owners were stretched thin, juggling
-							repairs, maintenance, and responsibilities with little help. So we
-							set out to create something different—solutions that feel like a
-							helping hand, not another expense.
+							and hands-on business owners were stretched thin, juggling repairs
+							and maintenance with little help. So we set out to create
+							something different—solutions that feel like a helping hand, not
+							another expense.
 						</StoryText>
 						<StoryText>
 							We focus on keeping things simple, affordable, and genuinely
@@ -233,17 +233,14 @@ const LandingPageComponent = () => {
 							peace of mind and help you stay on top of what matters.
 						</StoryText>
 						<StoryText>
-							Today, homeowners, small landlords, DIYers, and even vehicle and
-							equipment owners use our platform to manage what they own—without
-							the stress. From tracking property tasks to remembering vehicle
-							maintenance or keeping your lawn equipment in shape, everything
-							lives in one easy place.
+							Today, homeowners, small landlords, and DIYers use our platform to
+							track property tasks, stay on top of home maintenance, and manage
+							responsibilities without the stress.
 						</StoryText>
 						<StoryText>
-							Whether you’re managing a rental, taking care of your family car,
-							or making sure your tools are ready for the next job, we’re here
-							to make life a little easier—one task, one record, one win at a
-							time.
+							Whether you’re managing a rental or caring for your own home,
+							we’re here to make life a little easier—one task, one record, one
+							win at a time.
 						</StoryText>
 						<StoryText>
 							And we’re not done. We’re constantly improving, listening, and
