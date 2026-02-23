@@ -16,6 +16,7 @@ import { getCurrentLocation } from 'utils/geolocation';
 import { TaskCompletionModal } from 'Components/TaskCompletionModal';
 import { TrialWarningBanner } from 'Components/TrialWarningBanner/TrialWarningBanner';
 import { ExpiredTrialBanner } from 'Components/ExpiredTrialBanner/ExpiredTrialBanner';
+import { ScheduledSubscriptionBanner } from 'Components/ScheduledSubscriptionBanner/ScheduledSubscriptionBanner';
 import { getTrialDaysRemaining, isTrialExpired } from 'utils/subscriptionUtils';
 import { handleCheckoutSuccess } from 'services/stripeService';
 import { logout } from 'Redux/Slices/userSlice';
@@ -296,13 +297,27 @@ export const DashboardTab = () => {
 
 	return (
 		<Wrapper>
+			{/* Scheduled Subscription Banner */}
+			{currentUser?.subscription?.hasScheduledSubscription &&
+				currentUser?.subscription?.scheduledPlan &&
+				currentUser?.subscription?.trialEndsAt && (
+					<ScheduledSubscriptionBanner
+						scheduledPlan={currentUser.subscription.scheduledPlan}
+						trialEndsAt={currentUser.subscription.trialEndsAt}
+						onManageClick={() => navigate('/settings')}
+					/>
+				)}
+
 			{/* Trial/Expired Warning Banner */}
-			{currentUser?.subscription?.status === 'trial' && (
-				<TrialWarningBanner
-					daysRemaining={getTrialDaysRemaining(currentUser.subscription as any)}
-					onUpgradeClick={() => navigate('/paywall')}
-				/>
-			)}
+			{currentUser?.subscription?.status === 'trial' &&
+				!currentUser?.subscription?.hasScheduledSubscription && (
+					<TrialWarningBanner
+						daysRemaining={getTrialDaysRemaining(
+							currentUser.subscription as any,
+						)}
+						onUpgradeClick={() => navigate('/paywall')}
+					/>
+				)}
 			{currentUser?.subscription &&
 				isTrialExpired(currentUser.subscription) && (
 					<ExpiredTrialBanner onUpgradeClick={() => navigate('/paywall')} />

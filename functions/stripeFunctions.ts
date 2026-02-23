@@ -1,23 +1,21 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
-import * as dotenv from 'dotenv';
-
-// Load environment variables from .env file
-dotenv.config();
+import { defineSecret } from 'firebase-functions/params';
+const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY');
 
 if (!admin.apps.length) {
 	admin.initializeApp();
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+const stripe = new Stripe(STRIPE_SECRET_KEY.value() || '', {
 	apiVersion: '2023-10-16',
 });
 
-console.log('Stripe key loaded:', process.env.STRIPE_SECRET_KEY ? 'YES' : 'NO');
+console.log('Stripe key loaded:', STRIPE_SECRET_KEY.value() ? 'YES' : 'NO');
 console.log(
 	'Stripe key starts with sk_live_:',
-	process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_'),
+	STRIPE_SECRET_KEY.value()?.startsWith('sk_live_'),
 );
 
 const db = admin.firestore();
@@ -457,7 +455,7 @@ const handleSubscriptionUpdate = async (subscription: any) => {
 			const userData = userDoc.data();
 
 			// Update subscription data
-			const subscriptionData = {
+			const subscriptionData: any = {
 				status:
 					subscription.status === 'active'
 						? 'active'
@@ -471,6 +469,19 @@ const handleSubscriptionUpdate = async (subscription: any) => {
 				stripeSubscriptionId: subscription.id,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			};
+
+			// Check if this is a pre-scheduled subscription
+			if (
+				subscription.metadata?.preScheduled === 'true' &&
+				subscription.status === 'trialing'
+			) {
+				subscriptionData.scheduledPlan = subscriptionData.plan;
+				subscriptionData.hasScheduledSubscription = true;
+				console.log('Pre-scheduled subscription detected:', {
+					plan: subscriptionData.plan,
+					trialEnd: subscription.trial_end,
+				});
+			}
 
 			await userDoc.ref.update({
 				subscription: { ...userData.subscription, ...subscriptionData },
@@ -591,7 +602,7 @@ const handleSubscriptionCreated = async (subscription: any) => {
 			const userData = userDoc.data();
 
 			// Update subscription data
-			const subscriptionData = {
+			const subscriptionData: any = {
 				status:
 					subscription.status === 'active'
 						? 'active'
@@ -606,6 +617,19 @@ const handleSubscriptionCreated = async (subscription: any) => {
 				createdAt: admin.firestore.FieldValue.serverTimestamp(),
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			};
+
+			// Check if this is a pre-scheduled subscription
+			if (
+				subscription.metadata?.preScheduled === 'true' &&
+				subscription.status === 'trialing'
+			) {
+				subscriptionData.scheduledPlan = subscriptionData.plan;
+				subscriptionData.hasScheduledSubscription = true;
+				console.log('Pre-scheduled subscription created:', {
+					plan: subscriptionData.plan,
+					trialEnd: subscription.trial_end,
+				});
+			}
 
 			await userDoc.ref.update({
 				subscription: { ...userData.subscription, ...subscriptionData },

@@ -15,6 +15,8 @@ export interface SubscriptionData {
 	canceledAt?: number;
 	stripeCustomerId?: string;
 	stripeSubscriptionId?: string;
+	hasScheduledSubscription?: boolean;
+	scheduledPlan?: string;
 }
 
 /**

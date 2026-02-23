@@ -23,6 +23,11 @@ export const initializeStripe = async (): Promise<Stripe | null> => {
 		return null;
 	}
 
+	// Log if using test keys
+	if (STRIPE_PUBLIC_KEY.includes('pk_test_')) {
+		console.log('📌 Using Stripe TEST mode (localhost development)');
+	}
+
 	try {
 		stripeInstance = await loadStripe(STRIPE_PUBLIC_KEY);
 		return stripeInstance;
@@ -40,6 +45,7 @@ export const createCheckoutSession = async (
 	priceId: string,
 	userId: string,
 	email: string,
+	trialEnd?: number,
 ): Promise<string> => {
 	try {
 		// Call Firebase Cloud Function
@@ -50,6 +56,7 @@ export const createCheckoutSession = async (
 			email,
 			successUrl: STRIPE_CHECKOUT_CONFIG.SUCCESS_URL,
 			cancelUrl: STRIPE_CHECKOUT_CONFIG.CANCEL_URL,
+			...(trialEnd && { trialEnd }),
 		});
 
 		const data = result.data as { sessionId: string; url: string };

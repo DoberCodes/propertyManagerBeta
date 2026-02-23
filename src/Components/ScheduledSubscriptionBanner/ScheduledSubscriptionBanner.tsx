@@ -1,0 +1,70 @@
+import React from 'react';
+import { SUBSCRIPTION_PLANS } from '../../constants/subscriptions';
+
+/**
+ * Scheduled Subscription Banner
+ * Shows when user has pre-scheduled a subscription to start after trial ends
+ */
+interface ScheduledSubscriptionBannerProps {
+	scheduledPlan: string;
+	trialEndsAt: number;
+	onManageClick?: () => void;
+}
+
+export const ScheduledSubscriptionBanner: React.FC<
+	ScheduledSubscriptionBannerProps
+> = ({ scheduledPlan, trialEndsAt, onManageClick }) => {
+	const planName =
+		Object.values(SUBSCRIPTION_PLANS).find((p) => p.id === scheduledPlan)
+			?.name || scheduledPlan;
+
+	const trialEndDate = new Date(trialEndsAt * 1000).toLocaleDateString(
+		'en-US',
+		{
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric',
+		},
+	);
+
+	return (
+		<div
+			style={{
+				backgroundColor: '#10b981',
+				color: 'white',
+				padding: '15px 20px',
+				borderRadius: '6px',
+				marginBottom: '20px',
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				fontSize: '14px',
+				fontWeight: '500',
+			}}>
+			<span>
+				✅ You're all set! Your <strong>{planName}</strong> subscription will
+				automatically start on {trialEndDate} when your trial ends. No
+				interruption to your service!
+			</span>
+			{onManageClick && (
+				<button
+					onClick={onManageClick}
+					style={{
+						background: 'white',
+						color: '#10b981',
+						border: 'none',
+						padding: '8px 16px',
+						borderRadius: '4px',
+						fontWeight: '600',
+						cursor: 'pointer',
+						marginLeft: '15px',
+						whiteSpace: 'nowrap',
+					}}>
+					Manage
+				</button>
+			)}
+		</div>
+	);
+};
+
+export default ScheduledSubscriptionBanner;

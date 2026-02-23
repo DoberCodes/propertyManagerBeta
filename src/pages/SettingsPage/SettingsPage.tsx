@@ -17,6 +17,7 @@ import {
 } from 'Components/Library';
 import { FeedbackForm } from 'Components/FeedbackForm';
 import { ExpiredTrialBanner } from 'Components/ExpiredTrialBanner/ExpiredTrialBanner';
+import { ScheduledSubscriptionBanner } from 'Components/ScheduledSubscriptionBanner/ScheduledSubscriptionBanner';
 import { cancelSubscription } from 'services/stripeService';
 import {
 	updatePassword,
@@ -576,6 +577,15 @@ export const SettingsPage: React.FC = () => {
 	return (
 		<Container>
 			<Title>Settings</Title>
+			{subscription?.hasScheduledSubscription &&
+				subscription?.scheduledPlan &&
+				subscription?.trialEndsAt && (
+					<ScheduledSubscriptionBanner
+						scheduledPlan={subscription.scheduledPlan}
+						trialEndsAt={subscription.trialEndsAt}
+						onManageClick={() => navigate('/paywall')}
+					/>
+				)}
 			{isTrialExpired(subscription) && (
 				<ExpiredTrialBanner onUpgradeClick={() => navigate('/paywall')} />
 			)}

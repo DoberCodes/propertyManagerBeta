@@ -16,6 +16,8 @@ export interface FamilyAccount {
 		stripeCustomerId?: string;
 		stripeSubscriptionId?: string;
 		updatedAt?: string;
+		hasScheduledSubscription?: boolean;
+		scheduledPlan?: string;
 	};
 	createdAt: string;
 	updatedAt: string;
@@ -48,6 +50,8 @@ export interface User {
 		stripeCustomerId?: string;
 		stripeSubscriptionId?: string;
 		updatedAt?: string;
+		hasScheduledSubscription?: boolean;
+		scheduledPlan?: string;
 	};
 	legalAgreement?: {
 		agreedToTerms: boolean;

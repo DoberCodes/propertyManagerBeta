@@ -32,6 +32,7 @@ import {
 } from './PaywallPage.styles';
 import { SUBSCRIPTION_PLANS } from '../../constants/subscriptions';
 import { SubscriptionData } from '../../utils/subscriptionUtils';
+import { ScheduledSubscriptionBanner } from '../../Components/ScheduledSubscriptionBanner/ScheduledSubscriptionBanner';
 import {
 	getTrialDaysRemaining,
 	isTrialActive,
@@ -94,9 +95,13 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 			return;
 		}
 
-		// Only prevent selecting the current plan if user has an active paid subscription
-		// Expired trial users should be able to upgrade to any plan
-		if (planId === currentPlan && isSubscriptionActive(subscription)) {
+		// Only prevent selecting the current plan if user has an active PAID subscription
+		// Trial users should be able to keep their trial or upgrade anytime
+		if (
+			planId === currentPlan &&
+			isSubscriptionActive(subscription) &&
+			subscription.status !== 'trial'
+		) {
 			navigate('/dashboard');
 			return;
 		}
@@ -119,10 +124,18 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 				return;
 			}
 
+			// If user is in trial, pass trial end date for pre-scheduling
+			// This allows seamless transition from trial to paid without interruption
+			const trialEnd =
+				isOnTrial && subscription.trialEndsAt
+					? subscription.trialEndsAt
+					: undefined;
+
 			const checkoutUrl = await createCheckoutSession(
 				priceId,
 				userId,
 				userEmail,
+				trialEnd,
 			);
 
 			// Redirect to Stripe hosted checkout URL
@@ -182,7 +195,7 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 	const handleContactSales = () => {
 		// TODO: Implement contact sales form or mailto link
 		window.location.href =
-			'mailto:sales@propertymanager.com?subject=Custom Pricing Inquiry';
+			'mailto:maintleyapp@gmail.com?subject=Custom Pricing Inquiry';
 	};
 
 	const handleBackToSettings = () => {
@@ -198,7 +211,18 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 					</BackButton>
 				)}
 
-				{!isOnTrial && (
+				{/* Scheduled Subscription Banner */}
+				{subscription?.hasScheduledSubscription &&
+					subscription?.scheduledPlan &&
+					subscription?.trialEndsAt && (
+						<ScheduledSubscriptionBanner
+							scheduledPlan={subscription.scheduledPlan}
+							trialEndsAt={subscription.trialEndsAt}
+							onManageClick={() => navigate('/settings')}
+						/>
+					)}
+
+				{!isOnTrial && !subscription?.hasScheduledSubscription && (
 					<TrialBannerWrapper variant={variant}>
 						<TrialBannerTitle variant={variant}>
 							✨ Free 14-Day Trial Available on All Plans
@@ -210,14 +234,15 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 					</TrialBannerWrapper>
 				)}
 
-				{variant === 'full' && (
-					<>
-						<PaywallTitle variant={variant}>Choose Your Plan</PaywallTitle>
-						<PaywallSubtitle variant={variant}>
-							Start your free 14-day trial today. No credit card required.
-						</PaywallSubtitle>
-					</>
-				)}
+				{!isOnTrial ||
+					(!currentPlan && (
+						<>
+							<PaywallTitle variant={variant}>Choose Your Plan</PaywallTitle>
+							<PaywallSubtitle variant={variant}>
+								Start your free 14-day trial today. No credit card required.
+							</PaywallSubtitle>
+						</>
+					))}
 
 				{variant === 'full' && error && (
 					<TrialBannerWrapper
@@ -229,34 +254,36 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 					</TrialBannerWrapper>
 				)}
 
-				{variant === 'full' && isOnTrial && (
-					<TrialBannerWrapper variant={variant}>
-						<TrialBannerTitle variant={variant}>
-							🎉 You're on a Free Trial!
-						</TrialBannerTitle>
-						{daysRemaining === -1 ? (
-							<>
-								<TrialCountdown variant={variant}>∞</TrialCountdown>
-								<TrialBannerText variant={variant}>
-									unlimited access
-								</TrialBannerText>
-							</>
-						) : (
-							<>
-								<TrialCountdown variant={variant}>
-									{daysRemaining}
-								</TrialCountdown>
-								<TrialBannerText variant={variant}>
-									days remaining in your free trial
-								</TrialBannerText>
-							</>
-						)}
-						<TrialBannerText variant={variant}>
-							Upgrade to a paid plan anytime to keep your data and enjoy all
-							premium features.
-						</TrialBannerText>
-					</TrialBannerWrapper>
-				)}
+				{variant === 'full' &&
+					isOnTrial &&
+					!subscription?.hasScheduledSubscription && (
+						<TrialBannerWrapper variant={variant}>
+							<TrialBannerTitle variant={variant}>
+								🎉 You're on a Free Trial!
+							</TrialBannerTitle>
+							{daysRemaining === -1 ? (
+								<>
+									<TrialCountdown variant={variant}>∞</TrialCountdown>
+									<TrialBannerText variant={variant}>
+										unlimited access
+									</TrialBannerText>
+								</>
+							) : (
+								<>
+									<TrialCountdown variant={variant}>
+										{daysRemaining}
+									</TrialCountdown>
+									<TrialBannerText variant={variant}>
+										days remaining in your free trial
+									</TrialBannerText>
+								</>
+							)}
+							<TrialBannerText variant={variant}>
+								Upgrade to a paid plan anytime to keep your data and enjoy all
+								premium features.
+							</TrialBannerText>
+						</TrialBannerWrapper>
+					)}
 
 				<PricingCardsGrid layout={wide ? 'horizontal' : layout}>
 					{/* Homeowner Plan */}
@@ -343,8 +370,9 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 								<PlanFeature
 									key={idx}
 									color={
-										currentPlan === 'basic' &&
-										isSubscriptionActive(subscription)
+										(currentPlan === 'basic' &&
+											isSubscriptionActive(subscription)) ||
+										(isOnTrial && subscription?.scheduledPlan === 'basic')
 											? 'white'
 											: 'black'
 									}>
@@ -352,27 +380,40 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 								</PlanFeature>
 							))}
 						</PlanFeatures>
-						{currentPlan === 'basic' && isSubscriptionActive(subscription) && (
-							<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
-						)}
+						{(currentPlan === 'basic' && isSubscriptionActive(subscription)) ||
+						(isOnTrial && subscription?.scheduledPlan === 'basic') ? (
+							<CurrentPlanLabel>
+								{isOnTrial && subscription?.hasScheduledSubscription
+									? 'Scheduled Plan'
+									: 'Current Plan'}
+							</CurrentPlanLabel>
+						) : null}
 						<SelectPlanButton
 							isCurrentPlan={
-								currentPlan === 'basic' && isSubscriptionActive(subscription)
+								((currentPlan === 'basic' &&
+									isSubscriptionActive(subscription)) ||
+									(isOnTrial && subscription?.scheduledPlan === 'basic')) &&
+								!isOnTrial
 							}
 							disabled={
 								selectionOnly
 									? loading
 									: (currentPlan === 'basic' &&
-											isSubscriptionActive(subscription)) ||
+											isSubscriptionActive(subscription) &&
+											subscription.status !== 'trial') ||
 									  loading
 							}
 							onClick={() => handlePlanSelect('basic')}>
 							{currentPlan === 'basic' && isSubscriptionActive(subscription)
 								? selectionOnly
 									? 'Selected'
-									: 'Current Plan'
+									: subscription.status !== 'trial'
+									? 'Current Plan'
+									: 'Keep'
 								: selectionOnly
 								? 'Select Plan'
+								: isOnTrial && subscription?.scheduledPlan === 'basic'
+								? 'Scheduled'
 								: 'Upgrade'}
 						</SelectPlanButton>
 					</PricingCard>
@@ -402,8 +443,10 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 								<PlanFeature
 									key={idx}
 									color={
-										currentPlan === 'professional' &&
-										isSubscriptionActive(subscription)
+										(currentPlan === 'professional' &&
+											isSubscriptionActive(subscription)) ||
+										(isOnTrial &&
+											subscription?.scheduledPlan === 'professional')
 											? 'white'
 											: 'black'
 									}>
@@ -411,20 +454,29 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 								</PlanFeature>
 							))}
 						</PlanFeatures>
-						{currentPlan === 'professional' &&
-							isSubscriptionActive(subscription) && (
-								<CurrentPlanLabel>Current Plan</CurrentPlanLabel>
-							)}
+						{(currentPlan === 'professional' &&
+							isSubscriptionActive(subscription)) ||
+						(isOnTrial && subscription?.scheduledPlan === 'professional') ? (
+							<CurrentPlanLabel>
+								{isOnTrial && subscription?.hasScheduledSubscription
+									? 'Scheduled Plan'
+									: 'Current Plan'}
+							</CurrentPlanLabel>
+						) : null}
 						<SelectPlanButton
 							isCurrentPlan={
-								currentPlan === 'professional' &&
-								isSubscriptionActive(subscription)
+								((currentPlan === 'professional' &&
+									isSubscriptionActive(subscription)) ||
+									(isOnTrial &&
+										subscription?.scheduledPlan === 'professional')) &&
+								!isOnTrial
 							}
 							disabled={
 								selectionOnly
 									? loading
 									: (currentPlan === 'professional' &&
-											isSubscriptionActive(subscription)) ||
+											isSubscriptionActive(subscription) &&
+											subscription.status !== 'trial') ||
 									  loading
 							}
 							onClick={() => handlePlanSelect('professional')}>
@@ -432,9 +484,13 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 							isSubscriptionActive(subscription)
 								? selectionOnly
 									? 'Selected'
-									: 'Current Plan'
+									: subscription.status !== 'trial'
+									? 'Current Plan'
+									: 'Keep'
 								: selectionOnly
 								? 'Select Plan'
+								: isOnTrial && subscription?.scheduledPlan === 'professional'
+								? 'Scheduled'
 								: 'Upgrade'}
 						</SelectPlanButton>
 					</PricingCard>

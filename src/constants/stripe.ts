@@ -1,6 +1,7 @@
 /**
  * Stripe Configuration and Constants
  * Environment-specific configuration for Stripe integration
+ * Uses environment variables from .env and .env.local files
  */
 
 // Stripe Public Key - from environment variables
