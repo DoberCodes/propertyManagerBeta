@@ -1,5 +1,8 @@
 # My Property Manager Web App
 
+> **Proprietary Notice:**
+> This codebase is the exclusive property of Dober Family Ventures, LLC. Unauthorized copying, modification, distribution, or use is strictly prohibited. See LICENSE for details.
+
 ## Project Hygiene & Onboarding
 
 - **Environment Variables:**
