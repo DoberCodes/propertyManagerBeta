@@ -4,4 +4,18 @@ node_modules
 # Environment variables
 .env*
 
+# IDE/editor settings
+.vscode/
+.idea/
+.history/
+
+# OS-specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Build outputs
+lib/
+dist/
+
 /scripts/*

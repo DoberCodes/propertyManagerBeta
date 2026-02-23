@@ -25,6 +25,9 @@
 
 set -e  # Exit on any error
 
+# Clear release notes at the very start so only new notes are generated
+echo "" > RELEASE_NOTES.txt
+
 # Load environment variables from .env file if it exists
 if [ -f ".env" ]; then
   export $(cat .env | grep -v '^#' | xargs)
@@ -543,10 +546,9 @@ else
   exit 1
 fi
 
-# Clear release notes and remove APK from public folder
-echo "" > RELEASE_NOTES.txt
+# Remove APK from public folder
 rm -f public/PropertyManager.apk
-print_success "Release notes cleared and APK removed from public folder"
+print_success "APK removed from public folder"
 
 # ========== GITHUB PAGES DEPLOYMENT ==========
 echo ""

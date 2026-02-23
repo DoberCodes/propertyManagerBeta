@@ -1,5 +1,31 @@
 # My Property Manager Web App
 
+## Project Hygiene & Onboarding
+
+- **Environment Variables:**
+	- Copy `.env.example` to `.env.local` and fill in your secrets and config values. Never commit real secrets to git.
+	- The project’s `.gitignore` ensures all `.env*` files (except `.env.example`) are ignored for security.
+
+- **Release Notes:**
+	- See `RELEASE_NOTES.txt` for a summary of changes and updates, generated automatically from commit history.
+
+- **Scripts Folder:**
+	- The `scripts/` directory contains tracked utilities for database seeding, migrations, and automation. Only essential scripts are tracked; temp or sensitive scripts are ignored.
+
+- **Stripe CLI & Webhooks:**
+	- For local Stripe webhook development, use the automated script: `npm run stripe:webhook:auto` (from the `functions` directory). This updates your webhook secret in `.env.local` and starts the listener.
+	- See `.env.example` for required Stripe environment variables.
+
+- **Security:**
+	- Sensitive files (service accounts, secrets, APKs, etc.) are ignored by git. Never commit credentials or production keys.
+
+- **Code Style:**
+	- The project uses Prettier and ESLint for consistent code formatting and linting. Run `yarn lint` and `yarn format` (if available) before committing.
+
+- **Collaboration:**
+	- Please follow the established code style and use the provided scripts for setup and deployment. For questions, see in-code comments or contact the maintainer.
+
+
 This is a full-featured property management web application built with React, Redux Toolkit, Firebase, and Capacitor. It supports both web and native (Android) deployments, push notifications, team management, and real-time task tracking.
 
 ## Key Features
