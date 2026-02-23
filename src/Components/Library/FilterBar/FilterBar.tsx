@@ -23,11 +23,10 @@ interface FilterBarProps {
 const FilterContainer = styled.div<{ hideOnMobile?: boolean }>`
 	background-color: #f9fafb;
 	border: 1px solid #e5e7eb;
+	width: 100%;
 	border-radius: 8px;
 	padding: 1rem;
 	margin-bottom: 1rem;
-	display: flex;
-	flex-wrap: wrap;
 	gap: 1rem;
 	align-items: center;
 
@@ -41,7 +40,6 @@ const FilterContainer = styled.div<{ hideOnMobile?: boolean }>`
 const FilterGroup = styled.div`
 	display: flex;
 	flex-direction: column;
-	min-width: 200px;
 	flex: 1;
 
 	@media (max-width: 1024px) {
@@ -156,85 +154,101 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
 	return (
 		<FilterContainer className={className} hideOnMobile={hideOnMobile}>
-			{filters.map((filter) => (
-				<FilterGroup key={filter.key}>
-					<label htmlFor={`filter-${filter.key}`}>{filter.label}</label>
-					{filter.type === 'text' && (
-						<FilterInput
-							id={`filter-${filter.key}`}
-							type='text'
-							placeholder={
-								filter.placeholder || `Search ${filter.label.toLowerCase()}...`
-							}
-							value={filterValues[filter.key] || ''}
-							onChange={(e) => handleFilterChange(filter.key, e.target.value)}
-						/>
-					)}
-					{filter.type === 'select' && (
-						<FilterSelect
-							id={`filter-${filter.key}`}
-							value={filterValues[filter.key] || ''}
-							onChange={(e) => handleFilterChange(filter.key, e.target.value)}>
-							<option value=''>All {filter.label.toLowerCase()}</option>
-							{filter.options?.map((option) => (
-								<option key={option.value} value={option.value}>
-									{option.label}
-								</option>
-							))}
-						</FilterSelect>
-					)}
-					{filter.type === 'date' && (
-						<FilterInput
-							id={`filter-${filter.key}`}
-							type='date'
-							value={filterValues[filter.key] || ''}
-							onChange={(e) => handleFilterChange(filter.key, e.target.value)}
-						/>
-					)}
-					{filter.type === 'daterange' && (
-						<DateRangeContainer>
+			<div
+				style={{
+					display: 'flex',
+					gap: '1rem',
+					flexWrap: 'wrap',
+					alignItems: 'center',
+				}}>
+				{filters.map((filter) => (
+					<FilterGroup key={filter.key}>
+						<label htmlFor={`filter-${filter.key}`}>{filter.label}</label>
+						{filter.type === 'text' && (
 							<FilterInput
-								type='date'
-								placeholder='Start date'
-								value={filterValues[`${filter.key}_start`] || ''}
-								onChange={(e) =>
-									handleFilterChange(`${filter.key}_start`, e.target.value)
+								id={`filter-${filter.key}`}
+								type='text'
+								placeholder={
+									filter.placeholder ||
+									`Search ${filter.label.toLowerCase()}...`
 								}
+								value={filterValues[filter.key] || ''}
+								onChange={(e) => handleFilterChange(filter.key, e.target.value)}
 							/>
-							<span>to</span>
+						)}
+						{filter.type === 'select' && (
+							<FilterSelect
+								id={`filter-${filter.key}`}
+								value={filterValues[filter.key] || ''}
+								onChange={(e) =>
+									handleFilterChange(filter.key, e.target.value)
+								}>
+								<option value=''>All {filter.label.toLowerCase()}</option>
+								{filter.options?.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</FilterSelect>
+						)}
+						{filter.type === 'date' && (
 							<FilterInput
+								id={`filter-${filter.key}`}
 								type='date'
-								placeholder='End date'
-								value={filterValues[`${filter.key}_end`] || ''}
-								onChange={(e) =>
-									handleFilterChange(`${filter.key}_end`, e.target.value)
-								}
+								value={filterValues[filter.key] || ''}
+								onChange={(e) => handleFilterChange(filter.key, e.target.value)}
 							/>
-						</DateRangeContainer>
-					)}
-					{filter.type === 'multiselect' && (
-						<FilterSelect
-							id={`filter-${filter.key}`}
-							multiple
-							value={filterValues[filter.key] || []}
-							onChange={(e) => {
-								const selectedOptions = Array.from(
-									e.target.selectedOptions,
-									(option) => option.value,
-								);
-								handleFilterChange(filter.key, selectedOptions);
-							}}>
-							{filter.options?.map((option) => (
-								<option key={option.value} value={option.value}>
-									{option.label}
-								</option>
-							))}
-						</FilterSelect>
-					)}
-				</FilterGroup>
-			))}
-
-			<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+						)}
+						{filter.type === 'daterange' && (
+							<DateRangeContainer>
+								<FilterInput
+									type='date'
+									placeholder='Start date'
+									value={filterValues[`${filter.key}_start`] || ''}
+									onChange={(e) =>
+										handleFilterChange(`${filter.key}_start`, e.target.value)
+									}
+								/>
+								<span>to</span>
+								<FilterInput
+									type='date'
+									placeholder='End date'
+									value={filterValues[`${filter.key}_end`] || ''}
+									onChange={(e) =>
+										handleFilterChange(`${filter.key}_end`, e.target.value)
+									}
+								/>
+							</DateRangeContainer>
+						)}
+						{filter.type === 'multiselect' && (
+							<FilterSelect
+								id={`filter-${filter.key}`}
+								multiple
+								value={filterValues[filter.key] || []}
+								onChange={(e) => {
+									const selectedOptions = Array.from(
+										e.target.selectedOptions,
+										(option) => option.value,
+									);
+									handleFilterChange(filter.key, selectedOptions);
+								}}>
+								{filter.options?.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</FilterSelect>
+						)}
+					</FilterGroup>
+				))}
+			</div>
+			<div
+				style={{
+					display: 'block',
+					gap: '0.5rem',
+					alignItems: 'flex-end',
+					marginTop: '0.5rem',
+				}}>
 				{hasActiveFilters && (
 					<ClearButton onClick={clearFilters}>Clear Filters</ClearButton>
 				)}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ActionButton } from 'Components/Library/ReusableTable/ReusableTable.styles';
 
 interface UnifiedMaintenanceHistoryProps {
 	records: Array<any>;
@@ -14,7 +14,6 @@ interface UnifiedMaintenanceHistoryProps {
 export const UnifiedMaintenanceHistory: React.FC<
 	UnifiedMaintenanceHistoryProps
 > = ({ records, units, onNavigate, /*onDelete,*/ groupId, onDeleteGroup }) => {
-	const navigate = useNavigate();
 	const [isExpanded, setIsExpanded] = useState(false);
 	const latestRecord = records[0]; // Records are sorted by date, newest first
 
@@ -65,36 +64,21 @@ export const UnifiedMaintenanceHistory: React.FC<
 						</p>
 					</div>
 					<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-						<button
+						<ActionButton
+							className='delete'
 							onClick={(e) => {
 								e.stopPropagation();
 								onDeleteGroup?.(records);
-							}}
-							style={{
-								fontSize: '12px',
-								color: '#ef4444',
-								background: 'none',
-								border: 'none',
-								padding: 0,
-								cursor: 'pointer',
 							}}>
 							Delete group
-						</button>
-						<button
+						</ActionButton>
+						<ActionButton
 							onClick={(e) => {
 								e.stopPropagation();
 								onNavigate?.(records);
-							}}
-							style={{
-								fontSize: '12px',
-								color: '#3b82f6',
-								background: 'none',
-								border: 'none',
-								padding: 0,
-								cursor: 'pointer',
 							}}>
 							View details
-						</button>
+						</ActionButton>
 						<span style={{ fontSize: '18px', color: '#6b7280' }}>
 							{isExpanded ? '▼' : '▶'}
 						</span>
@@ -108,36 +92,21 @@ export const UnifiedMaintenanceHistory: React.FC<
 						<div key={record.id} style={{ marginBottom: '8px' }}>
 							<p>{record.title}</p>
 							{/* Additional record details */}
-							<button
+							<ActionButton
+								className='delete'
 								onClick={(e) => {
 									e.stopPropagation();
 									onDeleteGroup?.(records);
-								}}
-								style={{
-									fontSize: '12px',
-									color: '#ef4444',
-									background: 'none',
-									border: 'none',
-									padding: 0,
-									cursor: 'pointer',
 								}}>
 								Delete record
-							</button>
-							<button
+							</ActionButton>
+							<ActionButton
 								onClick={(e) => {
 									e.stopPropagation();
 									onNavigate?.(record);
-								}}
-								style={{
-									fontSize: '12px',
-									color: '#3b82f6',
-									background: 'none',
-									border: 'none',
-									padding: 0,
-									cursor: 'pointer',
 								}}>
 								View details
-							</button>
+							</ActionButton>
 						</div>
 				  ))
 				: null}

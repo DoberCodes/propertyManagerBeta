@@ -14,6 +14,7 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from 'Components/Library/InfoCards/InfoCardStyles';
+import { WarningDialog } from 'Components/Library/WarningDialog';
 import {
 	GridContainer,
 	GridTable,
@@ -40,6 +41,11 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 		{ skip: !property?.id },
 	);
 	const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteDialogMessage, setDeleteDialogMessage] = useState('');
+	const [pendingDeleteAction, setPendingDeleteAction] = useState<
+		() => Promise<void>
+	>(() => async () => {});
 
 	useEffect(() => {
 		const loadFamilyMembers = async () => {
@@ -169,16 +175,16 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 			return;
 		}
 
-		const confirmed = window.confirm(
+		setDeleteDialogMessage(
 			`Delete ${deletableRecords.length} maintenance history record(s) in this group? This cannot be undone. Linked tasks will not be deleted.`,
 		);
-		if (!confirmed) return;
-
-		for (const record of deletableRecords) {
-			await deleteMaintenanceHistory(record.id).unwrap();
-		}
-
-		navigate(`/property/${property?.slug || slug}`);
+		setPendingDeleteAction(() => async () => {
+			for (const record of deletableRecords) {
+				await deleteMaintenanceHistory(record.id).unwrap();
+			}
+			navigate(`/property/${property?.slug || slug}`);
+		});
+		setDeleteDialogOpen(true);
 	};
 
 	if (!property) {
@@ -193,6 +199,18 @@ export const MaintenanceHistoryGroupPage: React.FC = () => {
 
 	return (
 		<SectionContainer>
+			<WarningDialog
+				open={deleteDialogOpen}
+				title='Confirm Deletion'
+				message={deleteDialogMessage}
+				confirmText='Delete'
+				cancelText='Cancel'
+				onConfirm={async () => {
+					setDeleteDialogOpen(false);
+					await pendingDeleteAction();
+				}}
+				onCancel={() => setDeleteDialogOpen(false)}
+			/>
 			<SectionHeader>
 				<div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
 					<div style={{ fontSize: '12px', color: '#6b7280' }}>

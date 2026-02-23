@@ -6,6 +6,7 @@ import {
 	FormLabel,
 	FormSelect,
 } from 'Components/Library';
+import { WarningDialog } from 'Components/Library/WarningDialog';
 import {
 	SectionContainer,
 	SectionHeader,
@@ -21,6 +22,8 @@ import { applyFilters } from 'utils/tableFilters';
 import { AddMaintenanceHistoryModal } from 'Components/Library/Modal/AddMaintenanceHistoryModal';
 import { useSelector } from 'react-redux';
 import { ReusableTable, Column } from 'Components/Library/ReusableTable';
+// bring in the shared action button style used throughout tables
+import { ActionButton } from 'Components/Library/ReusableTable/ReusableTable.styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import { UnifiedMaintenanceHistory } from 'Components/UnifiedMaintenanceHistory';
@@ -69,6 +72,12 @@ export const MaintenanceTab = ({
 		new Set(),
 	);
 	const [showBulkGroupModal, setShowBulkGroupModal] = useState(false);
+	// dialog for deletions
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteDialogMessage, setDeleteDialogMessage] = useState('');
+	const [pendingDeleteAction, setPendingDeleteAction] = useState<
+		() => Promise<void>
+	>(() => async () => {});
 	const canBulkEdit = Boolean(onUpdateMaintenanceHistory);
 
 	const { isMobile } = useSelector((state: any) => state.app);
@@ -145,14 +154,17 @@ export const MaintenanceTab = ({
 			return;
 		}
 
-		const confirmed = window.confirm(
-			`Delete ${deletableRecords.length} maintenance history record(s) in this group? This cannot be undone.`,
+		// ask via dialog instead of window.confirm
+		setDeleteDialogMessage(
+			`Delete ${deletableRecords.length} maintenance history record(s) in this group? This cannot be undone. Linked tasks will not be deleted.`,
 		);
-		if (!confirmed) return;
-
-		for (const record of deletableRecords) {
-			await onDeleteMaintenanceHistory(record.id);
-		}
+		setPendingDeleteAction(() => async () => {
+			for (const record of deletableRecords) {
+				await onDeleteMaintenanceHistory(record.id);
+			}
+			navigate(`/property/${property?.slug || ''}`);
+		});
+		setDeleteDialogOpen(true);
 	};
 
 	const completedByLookup = useMemo(() => {
@@ -389,22 +401,21 @@ export const MaintenanceTab = ({
 			render: (_, row) => (
 				<div style={{ display: 'flex', gap: '8px' }}>
 					{onDeleteMaintenanceHistory && (
-						<button
+						<ActionButton
+							className='delete'
 							onClick={() => {
 								handleDeleteGroup(groupedRecords.groups[row.groupId] || [row]);
-							}}
-							style={{ color: 'red' }}>
+							}}>
 							<FontAwesomeIcon icon={faTrash} />
-						</button>
+						</ActionButton>
 					)}
-					<button
+					<ActionButton
 						onClick={() => {
 							const slugLink = handleSelectionLink(row);
 							navigate(slugLink || '/');
-						}}
-						style={{ color: '#3b82f6' }}>
+						}}>
 						<FontAwesomeIcon icon={faEye} />
-					</button>
+					</ActionButton>
 				</div>
 			),
 		},
@@ -412,6 +423,18 @@ export const MaintenanceTab = ({
 
 	return (
 		<SectionContainer>
+			<WarningDialog
+				open={deleteDialogOpen}
+				title='Confirm Deletion'
+				message={deleteDialogMessage}
+				confirmText='Delete'
+				cancelText='Cancel'
+				onConfirm={async () => {
+					setDeleteDialogOpen(false);
+					await pendingDeleteAction();
+				}}
+				onCancel={() => setDeleteDialogOpen(false)}
+			/>
 			<SectionHeader>Maintenance History</SectionHeader>
 
 			{/* Toolbar with Add button */}

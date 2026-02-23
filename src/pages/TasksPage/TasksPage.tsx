@@ -40,6 +40,7 @@ import {
 } from 'Components/Library/FilterBar';
 import { applyFilters } from '../../utils/tableFilters';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { COLORS } from '../../constants/colors';
 
 export const TasksPage = () => {
 	const navigate = useNavigate();
@@ -447,25 +448,25 @@ export const TasksPage = () => {
 					<>
 						<FilterBar filters={taskFilters} onFiltersChange={setFilters} />
 						{/* desktop add button below filter bar */}
-						{!isMobile && (
-							<div style={{ marginTop: '12px', textAlign: 'right' }}>
-								<button
-									onClick={handleCreateTask}
-									style={{
-										background: '#3b82f6',
-										color: 'white',
-										border: 'none',
-										padding: '8px 12px',
-										borderRadius: '4px',
-										fontSize: '16px',
-										cursor: 'pointer',
-									}}
-									title='Create new task'>
-									<FontAwesomeIcon icon={faPlus} />
-								</button>
-							</div>
-						)}
 					</>
+				)}
+				{!isMobile && (
+					<div style={{ marginTop: '12px', textAlign: 'right' }}>
+						<button
+							onClick={handleCreateTask}
+							style={{
+								background: COLORS.primary,
+								color: 'white',
+								border: 'none',
+								padding: '8px 12px',
+								borderRadius: '4px',
+								fontSize: '16px',
+								cursor: 'pointer',
+							}}
+							title='Create new task'>
+							<FontAwesomeIcon icon={faPlus} />
+						</button>
+					</div>
 				)}
 			</div>
 
@@ -481,7 +482,7 @@ export const TasksPage = () => {
 							width: '60px',
 							height: '60px',
 							borderRadius: '50%',
-							backgroundColor: '#3b82f6',
+							backgroundColor: COLORS.primary,
 							color: 'white',
 							fontSize: '28px',
 							border: 'none',
@@ -586,6 +587,7 @@ export const TasksPage = () => {
 						editingTaskId ? allTasks.find((t) => t.id === editingTaskId) : null
 					}
 					isEditing={!!editingTaskId}
+					propertyOptions={propertyFilterOptions}
 					assigneeOptions={assigneeOptions}
 					currentUser={currentUser}
 				/>

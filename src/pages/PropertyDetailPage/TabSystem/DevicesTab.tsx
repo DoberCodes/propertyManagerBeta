@@ -20,6 +20,7 @@ import {
 	SectionContainer,
 	SectionHeader,
 } from '../../../Components/Library/InfoCards/InfoCardStyles';
+import { WarningDialog } from '../../../Components/Library/WarningDialog';
 import { DeviceModal } from '../../../Components/Library/Modal';
 import { Property } from '../../../types/Property.types';
 import {
@@ -68,6 +69,13 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 	const [editingDevice, setEditingDevice] = useState<any>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedDevice, setSelectedDevice] = useState<any>(null);
+	// delete confirmation dialog state
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleteDialogMessage, setDeleteDialogMessage] = useState('');
+	const [pendingDeleteDeviceId, setPendingDeleteDeviceId] = useState<
+		string | null
+	>(null);
+
 	const [deviceFormData, setDeviceFormData] = useState<DeviceFormData>({
 		type: '',
 		brand: '',
@@ -276,16 +284,23 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 		}
 	};
 
-	const handleDeleteDevice = async (deviceId: string) => {
-		if (window.confirm('Are you sure you want to delete this device?')) {
-			try {
-				await deleteDevice(deviceId);
-				setSelectedDevice(null);
-			} catch (error) {
-				console.error('Error deleting device:', error);
-				alert('Failed to delete device. Please try again.');
-			}
+	const handleDeleteDevice = (deviceId: string) => {
+		setDeleteDialogMessage('Are you sure you want to delete this device?');
+		setPendingDeleteDeviceId(deviceId);
+		setDeleteDialogOpen(true);
+	};
+
+	const confirmDeleteDevice = async () => {
+		if (!pendingDeleteDeviceId) return;
+		try {
+			await deleteDevice(pendingDeleteDeviceId);
+			setSelectedDevice(null);
+		} catch (error) {
+			console.error('Error deleting device:', error);
+			alert('Failed to delete device. Please try again.');
 		}
+		setDeleteDialogOpen(false);
+		setPendingDeleteDeviceId(null);
 	};
 
 	if (isLoading) {
@@ -299,6 +314,15 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 
 	return (
 		<SectionContainer>
+			<WarningDialog
+				open={deleteDialogOpen}
+				title='Confirm Deletion'
+				message={deleteDialogMessage}
+				confirmText='Delete'
+				cancelText='Cancel'
+				onConfirm={confirmDeleteDevice}
+				onCancel={() => setDeleteDialogOpen(false)}
+			/>
 			<SectionHeader>Household Devices</SectionHeader>
 
 			<Toolbar>

@@ -55,6 +55,7 @@ export interface Task {
 	propertyId: string;
 	enableNotifications?: boolean;
 	notifications?: TaskNotification[];
+	description?: string;
 	suiteId?: string; // Optional: for tasks specific to a suite
 	unitId?: string; // Optional: for tasks specific to a unit
 	devices?: string[]; // Optional: device IDs related to this task

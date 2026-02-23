@@ -25,6 +25,10 @@ import {
 	useGetTasksQuery,
 } from '../../../Redux/API/taskSlice';
 import { useGetAllDevicesQuery } from '../../../Redux/API/deviceSlice';
+import {
+	useGetAllUnitsQuery,
+	useGetPropertiesQuery,
+} from '../../../Redux/API/propertySlice';
 import { useGetAllMaintenanceHistoryForUserQuery } from '../../../Redux/API/userSlice';
 import { addTask, updateTask } from '../../../Redux/Slices/propertyDataSlice';
 
@@ -118,14 +122,51 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 	const dispatch = useDispatch();
 	const { data: allTasks = [] } = useGetTasksQuery();
 	const { data: allDevices = [] } = useGetAllDevicesQuery();
+	const { data: allUnits = [] } = useGetAllUnitsQuery();
+	const { data: allProperties = [] } = useGetPropertiesQuery();
 	const { data: allMaintenanceHistory = [] } =
 		useGetAllMaintenanceHistoryForUserQuery();
 	const [createTask] = useCreateTaskMutation();
 	const [updateTaskApi] = useUpdateTaskMutation();
 
-	// Device options for task linking
+	const [formState, setFormState] = useState<TaskFormData>(defaultForm);
+
+	const selectedPropertyId = formState.propertyId || propertyId || '';
+
+	// Determine if selected property is single family
+	const selectedProperty = useMemo(() => {
+		if (!selectedPropertyId) return null;
+		return allProperties.find((p: any) => p.id === selectedPropertyId);
+	}, [selectedPropertyId, allProperties]);
+
+	const isSingleFamily = selectedProperty?.propertyType === 'Single Family';
+
+	const filteredUnitOptions = useMemo(() => {
+		if (unitOptions.length > 0) return unitOptions;
+		if (!selectedPropertyId) return [];
+
+		return allUnits
+			.filter((unit: any) => unit.propertyId === selectedPropertyId)
+			.map((unit: any) => ({
+				label: unit.unitName || unit.name || unit.title || 'Unit',
+				value: unit.id,
+			}));
+	}, [unitOptions, allUnits, selectedPropertyId]);
+
+	// Device options for task linking (property-scoped)
 	const internalDeviceOptions = React.useMemo(() => {
-		return allDevices.map((device) => {
+		const scopedDevices = selectedPropertyId
+			? allDevices.filter((device: any) => {
+					const devicePropertyId =
+						device.propertyId ||
+						device.location?.propertyId ||
+						device.property?.id ||
+						'';
+					return devicePropertyId === selectedPropertyId;
+			  })
+			: allDevices;
+
+		return scopedDevices.map((device) => {
 			const displayName =
 				device.brand && device.model
 					? `${device.brand} ${device.model}`
@@ -135,16 +176,24 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				value: device.id,
 			};
 		});
-	}, [allDevices]);
+	}, [allDevices, selectedPropertyId]);
 
 	// Memoized device change handler to prevent re-renders
 	const handleDeviceChange = useCallback((devices: string[]) => {
 		setFormState((prev) => ({ ...prev, devices }));
 	}, []);
 
-	// Maintenance history options for task linking
+	// Maintenance history options for task linking (property-scoped)
 	const internalMaintenanceHistoryOptions = React.useMemo(() => {
-		return allMaintenanceHistory.map((record) => {
+		const scopedHistory = selectedPropertyId
+			? allMaintenanceHistory.filter((record: any) => {
+					const historyPropertyId =
+						record.propertyId || record.property?.id || '';
+					return historyPropertyId === selectedPropertyId;
+			  })
+			: allMaintenanceHistory;
+
+		return scopedHistory.map((record) => {
 			const dateLabel = record.completionDate
 				? new Date(record.completionDate).toLocaleDateString()
 				: 'No date';
@@ -153,9 +202,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 				value: record.id,
 			};
 		});
-	}, [allMaintenanceHistory]);
-
-	const [formState, setFormState] = useState<TaskFormData>(defaultForm);
+	}, [allMaintenanceHistory, selectedPropertyId]);
 
 	// Memoize the found task to prevent unnecessary re-renders
 	const foundTask = React.useMemo(() => {
@@ -234,6 +281,19 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 		} else {
 			newValue = type === 'checkbox' ? checked : value;
 		}
+
+		if (name === 'propertyId') {
+			setFormState((prev) => ({
+				...prev,
+				propertyId: newValue,
+				unitId: '',
+				devices: [],
+				linkedMaintenanceHistoryIds: [],
+			}));
+			setPendingLinkedHistoryIds([]);
+			return;
+		}
+
 		setFormState((prev) => ({
 			...prev,
 			[name]: newValue,
@@ -526,7 +586,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 							</FormSelect>
 						</FormGroup>
 
-						{unitOptions.length > 0 && (
+						{!isSingleFamily && filteredUnitOptions.length > 0 && (
 							<FormGroup>
 								<FormLabel>Unit</FormLabel>
 								<FormSelect
@@ -534,7 +594,7 @@ export const TaskModal: React.FC<EditTaskModalProps> = ({
 									value={formState.unitId || ''}
 									onChange={handleChange}>
 									<option value=''>(none)</option>
-									{unitOptions.map((opt) => (
+									{filteredUnitOptions.map((opt) => (
 										<option key={opt.value} value={opt.value}>
 											{opt.label}
 										</option>

@@ -38,6 +38,7 @@ import {
 	DesktopTableWrapper,
 	GridContainer,
 } from './index.styles';
+import { WarningDialog } from '../../../Components/Library/WarningDialog';
 
 interface ContractorsTabProps {
 	propertyId: string;
@@ -274,6 +275,18 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 				</EmptyState>
 			) : (
 				<>
+					{/* delete confirmation dialog */}
+					<WarningDialog
+						open={isDeleteModalOpen}
+						title='Delete Contractor'
+						message={`Are you sure you want to delete ${
+							contractorToDelete?.company || contractorToDelete?.name
+						}?`}
+						confirmText='Delete'
+						cancelText='Cancel'
+						onConfirm={handleDeleteConfirm}
+						onCancel={handleDeleteCancel}
+					/>
 					<DesktopTableWrapper>
 						<GridContainer>
 							<ReusableTable
