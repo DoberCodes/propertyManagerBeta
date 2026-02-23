@@ -447,7 +447,7 @@ print_success "Web app rebuilt for deployment"
 echo ""
 print_header "Step 6: Auto-Committing Changes"
 
-git add package.json client/package.json src/utils/versionCheck.ts android/app/build.gradle
+git add package.json client/package.json src/utils/versionCheck.ts android/app/build.gradle RELEASE_NOTES.txt
 if git diff --cached --quiet; then
   print_warning "No version changes to commit. Skipping commit/push/tag steps."
   SKIP_GIT_STEPS=1
@@ -457,6 +457,7 @@ else
 - Bump version to $NEW_VERSION
 - Update app version check
 - Update Android versionCode and versionName
+- Update release notes
 - Build signed APK"
   print_success "Changes committed to main"
   SKIP_GIT_STEPS=0

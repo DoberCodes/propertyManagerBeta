@@ -1,1 +1,12 @@
+🎉 **Release Notes for Version 1.11.3** 🎉
 
+
+## 🐛 Bug Fixes
+- fixing the gitignores to include os specifics and IDE settings also started tracking the release notes text file.
+- Fixing the landing page and adding screenshots with slight modification to remove unrendered component. Fix coming later.
+- adding back the package.json for client
+
+## 🔧 Improvements & Maintenance
+- adding non-production connections for testing purposes.
+- Adding License for code use
+- updating readme to match license.
