@@ -25,9 +25,6 @@
 
 set -e  # Exit on any error
 
-# Clear release notes at the very start so only new notes are generated
-echo "" > RELEASE_NOTES.txt
-
 # Load environment variables from .env file if it exists
 if [ -f ".env" ]; then
   export $(cat .env | grep -v '^#' | xargs)
@@ -161,6 +158,9 @@ if [[ -z $(gh auth token 2>/dev/null) ]]; then
   exit 1
 fi
 print_success "GitHub CLI authenticated"
+
+# Clear old release notes to ensure only new notes are generated
+echo "" > RELEASE_NOTES.txt
 
 # Check GitHub token scopes (needs repo for releases)
 GITHUB_SCOPES=$(gh auth status -t -h github.com 2>/dev/null | grep -i "Token scopes" | sed 's/.*: //')
