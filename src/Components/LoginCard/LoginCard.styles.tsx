@@ -52,6 +52,23 @@ export const Title = styled.h2`
 	}
 `;
 
+export const TrialNotice = styled.p`
+	margin: -16px 0 18px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: ${COLORS.primaryDark};
+	text-align: center;
+
+	@media (max-width: 1024px) {
+		margin: -12px 0 16px 0;
+	}
+
+	@media (max-width: 480px) {
+		font-size: 13px;
+		margin: -10px 0 14px 0;
+	}
+`;
+
 export const Input = styled.input`
 	padding: 12px 14px;
 	font-size: 16px;

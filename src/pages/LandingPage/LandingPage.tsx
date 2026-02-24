@@ -50,6 +50,7 @@ import {
 import packageJson from '../../../package.json';
 import { getAPKFileSize, getAPKDownloadURL } from '../../utils/versionCheck';
 import SEO from 'Components/SEO/SEO';
+import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
 
 const formatBytes = (bytes: number) => {
 	var marker = 1024;
@@ -412,11 +413,12 @@ const LandingPageComponent = () => {
 					<CTADescription>
 						Take care of what you own — without the hassle. Join homeowners,
 						landlords, and DIYers who track maintenance in one place and enjoy
-						peace of mind every day.
+						peace of mind every day. Start with a {TRIAL_DURATION_DAYS}-day free
+						trial on any paid plan.
 					</CTADescription>
 					<CTAButtons>
 						<CTAButton onClick={() => navigate('/register')}>
-							Start Free Trial
+							Start {TRIAL_DURATION_DAYS}-Day Free Trial
 						</CTAButton>
 						<CTASecondary onClick={() => navigate('/login')}>
 							Sign In

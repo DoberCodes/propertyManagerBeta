@@ -234,16 +234,6 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 					</TrialBannerWrapper>
 				)}
 
-				{!isOnTrial ||
-					(!currentPlan && (
-						<>
-							<PaywallTitle variant={variant}>Choose Your Plan</PaywallTitle>
-							<PaywallSubtitle variant={variant}>
-								Start your free 14-day trial today. No credit card required.
-							</PaywallSubtitle>
-						</>
-					))}
-
 				{variant === 'full' && error && (
 					<TrialBannerWrapper
 						variant={variant}
@@ -510,13 +500,11 @@ export const PaywallPage: React.FC<PaywallPageProps> = ({
 								layout={layout}
 								style={{ color: '#22c55e', fontWeight: 'bold' }}>
 								Promo code "{appliedPromoCode.toUpperCase()}" has been applied!
-								You now have unlimited trial access.
 							</PromoText>
 						) : (
 							<>
 								<PromoText layout={layout}>
-									Enter your promo code to unlock special pricing or access the
-									free plan.
+									Enter your promo code to unlock special pricing.
 								</PromoText>
 								<PromoInput
 									layout={layout}

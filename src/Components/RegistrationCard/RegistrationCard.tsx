@@ -21,6 +21,7 @@ import {
 	TenantPlanPrice,
 	TenantPlanNote,
 	EmailStatusText,
+	TrialNotice,
 } from './RegistrationCard.styles';
 import { faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -32,6 +33,7 @@ import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
 import DocumentViewer from '../DocumentViewer';
+import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
 
 // Map user type selection to appropriate role
 const getRoleFromUserType = (userType: string): string => {
@@ -62,7 +64,7 @@ export const RegistrationCard = () => {
 	const [showPasswordConfirm, setShowPasswordConfirm] =
 		useState<boolean>(false);
 	const [userType, setUserType] = useState<string>('');
-	const [selectedPlan, setSelectedPlan] = useState<string>('homeowner');
+	const [selectedPlan, setSelectedPlan] = useState<string>('');
 	const [promoCode, setPromoCode] = useState<string>('');
 	const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
 	const [selectedDocument, setSelectedDocument] = useState<{
@@ -251,6 +253,9 @@ export const RegistrationCard = () => {
 				{step === 3 && 'Create Account - Step 3 of 4'}
 				{step === 4 && 'Create Account - Step 4 of 4'}
 			</Title>
+			<TrialNotice>
+				Start with a {TRIAL_DURATION_DAYS}-day free trial on any paid plan.
+			</TrialNotice>
 			{error && <ErrorMessage>{error}</ErrorMessage>}
 
 			{/* Step 1: Basic Information */}
@@ -525,10 +530,13 @@ export const RegistrationCard = () => {
 							plan: 'homeowner',
 							currentPeriodStart: Math.floor(Date.now() / 1000),
 							currentPeriodEnd:
-								Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
-							trialEndsAt: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
+								Math.floor(Date.now() / 1000) +
+								TRIAL_DURATION_DAYS * 24 * 60 * 60,
+							trialEndsAt:
+								Math.floor(Date.now() / 1000) +
+								TRIAL_DURATION_DAYS * 24 * 60 * 60,
 						}}
-						currentPlan='homeowner'
+						currentPlan={selectedPlan}
 						variant='embedded'
 						selectionOnly={true}
 						wide={true}
