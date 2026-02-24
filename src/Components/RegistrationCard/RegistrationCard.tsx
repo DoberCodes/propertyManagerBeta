@@ -107,15 +107,11 @@ export const RegistrationCard = () => {
 		}
 		if (!userType) {
 			setError(
-				'Please select if you are registering as a homeowner, property manager, tenant, or property guest',
+				'Please select if you are registering as a homeowner or property manager',
 			);
 			return false;
 		}
-		if (
-			!['homeowner', 'propertyManager', 'tenant', 'propertyGuest'].includes(
-				userType,
-			)
-		) {
+		if (!['homeowner', 'propertyManager'].includes(userType)) {
 			setError('Invalid user type selected');
 			return false;
 		}
@@ -284,8 +280,7 @@ export const RegistrationCard = () => {
 						required
 					/>
 					<QuestionLabel>
-						Are you registering as a homeowner, property manager, tenant, or
-						property guest?
+						Are you registering as a homeowner or property manager?
 					</QuestionLabel>
 					<RadioGrid>
 						<RadioOption>
@@ -316,7 +311,7 @@ export const RegistrationCard = () => {
 							/>
 							Property Manager
 						</RadioOption>
-						<RadioOption>
+						{/* <RadioOption>
 							<input
 								type='radio'
 								name='userType'
@@ -345,7 +340,7 @@ export const RegistrationCard = () => {
 								required
 							/>
 							Property Guest
-						</RadioOption>
+						</RadioOption> */}
 					</RadioGrid>
 					<Submit type='button' onClick={handleNext}>
 						Next
