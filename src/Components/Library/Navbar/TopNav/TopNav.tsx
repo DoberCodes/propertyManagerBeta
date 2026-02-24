@@ -15,9 +15,7 @@ import {
 } from './TopNav.styles';
 import { UserProfile } from './UserProfile';
 import { useNavigate } from 'react-router-dom';
-import { useRecentlyViewed } from '../../../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../../../Hooks/useFavorites';
-import { UserRole } from '../../../../constants/roles';
 import {
 	selectIsTenant,
 	selectCanAccessTeam,
@@ -46,7 +44,6 @@ export const TopNav = () => {
 	const canAccessTeam = useSelector(selectCanAccessTeam);
 	const canAccessProperties = useSelector(selectCanAccessProperties);
 	const canViewPages = useSelector(selectCanViewAllPages);
-	const isHomeowner = useSelector(selectIsHomeowner);
 	const isContractor = useSelector(selectIsContractor);
 
 	const navigationItems = [
@@ -110,10 +107,24 @@ export const TopNav = () => {
 					</HamburgerButton>
 					<Title className='desktop-title'>
 						<img src={TitleName} alt='Maintley' />
+						<span
+							style={{
+								color: '#22c55e',
+								position: 'relative',
+								top: '-10px',
+							}}>
+							Beta
+						</span>
 					</Title>
 				</LeftSection>
 				<Title className='mobile-title'>
-					<img src={TitleName} alt='Maintley' />
+					<img src={TitleName} alt='Maintley' />{' '}
+					<div
+						style={{
+							color: '#22c55e',
+						}}>
+						Beta
+					</div>
 				</Title>
 				<RightSection>
 					{/* Notification Icon */}

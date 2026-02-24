@@ -474,22 +474,44 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 		const steps: OnboardingStep[] = [
 			// Step 1: Welcome
 			{
-				id: 'welcome',
+				id: 'welcome_beta',
 				type: 'instruction',
-				title: 'Welcome to Maintley! 🎉',
-				description: `Your property management journey starts here. Let's get you set up with a personalized guided tour.`,
+				title: 'Welcome to Maintley Beta! 🎉',
+				description: `Thanks for being an early adopter! Your feedback during this beta phase is crucial to help us build the best property management tool possible. Let's get you started with a quick tour of the key features and how to make the most of Maintley.`,
+				content: (
+					<></>
+					// <div className='feature-list'>
+					// 	<ul>
+					// 		<li>🏠 Manage all your properties in one place</li>
+					// 		<li>🔧 Track maintenance tasks and schedules</li>
+					// 		{canManageTeam && <li>👥 Invite team members and tenants</li>}
+					// 		<li>📊 Get insights with reports and analytics</li>
+					// 		<li>🎯 Never miss important maintenance deadlines</li>
+					// 	</ul>
+					// </div>
+				),
+				actionLabel: 'Happy to be here!',
+				action: () => advanceToNextStep(),
+				skipLabel: 'Skip Tour',
+			},
+			{
+				id: 'welcome2',
+				type: 'instruction',
+				title: 'Management Made Easy',
+				description: `Your property management journey starts here. With Maintley, managing your properties has never been easier.`,
 				content: (
 					<div className='feature-list'>
 						<ul>
 							<li>🏠 Manage all your properties in one place</li>
 							<li>🔧 Track maintenance tasks and schedules</li>
-							{canManageTeam && <li>👥 Invite team members and tenants</li>}
+							<li>👨‍👩‍👧‍👦 Invite family members to your plan</li>
+							{canManageTeam && <li>👥 Track your team members and tenants</li>}
 							<li>📊 Get insights with reports and analytics</li>
 							<li>🎯 Never miss important maintenance deadlines</li>
 						</ul>
 					</div>
 				),
-				actionLabel: 'Start My Guided Tour',
+				actionLabel: 'Continue to Tour',
 				action: () => advanceToNextStep(),
 				skipLabel: 'Skip Tour',
 			},
@@ -499,8 +521,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				id: 'create_property_instruction',
 				type: 'instruction',
 				title: 'Add Your First Property',
-				description:
-					'Start by adding your property details. This will be the foundation for managing everything else.',
+				description: 'Lets get started by adding your first property.',
 				content: (
 					<div style={{ textAlign: 'left', marginTop: '20px' }}>
 						<p style={{ marginBottom: '16px', fontWeight: '500' }}>
@@ -799,14 +820,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 			});
 		} else {
 			// For homeowners, add terms acceptance step before completion
-			steps.push({
-				id: 'terms_acceptance',
-				type: 'instruction',
-				title: 'Terms & Agreements',
-				description:
-					'Before you start using Maintley, please review and accept our terms of service, privacy policy, and maintenance disclaimer.',
-				content: <TermsAcceptanceStep onAccept={advanceToNextStep} />,
-			});
+			// steps.push({
+			// 	id: 'terms_acceptance',
+			// 	type: 'instruction',
+			// 	title: 'Terms & Agreements',
+			// 	description:
+			// 		'Before you start using Maintley, please review and accept our terms of service, privacy policy, and maintenance disclaimer.',
+			// 	content: <TermsAcceptanceStep onAccept={advanceToNextStep} />,
+			// });
 
 			steps.push({
 				id: 'homeowner_complete',

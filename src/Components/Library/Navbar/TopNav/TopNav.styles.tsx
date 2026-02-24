@@ -142,15 +142,16 @@ export const RightSection = styled.div`
 `;
 
 export const Title = styled.div`
-	display: flex;
+	display: block;
+	justify-content: center;
 	align-items: center;
 	margin: 0;
 	height: 100%;
 
 	img {
 		max-height: 100%;
-		width: auto;
-		max-width: 120px;
+		width: 80%;
+		max-width: 100px;
 		object-fit: contain;
 	}
 
