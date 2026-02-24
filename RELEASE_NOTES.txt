@@ -1,5 +1,5 @@
-🎉 **Release Notes for Version 1.11.5** 🎉
+🎉 **Release Notes for Version 1.11.6** 🎉
 
 
 ## 🐛 Bug Fixes
-- fixing the missing feature cards
+- fixing the notice of 14 day free trials
