@@ -1,12 +1,10 @@
-🎉 **Release Notes for Version 1.11.3** 🎉
+🎉 **Release Notes for Version 1.11.4** 🎉
 
 
 ## 🐛 Bug Fixes
-- fixing the gitignores to include os specifics and IDE settings also started tracking the release notes text file.
-- Fixing the landing page and adding screenshots with slight modification to remove unrendered component. Fix coming later.
-- adding back the package.json for client
+- updating app to showcase beta and fixing the welcome dialog to also show beta as first step.
+- fixing the preflight issues with release notes
 
 ## 🔧 Improvements & Maintenance
-- adding non-production connections for testing purposes.
-- Adding License for code use
-- updating readme to match license.
+- updating the build script to inlcude the release notes in the push.
+- adding changes to the terms of service about taxes and modifying the registration to remove tenant view for now. Need to finish working on it.
