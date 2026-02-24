@@ -1,10 +1,5 @@
-🎉 **Release Notes for Version 1.11.4** 🎉
+🎉 **Release Notes for Version 1.11.5** 🎉
 
 
 ## 🐛 Bug Fixes
-- updating app to showcase beta and fixing the welcome dialog to also show beta as first step.
-- fixing the preflight issues with release notes
-
-## 🔧 Improvements & Maintenance
-- updating the build script to inlcude the release notes in the push.
-- adding changes to the terms of service about taxes and modifying the registration to remove tenant view for now. Need to finish working on it.
+- fixing the missing feature cards
