@@ -4,9 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../Redux/store/store';
 import styled from 'styled-components';
 import { COLORS } from '../../constants/colors';
-import { SUBSCRIPTION_PLANS } from '../../constants/subscriptions';
 import { useGetPropertiesQuery } from '../../Redux/API/propertySlice';
-import TermsAcceptanceStep from './TermsAcceptanceStep';
 import { useGetTasksQuery } from '../../Redux/API/taskSlice';
 import {
 	selectIsHomeowner,

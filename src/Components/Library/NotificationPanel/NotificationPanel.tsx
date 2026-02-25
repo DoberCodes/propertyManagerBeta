@@ -14,11 +14,7 @@ import {
 	useUpdateNotificationMutation,
 	useDeleteNotificationMutation,
 } from '../../../Redux/API/notificationSlice';
-import {
-	useAcceptInvitationMutation,
-	useRejectInvitationMutation,
-	useGetUserInvitationsQuery,
-} from '../../../Redux/API/userSlice';
+import { useAcceptInvitationMutation } from '../../../Redux/API/userSlice';
 import { useUpdateUserMutation } from '../../../Redux/API/userSlice';
 import { Notification } from '../../../types/Notification.types';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
@@ -279,7 +275,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		);
 	}
 
-	const unreadCount = notifications.filter((n) => n.status === 'unread').length;
 	const queryErrorMessage = isError
 		? String((queryError as any)?.message || queryError || '')
 		: '';
@@ -514,43 +509,6 @@ const Card = styled.div`
 	display: flex;
 	flex-direction: column;
 	min-height: 260px;
-`;
-
-const CardHeader = styled.div`
-	padding: 16px 20px;
-	border-bottom: 1px solid #e0e0e0;
-	background: #f9fafb;
-
-	h3 {
-		margin: 0;
-		font-size: 16px;
-		font-weight: 600;
-		color: #1f2937;
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	@media (max-width: 480px) {
-		padding: 16px;
-
-		h3 {
-			font-size: 17px;
-		}
-	}
-`;
-
-const Badge = styled.span<{ count: number }>`
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: #f59e0b;
-	color: white;
-	border-radius: 50%;
-	width: 24px;
-	height: 24px;
-	font-size: 12px;
-	font-weight: 600;
 `;
 
 const LoadingContainer = styled.div`
@@ -849,28 +807,3 @@ const CloseButton = styled.button`
 		opacity: 0.7;
 	}
 `;
-
-const NotificationPopup = styled.div`
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	z-index: 1000;
-
-	.popup-content {
-		background: white;
-		border-radius: 8px;
-		width: 90%;
-		height: 80%; /* Adjusted height to occupy most of the screen */
-		overflow-y: auto;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	}
-`;
-
-// Usage of NotificationPopup
-// Wrap the notification panel content with <NotificationPopup> and <div className="popup-content">...</div>

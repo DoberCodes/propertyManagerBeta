@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useDetailPageData } from '../../Hooks/useDetailPageData';
 import {
@@ -40,7 +40,6 @@ const ContentContainer = styled.div`
 `;
 
 export const SuiteDetailPage: React.FC = () => {
-	const navigate = useNavigate();
 	const { slug, suiteName } = useParams<{ slug: string; suiteName: string }>();
 	const [activeTab, setActiveTab] = React.useState<
 		'info' | 'occupants' | 'devices' | 'tasks' | 'history' | 'requests'

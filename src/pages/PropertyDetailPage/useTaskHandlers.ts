@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { AppDispatch } from '../../Redux/store';
 import { useDispatch } from 'react-redux';
-import {
-	deleteTask as deleteTaskAction,
-	addTask,
-	updateTask,
-} from '../../Redux/Slices/propertyDataSlice';
-import { TaskHandlers, Task } from '../../types/Task.types';
+import { deleteTask as deleteTaskAction } from '../../Redux/Slices/propertyDataSlice';
+import { TaskHandlers } from '../../types/Task.types';
 
 interface UseTaskHandlersProps {
 	onDeleteClick?: (taskIds: string[]) => void;
@@ -20,7 +16,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 	const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 	const [showTaskDialog, setShowTaskDialog] = useState(false);
 	const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-	const [editingTask, setEditingTask] = useState<any | null>(null);
 	const [showTaskAssignDialog, setShowTaskAssignDialog] = useState(false);
 	const [assigningTaskId, setAssigningTaskId] = useState<string | null>(null);
 	const [selectedAssignee, setSelectedAssignee] = useState<any>(null);
@@ -33,7 +28,6 @@ export const useTaskHandlers = (props?: UseTaskHandlersProps): TaskHandlers => {
 
 	const handleCreateTask = () => {
 		setEditingTaskId(null);
-		setEditingTask(null);
 		setShowTaskDialog(true);
 	};
 

@@ -10,7 +10,7 @@ import {
 import { useRejectTaskMutation } from '../../Redux/API/taskSlice';
 import { canApproveTaskCompletions } from '../../utils/permissions';
 import { UserRole } from '../../constants/roles';
-import { GenericModal, FormGroup } from '../Library';
+import { GenericModal } from '../Library';
 import {
 	InfoSection,
 	InfoRow,
@@ -151,12 +151,6 @@ export const TaskApprovalModal: React.FC<TaskApprovalModalProps> = ({
 			setError(error.message || 'Failed to reject task. Please try again.');
 		} finally {
 			setIsSubmitting(false);
-		}
-	};
-
-	const handleOverlayClick = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) {
-			onClose();
 		}
 	};
 

@@ -211,12 +211,6 @@ export const TaskCompletionModal: React.FC<TaskCompletionModalProps> = ({
 		}
 	};
 
-	const handleOverlayClick = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) {
-			onClose();
-		}
-	};
-
 	return (
 		<GenericModal
 			isOpen={true}

@@ -28,8 +28,6 @@ import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { signUpWithEmail, checkEmailExists } from '../../services/authService';
 import { USER_ROLES } from '../../constants/roles';
-import { useDispatch } from 'react-redux';
-import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
 import DocumentViewer from '../DocumentViewer';
@@ -71,7 +69,6 @@ export const RegistrationCard = () => {
 		name: string;
 		title: string;
 	} | null>(null);
-	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
 	const handleViewDocument = (filename: string, title: string) => {

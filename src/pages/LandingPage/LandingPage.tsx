@@ -43,7 +43,6 @@ import {
 	DownloadButton,
 	DownloadInfo,
 	InfoItem,
-	VersionStatus,
 	FooterCopyright,
 } from './LandingPage.styles';
 
@@ -104,7 +103,6 @@ const LandingPageComponent = () => {
 
 	const [apkFileSize, setApkFileSize] = useState('Unknown');
 	const [versionedApkFileSize, setVersionedApkFileSize] = useState('Unknown');
-	const [isCurrentVersionLatest, setIsCurrentVersionLatest] = useState(true);
 
 	useEffect(() => {
 		const fetchFileSizesAndVersionInfo = async () => {
@@ -116,8 +114,6 @@ const LandingPageComponent = () => {
 				if (releaseResponse.ok) {
 					const release = await releaseResponse.json();
 					const latestVersion = release.tag_name.replace('v', '');
-					setIsCurrentVersionLatest(latestVersion === packageJson.version);
-
 					// Get file sizes for both APKs
 					const assets = release.assets || [];
 					const latestApk = assets.find(

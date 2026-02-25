@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { COLORS } from '../../constants/colors';
 import SEO from 'Components/SEO/SEO';
-import { MobileCarousel } from 'Components/Library';
 
 const SubTitle = styled.h3`
 	font-size: 1.3rem;
@@ -153,39 +152,6 @@ const FeatureIcon = styled.span`
 	min-width: 32px;
 `;
 
-const HeroCarouselWrapper = styled.div`
-	width: 80vw;
-	height: 80vh;
-	max-width: 100vw;
-	margin-left: 50%;
-	transform: translateX(-50%);
-	position: relative;
-	background: #fff;
-	box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
-	overflow: hidden;
-	border-radius: 0 0 24px 24px;
-	margin-bottom: 40px;
-	@media (max-width: 900px) {
-		border-radius: 0 0 12px 12px;
-	}
-`;
-
-const CarouselCaption = styled.div`
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 32px;
-	text-align: center;
-	color: #fff;
-	background: rgba(0, 0, 0, 0.45);
-	font-size: 1.25rem;
-	font-weight: 600;
-	padding: 12px 0;
-	border-radius: 0 0 16px 16px;
-	pointer-events: none;
-	z-index: 2;
-`;
-
 export const FeatureDocsPage: React.FC = () => {
 	const navigate = useNavigate();
 
@@ -198,16 +164,6 @@ export const FeatureDocsPage: React.FC = () => {
 		`${window.location.origin}/screenshots/taskpage.png`,
 		`${window.location.origin}/screenshots/teampage.png`,
 		`${window.location.origin}/screenshots/unitmanagement.png`,
-	];
-	const captions = [
-		'Dashboard: Overview of property health and tasks',
-		'Device Management: Track and maintain all devices',
-		'Properties: Manage all your properties in one place',
-		'Property Details: Deep dive into each property',
-		'Reporting: Visualize maintenance and performance',
-		'Task Page: Assign, track, and complete tasks',
-		'Team Page: Collaborate with your property team',
-		'Unit Management: Organize and monitor every unit',
 	];
 	return (
 		<React.Fragment>

@@ -38,7 +38,6 @@ import {
 } from '../../Redux/API/tenantSlice';
 import { canApproveMaintenanceRequest } from '../../utils/permissions';
 import { selectIsTenant } from '../../Redux/selectors/permissionSelectors';
-import { UserRole } from '../../constants/roles';
 import { TeamMember } from '../../types/Team.types';
 import { useFavorites } from '../../Hooks/useFavorites';
 import {
@@ -74,7 +73,6 @@ import {
 import { useGetTeamMembersQuery } from '../../Redux/API/teamSlice';
 import { TabSystem } from './TabSystem';
 import { UnitModal } from '../../Components/Library';
-import { Content } from 'pages/Layout/Layout.styles';
 
 export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	props,

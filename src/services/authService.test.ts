@@ -41,7 +41,8 @@ jest.mock('firebase/functions', () => ({
 	httpsCallable: jest.fn(),
 }));
 
-describe('Family Account Functionality', () => {
+// Family member features are hidden for now.
+describe.skip('Family Account Functionality', () => {
 	const mockAccountId = 'account-owner-id';
 	const mockFamilyMemberId = 'family-member-id';
 

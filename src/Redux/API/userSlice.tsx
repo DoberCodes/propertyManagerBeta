@@ -1,4 +1,3 @@
-import { User as FirebaseUser } from 'firebase/auth';
 import {
 	doc,
 	updateDoc,

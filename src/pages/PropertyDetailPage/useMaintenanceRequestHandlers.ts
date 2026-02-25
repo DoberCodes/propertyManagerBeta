@@ -13,7 +13,6 @@ import {
 import { TaskData } from '../../types/Task.types';
 import { createMaintenanceRequestUtil } from './PropertyDetailPage.utils';
 import { uploadMaintenanceRequestFiles } from '../../utils/maintenanceRequestUpload';
-import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 
 export const useMaintenanceRequestHandlers = (
 	property: any,
@@ -25,7 +24,6 @@ export const useMaintenanceRequestHandlers = (
 	const [showConvertModal, setShowConvertModal] = useState(false);
 	const [convertingRequest, setConvertingRequest] =
 		useState<MaintenanceRequestItem | null>(null);
-	const [createNotification] = useCreateNotificationMutation();
 
 	const handleMaintenanceRequestSubmit = async (
 		request: MaintenanceRequest,
@@ -96,23 +94,6 @@ export const useMaintenanceRequestHandlers = (
 
 	const handleConvertToTask = async (taskData: TaskData) => {
 		if (!convertingRequest || !property || !currentUser) return;
-
-		const newTask = {
-			id: `task-${Date.now()}`,
-			title: taskData.title,
-			description: convertingRequest.description,
-			priority: convertingRequest.priority,
-			dueDate: taskData.dueDate,
-			status: 'Pending' as const,
-			propertyId: property.id,
-			property: property.title,
-			assignee: taskData.assignee,
-			notes: taskData.notes,
-			devices: taskData.devices || [],
-			createdBy: currentUser.id,
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString(),
-		};
 
 		try {
 			dispatch(convertRequestToTask(convertingRequest.id));

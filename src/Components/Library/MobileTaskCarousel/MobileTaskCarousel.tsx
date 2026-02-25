@@ -44,8 +44,6 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState(0);
 	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-	const [showDetailModal, setShowDetailModal] = useState(false);
-	const [isEditMode, setIsEditMode] = useState(false);
 
 	// EditTaskModal visibility (modal owns its own form state)
 	const [showEditModal, setShowEditModal] = useState(false);
@@ -132,8 +130,6 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 
 	const handleCardClick = () => {
 		setSelectedTask(currentTask);
-		setIsEditMode(false);
-		setShowDetailModal(true);
 	};
 
 	const handleEditClick = () => {
@@ -148,7 +144,6 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 		}
 
 		// Fallback: open local modal (modal will initialize its own form state)
-		setIsEditMode(true);
 		setShowEditModal(true);
 	};
 
@@ -164,9 +159,7 @@ export const MobileTaskCarousel: React.FC<MobileTaskCarouselProps> = ({
 	};
 
 	const handleDetailModalClose = () => {
-		setShowDetailModal(false);
 		setSelectedTask(null);
-		setIsEditMode(false);
 		setShowEditModal(false);
 	};
 

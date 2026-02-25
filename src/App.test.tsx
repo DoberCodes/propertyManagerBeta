@@ -1,6 +1,6 @@
 // mock axios early to prevent Jest trying to parse the ESM axios package
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from './Redux/store/store';
 import App from 'App';

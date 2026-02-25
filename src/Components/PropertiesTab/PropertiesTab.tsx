@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { PropertyDialog } from './PropertyDialog';
@@ -11,7 +11,6 @@ import { useRecentlyViewed } from '../../Hooks/useRecentlyViewed';
 import { useFavorites } from '../../Hooks/useFavorites';
 import { RootState } from '../../Redux/store/store';
 import { setCurrentUser } from '../../Redux/Slices/userSlice';
-import { UserRole } from '../../constants/roles';
 import {
 	selectCanAccessProperties,
 	selectIsHomeowner,
@@ -26,10 +25,7 @@ import {
 	useCreateUnitMutation,
 } from '../../Redux/API/propertySlice';
 import { useGetAllPropertySharesForUserQuery } from '../../Redux/API/userSlice';
-import {
-	useDeletePropertyShareMutation,
-	useCreatePropertyShareMutation,
-} from '../../Redux/API/userSlice';
+import { useDeletePropertyShareMutation } from '../../Redux/API/userSlice';
 import { useUpdateUserMutation } from '../../Redux/API/userSlice';
 import { useCreateNotificationMutation } from '../../Redux/API/notificationSlice';
 import { db } from '../../config/firebase';
@@ -38,7 +34,6 @@ import {
 	canAddProperty,
 	getRemainingPropertySlots,
 	getSubscriptionPlanDetails,
-	canManageTeam,
 	isTrialExpired,
 } from '../../utils/subscriptionUtils';
 import { filterPropertyGroupsByRole } from '../../utils/dataFilters';
@@ -68,7 +63,6 @@ import {
 	GroupActionButton,
 } from './PropertiesTab.styles';
 import { Property } from '../../types/Property.types';
-import { current } from '@reduxjs/toolkit';
 
 export const Properties = () => {
 	const navigate = useNavigate();
@@ -129,10 +123,6 @@ export const Properties = () => {
 			properties: group.properties || [],
 		}));
 	}, [propertyGroups]);
-
-	// Get userType from registration (ensure it's stored in user object)
-	// TODO: Make sure userType is persisted in user model after registration
-	const userType = (currentUser as any)?.userType || currentUser?.role;
 
 	// Count total properties for this user (for homeowners, only count owned properties, not shared)
 	const totalProperties = groupsWithProperties.reduce((acc, group) => {
@@ -437,7 +427,7 @@ export const Properties = () => {
 				? hiddenIds.filter((id) => id !== propertyId)
 				: [...hiddenIds, propertyId];
 
-			const result = await updateUser({
+			await updateUser({
 				id: currentUser.id,
 				updates: { hiddenPropertyIds: updatedHiddenIds },
 			}).unwrap();

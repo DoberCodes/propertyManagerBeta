@@ -8,7 +8,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useSelector } from 'react-redux';
 import { RootState } from 'Redux/store';
-import { uploadDeviceFile } from 'utils/deviceFileUpload';
 import {
 	useGetDevicesQuery,
 	useCreateDeviceMutation,
@@ -24,7 +23,6 @@ import { WarningDialog } from '../../../Components/Library/WarningDialog';
 import { DeviceModal } from '../../../Components/Library/Modal';
 import { Property } from '../../../types/Property.types';
 import {
-	GridContainer,
 	MobileCarouselContainer,
 	MobileCarouselViewport,
 	MobileCarouselTrack,
@@ -213,48 +211,6 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({ property }) => {
 				[field]: value,
 			}));
 		}
-	};
-
-	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) return;
-
-		try {
-			const fileArray = Array.from(files);
-			const uploadPromises = fileArray.map(async (file) => {
-				const uploadedFile = await uploadDeviceFile(
-					file,
-					property.id,
-					editingDevice?.id,
-				);
-				return uploadedFile;
-			});
-
-			const uploadedFiles = await Promise.all(uploadPromises);
-			setDeviceFormData((prev) => ({
-				...prev,
-				files: [...(prev.files || []), ...uploadedFiles],
-			}));
-
-			// Reset file input
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
-		} catch (error) {
-			console.error('Error uploading files:', error);
-			alert(
-				error instanceof Error
-					? error.message
-					: 'Failed to upload files. Please try again.',
-			);
-		}
-	};
-
-	const handleRemoveFile = (index: number) => {
-		setDeviceFormData((prev) => ({
-			...prev,
-			files: prev.files?.filter((_, i) => i !== index) || [],
-		}));
 	};
 
 	const handleSubmit = async () => {

@@ -21,7 +21,6 @@ import {
 	selectCanAccessTeam,
 	selectCanAccessProperties,
 	selectCanViewAllPages,
-	selectIsHomeowner,
 	selectIsContractor,
 } from '../../../../Redux/selectors/permissionSelectors';
 import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';

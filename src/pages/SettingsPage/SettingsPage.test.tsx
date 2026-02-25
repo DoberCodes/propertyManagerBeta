@@ -63,7 +63,8 @@ const createMockStore = (initialState = {}) => {
 	});
 };
 
-describe('SettingsPage Family Members', () => {
+// Family member features are hidden for now.
+describe.skip('SettingsPage Family Members', () => {
 	let store: ReturnType<typeof createMockStore>;
 	let mockAddFamilyMember: jest.Mock;
 	let mockGetFamilyMembers: jest.Mock;

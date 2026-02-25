@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '../Redux/store/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../Redux/store/store';
 import { useUpdateUserMutation } from '../Redux/API/userSlice';
 import { setCurrentUser } from '../Redux/Slices/userSlice';
 import { Task } from '../types/Task.types';

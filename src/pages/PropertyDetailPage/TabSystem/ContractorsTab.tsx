@@ -65,8 +65,7 @@ export const ContractorsTab: React.FC<ContractorsTabProps> = ({
 		skip: !propertyId,
 	});
 
-	const [deleteContractor, { isLoading: isDeleting }] =
-		useDeleteContractorMutation();
+	const [deleteContractor] = useDeleteContractorMutation();
 
 	// Filter configuration for contractors
 	const contractorFilters: FilterConfig[] = [

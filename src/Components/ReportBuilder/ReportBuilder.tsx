@@ -13,15 +13,11 @@ import {
 } from '../../Redux/API/propertySlice';
 import { useGetPublicTenantProfilesQuery } from '../../Redux/API/tenantSlice';
 import { useGetContractorsQuery } from '../../Redux/API/contractorSlice';
-import {
-	useGetDevicesQuery,
-	useGetAllDevicesQuery,
-} from '../../Redux/API/deviceSlice';
+import { useGetAllDevicesQuery } from '../../Redux/API/deviceSlice';
 import {
 	useGetAllMaintenanceHistoryForUserQuery,
 	useGetAllPropertySharesForUserQuery,
 } from '../../Redux/API/userSlice';
-import { useGetUnitsQuery } from '../../Redux/API/propertySlice';
 import {
 	FormGroup as LibraryFormGroup,
 	FormLabel as LibraryLabel,
@@ -149,11 +145,9 @@ export const ReportBuilder: React.FC = () => {
 		useGetContractorsQuery();
 
 	// Get all units and devices across all properties
-	const { data: allUnits = [], isLoading: unitsLoading } =
-		useGetAllUnitsQuery();
+	const { data: allUnits = [] } = useGetAllUnitsQuery();
 
-	const { data: allDevices = [], isLoading: devicesLoading } =
-		useGetAllDevicesQuery();
+	const { data: allDevices = [] } = useGetAllDevicesQuery();
 	const suitesData = useMemo(() => {
 		const allSuites: any[] = [];
 		properties.forEach((property: any) => {

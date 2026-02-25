@@ -27,13 +27,10 @@ export const useGetAuthStatus = () => {
 			};
 			const status = getStatus(payload);
 			if (status) {
-				const authenticated = fetch(
-					`http://localhost:5000/authentication/${status}`,
-					{
-						method: 'GET',
-						signal: Timeout(5).signal,
-					},
-				).then(async (res) => {
+				fetch(`http://localhost:5000/authentication/${status}`, {
+					method: 'GET',
+					signal: Timeout(5).signal,
+				}).then(async (res) => {
 					let userData;
 					if (res.status === 200) {
 						userData = await res.json();

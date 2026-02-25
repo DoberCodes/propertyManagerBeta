@@ -2,10 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useDetailPageData } from 'Hooks/useDetailPageData';
-import {
-	useDeleteMaintenanceHistoryMutation,
-	useGetMaintenanceHistoryByPropertyQuery,
-} from 'Redux/API/maintenanceSlice';
+import { useDeleteMaintenanceHistoryMutation } from 'Redux/API/maintenanceSlice';
 import { useGetContractorsByPropertyQuery } from 'Redux/API/contractorSlice';
 import { useGetPropertySharesQuery } from 'Redux/API/userSlice';
 import { RootState } from 'Redux/store/store';

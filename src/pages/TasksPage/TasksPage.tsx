@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from 'Redux/store/store';
 import { ZeroState } from 'Components/Library/ZeroState';
@@ -9,7 +8,6 @@ import {
 	useGetAllPropertySharesForUserQuery,
 } from '../../Redux/API/userSlice';
 import { filterTasksByRole } from '../../utils/dataFilters';
-import { TaskCompletionModal } from '../../Components/TaskCompletionModal';
 import { ReusableTable } from '../../Components/Library/ReusableTable';
 import { useTaskHandlers } from '../PropertyDetailPage/useTaskHandlers';
 import {
@@ -26,12 +24,7 @@ import {
 	useGetTasksQuery,
 	useUpdateTaskMutation,
 } from '../../Redux/API/taskSlice';
-import {
-	Wrapper,
-	TaskGridSection,
-	FilterSection,
-	CarouselSection,
-} from './TasksPage.styles';
+import { Wrapper, TaskGridSection, CarouselSection } from './TasksPage.styles';
 
 import {
 	FilterBar,
@@ -43,7 +36,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { COLORS } from '../../constants/colors';
 
 export const TasksPage = () => {
-	const navigate = useNavigate();
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	// Select groups from state and derive team members with useMemo
 	const teamGroups = useSelector((state: RootState) => state.team.groups);

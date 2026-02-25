@@ -81,39 +81,6 @@ export const DashboardTab = () => {
 		assigningTaskId,
 	} = taskHandlers;
 
-	// Pie chart data for efficiency
-	const efficiencyData = useMemo(() => {
-		const now = new Date();
-		let completed = allMaintenanceHistory.length, // Count completed tasks from maintenance history
-			inProgress = 0,
-			overdue = 0;
-
-		// Count in-progress and overdue from active tasks (excluding completed)
-		allTasks.forEach((task) => {
-			if (task.status !== 'Completed') {
-				// Skip completed tasks since they're in maintenance history
-				if (
-					task.dueDate &&
-					new Date(task.dueDate) < now &&
-					(task.status === 'Pending' ||
-						task.status === 'In Progress' ||
-						task.status === 'Awaiting Approval' ||
-						task.status === 'Rejected')
-				) {
-					overdue++;
-				} else {
-					inProgress++;
-				}
-			}
-		});
-
-		return [
-			{ name: 'Completed', value: completed },
-			{ name: 'In Progress', value: inProgress },
-			{ name: 'Overdue', value: overdue },
-		];
-	}, [allTasks, allMaintenanceHistory]);
-
 	// Redirect tenants to their assigned property
 	const isUserTenant = useSelector(selectIsTenant);
 

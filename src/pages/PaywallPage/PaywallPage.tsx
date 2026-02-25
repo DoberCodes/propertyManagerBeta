@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
 	PaywallWrapper,
 	PaywallContainer,
-	PaywallTitle,
-	PaywallSubtitle,
 	BackButton,
 	TrialBannerWrapper,
 	TrialBannerTitle,
