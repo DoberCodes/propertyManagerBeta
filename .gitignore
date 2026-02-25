@@ -10,6 +10,9 @@ yarn.lock
 
 # testing
 /coverage
+/test-results
+/playwright-report
+.env.local
 
 # production
 /build
@@ -17,6 +20,7 @@ yarn.lock
 
 # migrations
 /scripts
+/tmp/
 
 # misc
 .DS_Store
