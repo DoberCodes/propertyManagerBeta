@@ -207,12 +207,9 @@ export const RegistrationCard = () => {
 				promoCode.trim() || undefined,
 				{
 					agreedToTerms: true,
-					agreedVersion: '1.0', // You can update this version when terms change
+					agreedVersion: '1.1', // You can update this version when terms change
 				},
 			);
-
-			// Update Redux store
-			dispatch(setCurrentUser(user));
 
 			// Store session in localStorage
 			localStorage.setItem(

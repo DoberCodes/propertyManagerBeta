@@ -8,7 +8,7 @@ import DocumentViewer from '../../DocumentViewer';
 import { COLORS } from '../../../constants/colors';
 
 // Current version of legal documents
-const CURRENT_LEGAL_VERSION = '1.0';
+const CURRENT_LEGAL_VERSION = '1.1';
 
 const NotificationWrapper = styled.div`
 	position: fixed;

@@ -32,10 +32,16 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addFamilyMember = void 0;
-const functions = __importStar(require("firebase-functions"));
+const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
+const mail_1 = __importDefault(require("@sendgrid/mail"));
+const params_1 = require("firebase-functions/params");
+const SENDGRID_API_KEY = (0, params_1.defineSecret)(process.env.SENDGRID_API_KEY_SECRET_NAME || 'SENDGRID_API_KEY');
 if (!admin.apps.length) {
     admin.initializeApp();
 }
@@ -56,8 +62,15 @@ const USER_ROLES = {
  * Cloud function to add a family member to an account
  * This runs on the backend to avoid authentication state issues
  */
-exports.addFamilyMember = functions.https.onCall(async (data, context) => {
-    var _a;
+exports.addFamilyMember = functions
+    .runWith({ secrets: ['SENDGRID_API_KEY'] })
+    .https.onCall(async (data, context) => {
+    var _a, _b;
+    // Initialize SendGrid with secret
+    const apiKey = SENDGRID_API_KEY.value();
+    if (apiKey) {
+        mail_1.default.setApiKey(apiKey);
+    }
     // Verify authentication
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -91,8 +104,8 @@ exports.addFamilyMember = functions.https.onCall(async (data, context) => {
         if ((accountData === null || accountData === void 0 ? void 0 : accountData.ownerId) !== context.auth.uid) {
             throw new functions.https.HttpsError('permission-denied', 'Only account owners can add family members');
         }
-        if (((_a = accountData === null || accountData === void 0 ? void 0 : accountData.memberIds) === null || _a === void 0 ? void 0 : _a.length) >= 2) {
-            throw new functions.https.HttpsError('resource-exhausted', 'Family accounts are limited to 2 members');
+        if (((_a = accountData === null || accountData === void 0 ? void 0 : accountData.memberIds) === null || _a === void 0 ? void 0 : _a.length) >= 3) {
+            throw new functions.https.HttpsError('resource-exhausted', 'Family accounts are limited to 2 family members (plus the account owner)');
         }
         // Create Firebase Auth user
         const tempPassword = Math.random().toString(36) + Math.random().toString(36);
@@ -137,6 +150,58 @@ exports.addFamilyMember = functions.https.onCall(async (data, context) => {
             memberIds: [...((accountData === null || accountData === void 0 ? void 0 : accountData.memberIds) || []), userRecord.uid],
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        // Send invitation email
+        if (apiKey) {
+            try {
+                const accountOwnerDoc = await db
+                    .collection('users')
+                    .doc(context.auth.uid)
+                    .get();
+                const ownerName = ((_b = accountOwnerDoc.data()) === null || _b === void 0 ? void 0 : _b.firstName) || 'Account Owner';
+                const inviteUrl = `${process.env.FRONTEND_URL || 'https://maintleyapp.com'}/dashboard`;
+                const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #10b981;">Welcome to Maintley!</h2>
+            <p>Hi ${firstName},</p>
+              
+            <p>${ownerName} has invited you to join their Maintley account to help manage properties, track maintenance, and keep records organized.</p>
+
+
+            <p>
+              <a href="${inviteUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                Get Started
+              </a>
+            </p>
+
+            <p>If you didn't expect this invitation, you can safely ignore this email or contact ${ownerName} for more information.</p>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+
+            <p style="color: #6b7280; font-size: 14px;">
+              Welcome aboard! You're now part of a better way to manage property maintenance and records.
+            </p>
+          </div>
+        `;
+                const msg = {
+                    to: email,
+                    from: {
+                        email: 'maintleyapp@gmail.com',
+                        name: 'Maintley',
+                    },
+                    subject: `${ownerName} invited you to join Maintley`,
+                    html: html,
+                };
+                await mail_1.default.send(msg);
+                console.log('Family member invitation email sent successfully');
+            }
+            catch (emailError) {
+                console.error('Error sending family member invitation email:', emailError);
+                // Don't throw - user creation was successful, just log the email error
+            }
+        }
+        else {
+            console.log('SendGrid API key not configured, skipping invitation email');
+        }
         return {
             success: true,
             user: userProfile,

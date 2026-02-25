@@ -417,6 +417,34 @@ export const SettingsPage: React.FC = () => {
 		}
 	};
 
+	const handleResendFamilyMemberInvite = async (memberId: string) => {
+		if (
+			!currentUser?.accountId ||
+			(!currentUser?.isAccountOwner &&
+				currentUser?.accountId !== currentUser?.id)
+		) {
+			return;
+		}
+
+		try {
+			const resendFunction = httpsCallable<
+				{ familyMemberId: string; accountId: string },
+				{ success: boolean; message?: string }
+			>(functions, 'resendFamilyMemberInvite');
+			const result = await resendFunction({
+				familyMemberId: memberId,
+				accountId: currentUser.accountId,
+			});
+
+			if (result.data.success) {
+				alert(`Invitation resent successfully!`);
+			}
+		} catch (error: any) {
+			console.error('Failed to resend invite:', error);
+			alert(error.message || 'Failed to resend invitation. Please try again.');
+		}
+	};
+
 	const handleRestartOnboarding = async () => {
 		if (!currentUser) return;
 
@@ -636,8 +664,8 @@ export const SettingsPage: React.FC = () => {
 				</ButtonContainer>
 			</SubscriptionSection>
 
-			{/* Family Members Section */}
-			{(currentUser?.isAccountOwner ||
+			{/* Family Members Section - COMMENTED OUT: Firebase rules for familyAccounts not yet established */}
+			{/* {(currentUser?.isAccountOwner ||
 				currentUser?.accountId === currentUser?.id) && (
 				<>
 					<AccountSection>
@@ -680,19 +708,38 @@ export const SettingsPage: React.FC = () => {
 													{member.email}
 												</span>
 											</div>
-											<button
-												onClick={() => handleRemoveFamilyMember(member.id)}
-												style={{
-													background: '#ef4444',
-													color: 'white',
-													border: 'none',
-													borderRadius: '4px',
-													padding: '4px 8px',
-													fontSize: '12px',
-													cursor: 'pointer',
-												}}>
-												Remove
-											</button>
+											<div style={{ display: 'flex', gap: '8px' }}>
+												<button
+													type='button'
+													onClick={() =>
+														handleResendFamilyMemberInvite(member.id)
+													}
+													style={{
+														background: '#3b82f6',
+														color: 'white',
+														border: 'none',
+														borderRadius: '4px',
+														padding: '4px 8px',
+														fontSize: '12px',
+														cursor: 'pointer',
+													}}>
+													Resend Invite
+												</button>
+												<button
+													type='button'
+													onClick={() => handleRemoveFamilyMember(member.id)}
+													style={{
+														background: '#ef4444',
+														color: 'white',
+														border: 'none',
+														borderRadius: '4px',
+														padding: '4px 8px',
+														fontSize: '12px',
+														cursor: 'pointer',
+													}}>
+													Remove
+												</button>
+											</div>
 										</div>
 									))}
 							</div>
@@ -717,7 +764,7 @@ export const SettingsPage: React.FC = () => {
 						)}
 					</AccountSection>
 				</>
-			)}
+			)} */}
 
 			<AccountSection>
 				<SectionTitle>Account Settings</SectionTitle>
@@ -976,8 +1023,8 @@ export const SettingsPage: React.FC = () => {
 				</p>
 			</GenericModal>
 
-			{/* Add Family Member Modal */}
-			<GenericModal
+			{/* Add Family Member Modal - COMMENTED OUT: Firebase rules for familyAccounts not yet established */}
+			{/* <GenericModal
 				isOpen={showAddFamilyMemberModal}
 				onClose={() => {
 					setShowAddFamilyMemberModal(false);
@@ -1045,7 +1092,7 @@ export const SettingsPage: React.FC = () => {
 					The family member will receive an email with instructions to set up
 					their account and access the shared subscription.
 				</p>
-			</GenericModal>
+			</GenericModal> */}
 		</Container>
 	);
 };

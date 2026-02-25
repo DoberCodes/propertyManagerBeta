@@ -96,7 +96,25 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	const { isFavorite, toggleFavorite } = useFavorites(currentUser!.id);
 
 	// Fetch properties from Firebase
-	const { data: firebaseProperties = [] } = useGetPropertiesQuery();
+	const { data: firebaseProperties = [], isLoading: isLoadingProperties } =
+		useGetPropertiesQuery();
+
+	// DEBUG: Log properties immediately after query
+	if (firebaseProperties && firebaseProperties.length > 0) {
+		console.log(
+			'DEBUG: useGetPropertiesQuery returned properties:',
+			firebaseProperties.length,
+		);
+		console.log(
+			'DEBUG: Property slugs:',
+			firebaseProperties.map((p: any) => p.slug),
+		);
+	} else {
+		console.log(
+			'DEBUG: useGetPropertiesQuery returned empty or no data. isLoading:',
+			isLoadingProperties,
+		);
+	}
 
 	// Get property groups from Redux (populated by DataLoader)
 	const propertyGroups = useSelector(
@@ -167,6 +185,19 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 		const resolvedProperty = propertyOverride
 			? propertyOverride
 			: firebaseProperties.find((p: any) => p.slug === slug);
+
+		// DEBUG: Log what's happening
+		if (!resolvedProperty && firebaseProperties.length > 0) {
+			console.log('DEBUG: Property not found! slug:', slug);
+			console.log(
+				'DEBUG: Available slugs:',
+				firebaseProperties.map((p: any) => p.slug),
+			);
+		}
+		if (firebaseProperties.length > 0) {
+			console.log('DEBUG: Loaded properties count:', firebaseProperties.length);
+		}
+
 		return resolvedProperty;
 	}, [slug, firebaseProperties, propertyOverride]);
 
@@ -563,6 +594,24 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = (
 	// Task handling is now managed by EditTaskModal component
 
 	if (!property) {
+		console.log(
+			'DEBUG: No property found. isLoadingProperties:',
+			isLoadingProperties,
+		);
+		console.log('DEBUG: firebaseProperties array:', firebaseProperties);
+		console.log('DEBUG: slug:', slug);
+		if (isLoadingProperties) {
+			console.log('DEBUG: Showing loading state');
+			return (
+				<Wrapper>
+					<EmptyState>
+						<h2>Loading property...</h2>
+						<p>Please wait while we fetch your property details.</p>
+					</EmptyState>
+				</Wrapper>
+			);
+		}
+		console.log('DEBUG: Showing property not found');
 		return (
 			<Wrapper>
 				<EmptyState>

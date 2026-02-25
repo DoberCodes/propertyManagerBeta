@@ -62,7 +62,7 @@ async function cleanupInvalidPushToken(userId, pushToken) {
     }
 }
 exports.sendPushOnNotificationCreate = (0, firestore_1.onDocumentCreated)('notifications/{notificationId}', async (event) => {
-    var _a;
+    var _a, _b;
     const notification = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!notification || !notification.userId) {
         console.log('Invalid notification document - missing userId');
@@ -79,6 +79,25 @@ exports.sendPushOnNotificationCreate = (0, firestore_1.onDocumentCreated)('notif
     const pushToken = user.pushToken;
     if (!pushToken) {
         console.log(`No push token for user ${notification.userId}`);
+        return;
+    }
+    // Check user notification preferences
+    const userPreferencesDoc = await db
+        .collection('userPreferences')
+        .doc(notification.userId)
+        .get();
+    const userPreferences = userPreferencesDoc.exists
+        ? userPreferencesDoc.data()
+        : null;
+    if (!userPreferences || !((_b = userPreferences.notificationPreferences) === null || _b === void 0 ? void 0 : _b.enabled)) {
+        console.log(`Notifications are disabled for user ${notification.userId}`);
+        return;
+    }
+    const notificationType = notification.type; // Assuming notification.type exists
+    if (notificationType &&
+        userPreferences.notificationPreferences.types &&
+        userPreferences.notificationPreferences.types[notificationType] === false) {
+        console.log(`Notification type '${notificationType}' is disabled for user ${notification.userId}`);
         return;
     }
     // Compose the push notification

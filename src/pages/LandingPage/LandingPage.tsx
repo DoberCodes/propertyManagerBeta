@@ -176,7 +176,7 @@ const LandingPageComponent = () => {
 
 		try {
 			// Using a simple mailto approach for now
-			const mailtoLink = `mailto:contact@mypropertymanager.com?subject=${encodeURIComponent(
+			const mailtoLink = `mailto:maintleyapp@gmail.com?subject=${encodeURIComponent(
 				formData.subject,
 			)}&body=${encodeURIComponent(
 				`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`,

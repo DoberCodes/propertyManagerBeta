@@ -12,7 +12,9 @@ export { markTasksAsOverdue } from './markTasksAsOverdue';
 export { deleteUserAccount } from './deleteUserAccount';
 export { deleteFamilyMemberAccount } from './deleteFamilyMemberAccount';
 export { addFamilyMember } from './addFamilyMember';
-export {
-	scheduledTaskNotifications,
-	triggerTaskNotifications,
-} from './src/taskNotifications';
+export { resendFamilyMemberInvite } from './resendFamilyMemberInvite';
+// Temporarily disabled due to missing utils/taskNotificationScheduler module
+// export {
+// 	scheduledTaskNotifications,
+// 	triggerTaskNotifications,
+// } from './src/taskNotifications';

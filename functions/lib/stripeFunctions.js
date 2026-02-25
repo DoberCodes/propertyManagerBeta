@@ -35,23 +35,29 @@ var __importStar = (this && this.__importStar) || (function () {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.stripeWebhook = exports.getSubscriptionDetails = exports.cancelSubscription = exports.verifyCheckoutSession = exports.createTrialSubscription = exports.createCheckoutSession = void 0;
-const functions = __importStar(require("firebase-functions"));
+const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
-const dotenv = __importStar(require("dotenv"));
-// Load environment variables from .env file
-dotenv.config();
+const params_1 = require("firebase-functions/params");
+const STRIPE_SECRET_KEY = (0, params_1.defineSecret)('STRIPE_SECRET_KEY');
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2023-10-16',
-});
-console.log('Stripe key loaded:', process.env.STRIPE_SECRET_KEY ? 'YES' : 'NO');
-console.log('Stripe key starts with sk_live_:', (_a = process.env.STRIPE_SECRET_KEY) === null || _a === void 0 ? void 0 : _a.startsWith('sk_live_'));
+// Initialize Stripe lazily to avoid accessing secrets at deployment time
+let stripe = null;
+const getStripe = () => {
+    var _a;
+    if (!stripe) {
+        stripe = new stripe_1.default(STRIPE_SECRET_KEY.value() || '', {
+            apiVersion: '2023-10-16',
+        });
+        console.log('Stripe key loaded:', STRIPE_SECRET_KEY.value() ? 'YES' : 'NO');
+        console.log('Stripe key starts with sk_live_:', (_a = STRIPE_SECRET_KEY.value()) === null || _a === void 0 ? void 0 : _a.startsWith('sk_live_'));
+    }
+    return stripe;
+};
 const db = admin.firestore();
 /**
  * Create Stripe Checkout Session
@@ -83,7 +89,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         let customerId = (_a = userData === null || userData === void 0 ? void 0 : userData.subscription) === null || _a === void 0 ? void 0 : _a.stripeCustomerId;
         // Create or retrieve Stripe customer
         if (!customerId) {
-            const customer = await stripe.customers.create({
+            const customer = await getStripe().customers.create({
                 email: email,
                 metadata: {
                     firebaseUID: userId,
@@ -97,7 +103,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
             });
         }
         // Create checkout session
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
             customer: customerId,
             payment_method_types: ['card'],
             line_items: [
@@ -149,7 +155,7 @@ exports.createTrialSubscription = functions.https.onCall(async (data, context) =
         let customerId = (_a = userData === null || userData === void 0 ? void 0 : userData.subscription) === null || _a === void 0 ? void 0 : _a.stripeCustomerId;
         // Create or retrieve Stripe customer
         if (!customerId) {
-            const customer = await stripe.customers.create({
+            const customer = await getStripe().customers.create({
                 email: email,
                 metadata: {
                     firebaseUID: userId,
@@ -163,7 +169,7 @@ exports.createTrialSubscription = functions.https.onCall(async (data, context) =
             });
         }
         // Create subscription with trial period
-        const subscription = await stripe.subscriptions.create({
+        const subscription = await getStripe().subscriptions.create({
             customer: customerId,
             items: [
                 {
@@ -204,7 +210,7 @@ exports.verifyCheckoutSession = functions.https.onCall(async (data, context) => 
     }
     try {
         // Retrieve session from Stripe
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        const session = await getStripe().checkout.sessions.retrieve(sessionId);
         if (session.payment_status !== 'paid') {
             throw new functions.https.HttpsError('failed-precondition', 'Payment not completed');
         }
@@ -213,7 +219,7 @@ exports.verifyCheckoutSession = functions.https.onCall(async (data, context) => 
             throw new functions.https.HttpsError('invalid-argument', 'Invalid session metadata');
         }
         // Get subscription details
-        const subscription = await stripe.subscriptions.retrieve(session.subscription);
+        const subscription = await getStripe().subscriptions.retrieve(session.subscription);
         // Update user subscription in Firestore
         const subscriptionData = {
             status: 'active',
@@ -249,7 +255,7 @@ exports.cancelSubscription = functions.https.onCall(async (data, context) => {
     }
     try {
         // Cancel subscription in Stripe
-        const subscription = await stripe.subscriptions.update(subscriptionId, {
+        const subscription = await getStripe().subscriptions.update(subscriptionId, {
             cancel_at_period_end: true,
         });
         // Update user subscription status
@@ -285,7 +291,7 @@ exports.getSubscriptionDetails = functions.https.onCall(async (data, context) =>
         throw new functions.https.HttpsError('invalid-argument', 'Subscription ID is required');
     }
     try {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
         return subscription;
     }
     catch (error) {
@@ -309,7 +315,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
             // For newer Firebase Functions versions, reconstruct raw body
             rawBody = Buffer.from(JSON.stringify(req.body));
         }
-        const event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+        const event = getStripe().webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
         console.log('Received Stripe webhook event:', event.type);
         switch (event.type) {
             case 'customer.subscription.created':
@@ -371,6 +377,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
  * Handle subscription updates from Stripe webhooks
  */
 const handleSubscriptionUpdate = async (subscription) => {
+    var _a;
     try {
         // Find user by Stripe customer ID
         const userQuery = await db
@@ -394,6 +401,16 @@ const handleSubscriptionUpdate = async (subscription) => {
                 stripeSubscriptionId: subscription.id,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
+            // Check if this is a pre-scheduled subscription
+            if (((_a = subscription.metadata) === null || _a === void 0 ? void 0 : _a.preScheduled) === 'true' &&
+                subscription.status === 'trialing') {
+                subscriptionData.scheduledPlan = subscriptionData.plan;
+                subscriptionData.hasScheduledSubscription = true;
+                console.log('Pre-scheduled subscription detected:', {
+                    plan: subscriptionData.plan,
+                    trialEnd: subscription.trial_end,
+                });
+            }
             await userDoc.ref.update({
                 subscription: { ...userData.subscription, ...subscriptionData },
             });
@@ -487,6 +504,7 @@ const handlePaymentFailure = async (invoice) => {
  * Handle subscription creation from Stripe webhooks
  */
 const handleSubscriptionCreated = async (subscription) => {
+    var _a;
     try {
         // Find user by Stripe customer ID
         const userQuery = await db
@@ -511,6 +529,16 @@ const handleSubscriptionCreated = async (subscription) => {
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
+            // Check if this is a pre-scheduled subscription
+            if (((_a = subscription.metadata) === null || _a === void 0 ? void 0 : _a.preScheduled) === 'true' &&
+                subscription.status === 'trialing') {
+                subscriptionData.scheduledPlan = subscriptionData.plan;
+                subscriptionData.hasScheduledSubscription = true;
+                console.log('Pre-scheduled subscription created:', {
+                    plan: subscriptionData.plan,
+                    trialEnd: subscription.trial_end,
+                });
+            }
             await userDoc.ref.update({
                 subscription: { ...userData.subscription, ...subscriptionData },
             });
@@ -722,9 +750,9 @@ const handleDiscountDeleted = async (discount) => {
  */
 function getPlanFromPriceId(priceId) {
     const priceMap = {
-        [functions.config().stripe.homeowner_price_id || 'price_homeowner']: 'homeowner',
-        [functions.config().stripe.basic_price_id || 'price_basic']: 'basic',
-        [functions.config().stripe.professional_price_id || 'price_professional']: 'professional',
+        [process.env.STRIPE_HOMEOWNER_PRICE_ID || 'price_homeowner']: 'homeowner',
+        [process.env.STRIPE_BASIC_PRICE_ID || 'price_basic']: 'basic',
+        [process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional']: 'professional',
     };
     return priceMap[priceId] || 'free';
 }
@@ -733,9 +761,9 @@ function getPlanFromPriceId(priceId) {
  */
 function getPriceIdFromPlan(plan) {
     const planMap = {
-        homeowner: functions.config().stripe.homeowner_price_id || 'price_homeowner',
-        basic: functions.config().stripe.basic_price_id || 'price_basic',
-        professional: functions.config().stripe.professional_price_id || 'price_professional',
+        homeowner: process.env.STRIPE_HOMEOWNER_PRICE_ID || 'price_homeowner',
+        basic: process.env.STRIPE_BASIC_PRICE_ID || 'price_basic',
+        professional: process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional',
     };
     return planMap[plan] || 'price_homeowner'; // Default to homeowner
 }

@@ -37,21 +37,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendFeedbackEmail = void 0;
-const functions = __importStar(require("firebase-functions"));
+const firestore_1 = require("firebase-functions/v2/firestore");
 const admin = __importStar(require("firebase-admin"));
 const mail_1 = __importDefault(require("@sendgrid/mail"));
+const params_1 = require("firebase-functions/params");
+const SENDGRID_API_KEY = (0, params_1.defineSecret)(process.env.SENDGRID_API_KEY_SECRET_NAME || 'SENDGRID_API_KEY');
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-// Initialize SendGrid with API key from environment
-const sendgridApiKey = process.env.SENDGRID_API_KEY;
-if (sendgridApiKey) {
-    mail_1.default.setApiKey(sendgridApiKey);
-}
-exports.sendFeedbackEmail = functions.firestore
-    .document('feedback/{feedbackId}')
-    .onCreate(async (snap, context) => {
-    const feedback = snap.data();
+exports.sendFeedbackEmail = (0, firestore_1.onDocumentCreated)({
+    document: 'feedback/{feedbackId}',
+    secrets: ['SENDGRID_API_KEY'],
+}, async (event) => {
+    var _a, _b;
+    // Initialize SendGrid with secret
+    const apiKey = SENDGRID_API_KEY.value();
+    if (apiKey) {
+        mail_1.default.setApiKey(apiKey);
+    }
+    const feedback = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
     if (!feedback) {
         console.error('No feedback data found');
         return;
@@ -69,7 +73,7 @@ exports.sendFeedbackEmail = functions.firestore
         feature_request: 'Feature Request',
         bug_report: 'Bug Report',
     };
-    const subject = `[Property Manager] ${feedbackTypeLabels[feedback.type]}: ${feedback.subject}`;
+    const subject = `[Maintley] ${feedbackTypeLabels[feedback.type]}: ${feedback.subject}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #6366f1;">New Feedback Received</h2>
@@ -91,18 +95,23 @@ exports.sendFeedbackEmail = functions.firestore
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
         <p style="color: #6b7280; font-size: 14px;">
-          This feedback was submitted through the Property Manager app.
+          This feedback was submitted through the Maintley app.
         </p>
       </div>
     `;
+    const feedbackRef = (_b = event.data) === null || _b === void 0 ? void 0 : _b.ref;
+    if (!feedbackRef) {
+        console.error('No feedback document reference found');
+        return;
+    }
     // Send feedback via SendGrid
-    if (sendgridApiKey) {
+    if (apiKey) {
         try {
             const msg = {
-                to: 'doberfamilyventures@gmail.com',
+                to: 'maintleyapp@gmail.com',
                 from: {
                     email: 'feedback@maintleyapp.com',
-                    name: 'Property Manager Feedback',
+                    name: 'Maintley Feedback',
                 },
                 subject: subject,
                 html: html,
@@ -111,7 +120,7 @@ exports.sendFeedbackEmail = functions.firestore
             await mail_1.default.send(msg);
             console.log('Feedback email sent successfully via SendGrid');
             // Update the feedback document to mark it as sent
-            await snap.ref.update({
+            await feedbackRef.update({
                 status: 'sent_via_sendgrid',
                 sentAt: admin.firestore.FieldValue.serverTimestamp(),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -120,7 +129,7 @@ exports.sendFeedbackEmail = functions.firestore
         catch (sendgridError) {
             console.error('Error sending via SendGrid:', sendgridError);
             // Update the feedback document to mark the failure
-            await snap.ref.update({
+            await feedbackRef.update({
                 status: 'sendgrid_failed',
                 sendgridError: sendgridError instanceof Error
                     ? sendgridError.message
@@ -132,7 +141,7 @@ exports.sendFeedbackEmail = functions.firestore
     else {
         console.log('No SendGrid API key configured. Feedback saved but not sent.');
         // Update the feedback document to mark it as saved only
-        await snap.ref.update({
+        await feedbackRef.update({
             status: 'saved_no_sendgrid_key',
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });

@@ -284,12 +284,9 @@ const propertySlice = apiSlice.injectEndpoints({
 					const accountId = userData?.accountId;
 					const isAccountOwner = userData?.isAccountOwner;
 
-					// Determine which user's data to fetch
-					// For family members, use the account owner's ID
 					const targetUserId =
 						!isAccountOwner && accountId ? accountId : userId;
 
-					// Get all property groups owned by this user
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
 						where('userId', '==', targetUserId),
@@ -297,7 +294,6 @@ const propertySlice = apiSlice.injectEndpoints({
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
 
-					// Fetch all properties owned by this user or where user is administrator
 					const ownedProperties: Property[] = [];
 					if (groupIds.length > 0) {
 						// Process in batches of 10 (Firestore limitation)
@@ -406,12 +402,29 @@ const propertySlice = apiSlice.injectEndpoints({
 						...adminProperties,
 						...regularSharedProperties,
 					];
+					console.log('DEBUG getProperties: allProperties breakdown:', {
+						ownedProperties: ownedProperties.length,
+						coOwnerProperties: coOwnerProperties.length,
+						coOwnerSharedProperties: coOwnerSharedProperties.length,
+						adminProperties: adminProperties.length,
+						regularSharedProperties: regularSharedProperties.length,
+						total: allProperties.length,
+					});
 					const uniqueProperties = Array.from(
 						new Map(allProperties.map((p) => [p.id, p])).values(),
+					);
+					console.log(
+						'DEBUG getProperties: uniqueProperties:',
+						uniqueProperties.length,
+					);
+					console.log(
+						'DEBUG getProperties: returning properties:',
+						uniqueProperties.map((p: any) => ({ id: p.id, slug: p.slug })),
 					);
 
 					return { data: uniqueProperties };
 				} catch (error: any) {
+					console.error('DEBUG getProperties: ERROR:', error.message, error);
 					return { error: error.message };
 				}
 			},
