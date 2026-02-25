@@ -1,0 +1,37 @@
+name: Build Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Unit tests
+        run: yarn test:ci
+
+      - name: Build
+        run: yarn build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright tests (Chromium)
+        run: yarn e2e:chrome
