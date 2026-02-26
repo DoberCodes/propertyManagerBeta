@@ -31,6 +31,7 @@ import {
 	TRIAL_DURATION_DAYS,
 } from '../constants/subscriptions';
 import { STRIPE_PLANS } from '../constants/stripe';
+import { createLegalAgreementDocuments } from '../constants/legal';
 
 /**
  * Sign in with email and password
@@ -170,6 +171,38 @@ export const signUpWithEmail = async (
 	legalAgreement?: {
 		agreedToTerms: boolean;
 		agreedVersion: string;
+		documents?: {
+			termsOfService?: {
+				accepted: boolean;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			privacyPolicy?: {
+				accepted: boolean;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			maintenanceDisclaimer?: {
+				accepted: boolean;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			subscriptionTerms?: {
+				accepted: boolean;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			eula?: {
+				accepted: boolean;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+		};
 	},
 ): Promise<User> => {
 	try {
@@ -228,12 +261,51 @@ export const signUpWithEmail = async (
 		);
 
 		// Prepare legal agreement data
+		const agreedAt = new Date().toISOString();
+		const legalDocuments = legalAgreement
+			? legalAgreement.documents
+				? {
+						termsOfService: legalAgreement.documents.termsOfService
+							? {
+									...legalAgreement.documents.termsOfService,
+									agreedAt,
+							  }
+							: undefined,
+						privacyPolicy: legalAgreement.documents.privacyPolicy
+							? {
+									...legalAgreement.documents.privacyPolicy,
+									agreedAt,
+							  }
+							: undefined,
+						maintenanceDisclaimer: legalAgreement.documents
+							.maintenanceDisclaimer
+							? {
+									...legalAgreement.documents.maintenanceDisclaimer,
+									agreedAt,
+							  }
+							: undefined,
+						subscriptionTerms: legalAgreement.documents.subscriptionTerms
+							? {
+									...legalAgreement.documents.subscriptionTerms,
+									agreedAt,
+							  }
+							: undefined,
+						eula: legalAgreement.documents.eula
+							? {
+									...legalAgreement.documents.eula,
+									agreedAt,
+							  }
+							: undefined,
+				  }
+				: createLegalAgreementDocuments(agreedAt, legalAgreement.agreedVersion)
+			: undefined;
 		const legalAgreementData = legalAgreement
 			? {
 					legalAgreement: {
 						agreedToTerms: legalAgreement.agreedToTerms,
-						agreedAt: new Date().toISOString(),
+						agreedAt,
 						agreedVersion: legalAgreement.agreedVersion,
+						documents: legalDocuments,
 					},
 			  }
 			: {};
@@ -313,8 +385,9 @@ export const signUpWithEmail = async (
 			...(legalAgreement && {
 				legalAgreement: {
 					agreedToTerms: legalAgreement.agreedToTerms,
-					agreedAt: new Date().toISOString(),
+					agreedAt,
 					agreedVersion: legalAgreement.agreedVersion,
+					documents: legalDocuments,
 				},
 			}),
 		};

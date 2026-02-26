@@ -817,16 +817,6 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				),
 			});
 		} else {
-			// For homeowners, add terms acceptance step before completion
-			// steps.push({
-			// 	id: 'terms_acceptance',
-			// 	type: 'instruction',
-			// 	title: 'Terms & Agreements',
-			// 	description:
-			// 		'Before you start using Maintley, please review and accept our terms of service, privacy policy, and maintenance disclaimer.',
-			// 	content: <TermsAcceptanceStep onAccept={advanceToNextStep} />,
-			// });
-
 			steps.push({
 				id: 'homeowner_complete',
 				type: 'instruction',

@@ -6,7 +6,11 @@ import { useUpdateUserMutation } from '../../../Redux/API/userSlice';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import DocumentViewer from '../../DocumentViewer';
 import { COLORS } from '../../../constants/colors';
-import { LEGAL_AGREEMENT_VERSION } from '../../../constants/legal';
+import {
+	LEGAL_AGREEMENT_VERSION,
+	LEGAL_DOCUMENT_KEYS,
+	createLegalAgreementDocuments,
+} from '../../../constants/legal';
 
 const NotificationWrapper = styled.div`
 	position: fixed;
@@ -253,6 +257,9 @@ export const LegalAgreementNotification: React.FC<
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 	const [acceptedMaintenance, setAcceptedMaintenance] = useState(false);
+	const [acceptedSubscriptionTerms, setAcceptedSubscriptionTerms] =
+		useState(false);
+	const [acceptedEula, setAcceptedEula] = useState(false);
 	const [selectedDocument, setSelectedDocument] = useState<{
 		name: string;
 		title: string;
@@ -269,10 +276,29 @@ export const LegalAgreementNotification: React.FC<
 			return;
 		}
 
+		const docs = currentUser.legalAgreement?.documents;
+		const hasAcceptedAllDocuments =
+			docs?.[LEGAL_DOCUMENT_KEYS.termsOfService]?.accepted &&
+			docs?.[LEGAL_DOCUMENT_KEYS.termsOfService]?.agreedVersion ===
+				LEGAL_AGREEMENT_VERSION &&
+			docs?.[LEGAL_DOCUMENT_KEYS.privacyPolicy]?.accepted &&
+			docs?.[LEGAL_DOCUMENT_KEYS.privacyPolicy]?.agreedVersion ===
+				LEGAL_AGREEMENT_VERSION &&
+			docs?.[LEGAL_DOCUMENT_KEYS.maintenanceDisclaimer]?.accepted &&
+			docs?.[LEGAL_DOCUMENT_KEYS.maintenanceDisclaimer]?.agreedVersion ===
+				LEGAL_AGREEMENT_VERSION &&
+			docs?.[LEGAL_DOCUMENT_KEYS.subscriptionTerms]?.accepted &&
+			docs?.[LEGAL_DOCUMENT_KEYS.subscriptionTerms]?.agreedVersion ===
+				LEGAL_AGREEMENT_VERSION &&
+			docs?.[LEGAL_DOCUMENT_KEYS.eula]?.accepted &&
+			docs?.[LEGAL_DOCUMENT_KEYS.eula]?.agreedVersion ===
+				LEGAL_AGREEMENT_VERSION;
+
 		// Check if user needs to accept legal documents
 		const needsToAccept =
 			!currentUser.legalAgreement?.agreedToTerms ||
-			currentUser.legalAgreement?.agreedVersion !== LEGAL_AGREEMENT_VERSION;
+			currentUser.legalAgreement?.agreedVersion !== LEGAL_AGREEMENT_VERSION ||
+			!hasAcceptedAllDocuments;
 
 		setShow(needsToAccept);
 	}, [currentUser]);
@@ -299,7 +325,13 @@ export const LegalAgreementNotification: React.FC<
 	const handleAccept = async () => {
 		setError('');
 
-		if (!acceptedTerms || !acceptedPrivacy || !acceptedMaintenance) {
+		if (
+			!acceptedTerms ||
+			!acceptedPrivacy ||
+			!acceptedMaintenance ||
+			!acceptedSubscriptionTerms ||
+			!acceptedEula
+		) {
 			setError('Please accept all legal documents to continue.');
 			return;
 		}
@@ -309,6 +341,9 @@ export const LegalAgreementNotification: React.FC<
 			return;
 		}
 
+		const agreedAt = new Date().toISOString();
+		const documents = createLegalAgreementDocuments(agreedAt);
+
 		try {
 			await updateUser({
 				id: currentUser.id,
@@ -316,7 +351,8 @@ export const LegalAgreementNotification: React.FC<
 					legalAgreement: {
 						agreedToTerms: true,
 						agreedVersion: LEGAL_AGREEMENT_VERSION,
-						agreedAt: new Date().toISOString(),
+						agreedAt,
+						documents,
 					},
 				},
 			}).unwrap();
@@ -328,7 +364,8 @@ export const LegalAgreementNotification: React.FC<
 					legalAgreement: {
 						agreedToTerms: true,
 						agreedVersion: LEGAL_AGREEMENT_VERSION,
-						agreedAt: new Date().toISOString(),
+						agreedAt,
+						documents,
 					},
 				}),
 			);
@@ -344,7 +381,12 @@ export const LegalAgreementNotification: React.FC<
 		return null;
 	}
 
-	const allAccepted = acceptedTerms && acceptedPrivacy && acceptedMaintenance;
+	const allAccepted =
+		acceptedTerms &&
+		acceptedPrivacy &&
+		acceptedMaintenance &&
+		acceptedSubscriptionTerms &&
+		acceptedEula;
 
 	return (
 		<NotificationWrapper>
@@ -439,6 +481,57 @@ export const LegalAgreementNotification: React.FC<
 									)
 								}>
 								View Maintenance Disclaimer →
+							</ViewLink>
+						</LegalContent>
+					</LegalSection>
+
+					<LegalSection>
+						<LegalCheckbox
+							type='checkbox'
+							checked={acceptedSubscriptionTerms}
+							onChange={(e) => {
+								setAcceptedSubscriptionTerms(e.target.checked);
+								setError('');
+							}}
+						/>
+						<LegalContent>
+							<LegalTitle>Subscription Terms</LegalTitle>
+							<LegalDescription>
+								I acknowledge and agree to the subscription terms, including
+								billing cycles, trial period details, and cancellation policy.
+							</LegalDescription>
+							<ViewLink
+								onClick={() =>
+									handleViewDocument('subscription-terms', 'Subscription Terms')
+								}>
+								View Subscription Terms →
+							</ViewLink>
+						</LegalContent>
+					</LegalSection>
+
+					<LegalSection>
+						<LegalCheckbox
+							type='checkbox'
+							checked={acceptedEula}
+							onChange={(e) => {
+								setAcceptedEula(e.target.checked);
+								setError('');
+							}}
+						/>
+						<LegalContent>
+							<LegalTitle>End User License Agreement (EULA)</LegalTitle>
+							<LegalDescription>
+								I acknowledge and agree to the end user license agreement for
+								use of the Maintley software.
+							</LegalDescription>
+							<ViewLink
+								onClick={() =>
+									handleViewDocument(
+										'eula',
+										'End User License Agreement (EULA)',
+									)
+								}>
+								View EULA →
 							</ViewLink>
 						</LegalContent>
 					</LegalSection>

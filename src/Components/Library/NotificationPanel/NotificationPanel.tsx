@@ -20,7 +20,10 @@ import { Notification } from '../../../types/Notification.types';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import { GenericModal } from '../Modal/GenericModal';
 import DocumentViewer from '../../DocumentViewer';
-import { LEGAL_AGREEMENT_VERSION } from '../../../constants/legal';
+import {
+	LEGAL_AGREEMENT_VERSION,
+	createLegalAgreementDocuments,
+} from '../../../constants/legal';
 
 interface NotificationPanelProps {
 	userId?: string;
@@ -36,6 +39,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 	const [acceptedMaintenance, setAcceptedMaintenance] = useState(false);
+	const [acceptedSubscriptionTerms, setAcceptedSubscriptionTerms] =
+		useState(false);
+	const [acceptedEula, setAcceptedEula] = useState(false);
 	const [selectedDocument, setSelectedDocument] = useState<{
 		name: string;
 		title: string;
@@ -123,6 +129,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 		setAcceptedTerms(false);
 		setAcceptedPrivacy(false);
 		setAcceptedMaintenance(false);
+		setAcceptedSubscriptionTerms(false);
+		setAcceptedEula(false);
 		setSelectedDocument(null);
 	};
 
@@ -161,7 +169,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 			return;
 		}
 
-		if (!acceptedTerms || !acceptedPrivacy || !acceptedMaintenance) {
+		if (
+			!acceptedTerms ||
+			!acceptedPrivacy ||
+			!acceptedMaintenance ||
+			!acceptedSubscriptionTerms ||
+			!acceptedEula
+		) {
 			setLegalError('Please accept all legal documents to continue.');
 			return;
 		}
@@ -170,6 +184,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 			legalNotification.data?.legalVersion || LEGAL_AGREEMENT_VERSION,
 		);
 		const agreedAt = new Date().toISOString();
+		const documents = createLegalAgreementDocuments(agreedAt, agreedVersion);
 
 		try {
 			await updateUser({
@@ -179,6 +194,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 						agreedToTerms: true,
 						agreedVersion,
 						agreedAt,
+						documents,
 					},
 				},
 			}).unwrap();
@@ -190,6 +206,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 						agreedToTerms: true,
 						agreedVersion,
 						agreedAt,
+						documents,
 					},
 				}),
 			);
@@ -411,7 +428,11 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 				primaryButtonAction={handleAcceptLegal}
 				secondaryButtonAction={handleCloseLegalModal}
 				primaryButtonDisabled={
-					!acceptedTerms || !acceptedPrivacy || !acceptedMaintenance
+					!acceptedTerms ||
+					!acceptedPrivacy ||
+					!acceptedMaintenance ||
+					!acceptedSubscriptionTerms ||
+					!acceptedEula
 				}
 				isLoading={isUpdatingUser || isUpdating}
 				showActions>
@@ -487,6 +508,52 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 								)
 							}>
 							View Maintenance Disclaimer
+						</LegalLink>
+					</LegalContent>
+				</LegalSection>
+				<LegalSection>
+					<LegalCheckbox
+						type='checkbox'
+						checked={acceptedSubscriptionTerms}
+						onChange={(event) => {
+							setAcceptedSubscriptionTerms(event.target.checked);
+							setLegalError('');
+						}}
+					/>
+					<LegalContent>
+						<LegalTitle>Subscription Terms</LegalTitle>
+						<LegalDescription>
+							I acknowledge and agree to the subscription terms, including
+							billing, renewals, and cancellation provisions.
+						</LegalDescription>
+						<LegalLink
+							onClick={() =>
+								handleViewDocument('subscription-terms', 'Subscription Terms')
+							}>
+							View Subscription Terms
+						</LegalLink>
+					</LegalContent>
+				</LegalSection>
+				<LegalSection>
+					<LegalCheckbox
+						type='checkbox'
+						checked={acceptedEula}
+						onChange={(event) => {
+							setAcceptedEula(event.target.checked);
+							setLegalError('');
+						}}
+					/>
+					<LegalContent>
+						<LegalTitle>End User License Agreement (EULA)</LegalTitle>
+						<LegalDescription>
+							I acknowledge and agree to the end user license agreement for use
+							of the Maintley software.
+						</LegalDescription>
+						<LegalLink
+							onClick={() =>
+								handleViewDocument('eula', 'End User License Agreement (EULA)')
+							}>
+							View EULA
 						</LegalLink>
 					</LegalContent>
 				</LegalSection>

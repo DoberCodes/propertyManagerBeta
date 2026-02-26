@@ -34,7 +34,10 @@ import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
 import DocumentViewer from '../DocumentViewer';
 import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
-import { LEGAL_AGREEMENT_VERSION } from '../../constants/legal';
+import {
+	LEGAL_AGREEMENT_VERSION,
+	createLegalAgreementDocuments,
+} from '../../constants/legal';
 
 // Map user type selection to appropriate role
 const getRoleFromUserType = (userType: string): string => {
@@ -147,7 +150,7 @@ export const RegistrationCard = () => {
 		}
 		if (!agreedToTerms) {
 			setError(
-				'You must agree to the Terms of Service, Privacy Policy, and Maintenance Disclaimer to continue',
+				'You must agree to the Terms of Service, Privacy Policy, Maintenance Disclaimer, Subscription Terms, and EULA to continue',
 			);
 			return false;
 		}
@@ -212,6 +215,7 @@ export const RegistrationCard = () => {
 		try {
 			// Map userType to appropriate role
 			const userRole = getRoleFromUserType(userType);
+			const agreedAt = new Date().toISOString();
 
 			// Register with Firebase - use mapped role, trim values
 			const user = await signUpWithEmail(
@@ -225,6 +229,10 @@ export const RegistrationCard = () => {
 				{
 					agreedToTerms: true,
 					agreedVersion: LEGAL_AGREEMENT_VERSION,
+					documents: createLegalAgreementDocuments(
+						agreedAt,
+						LEGAL_AGREEMENT_VERSION,
+					),
 				},
 			);
 
@@ -522,6 +530,41 @@ export const RegistrationCard = () => {
 										)
 									}>
 									Maintenance Disclaimer
+								</button>
+								,{' '}
+								<button
+									type='button'
+									style={{
+										color: '#10b981',
+										textDecoration: 'none',
+										cursor: 'pointer',
+										background: 'none',
+										border: 'none',
+										padding: 0,
+										font: 'inherit',
+									}}
+									onClick={() =>
+										handleViewDocument(
+											'subscription-terms',
+											'Subscription Terms',
+										)
+									}>
+									Subscription Terms
+								</button>
+								, and{' '}
+								<button
+									type='button'
+									style={{
+										color: '#10b981',
+										textDecoration: 'none',
+										cursor: 'pointer',
+										background: 'none',
+										border: 'none',
+										padding: 0,
+										font: 'inherit',
+									}}
+									onClick={() => handleViewDocument('eula', 'EULA')}>
+									EULA
 								</button>
 								*
 							</span>

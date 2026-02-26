@@ -57,6 +57,43 @@ export interface User {
 		agreedToTerms: boolean;
 		agreedAt: string; // ISO date string
 		agreedVersion: string; // Version of terms agreed to
+		documents?: {
+			termsOfService?: {
+				accepted: boolean;
+				agreedAt: string;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			privacyPolicy?: {
+				accepted: boolean;
+				agreedAt: string;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			maintenanceDisclaimer?: {
+				accepted: boolean;
+				agreedAt: string;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			subscriptionTerms?: {
+				accepted: boolean;
+				agreedAt: string;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+			eula?: {
+				accepted: boolean;
+				agreedAt: string;
+				agreedVersion: string;
+				fileName: string;
+				title: string;
+			};
+		};
 	};
 	notificationPreferences?: {
 		enabled: boolean; // Master switch for all notifications
