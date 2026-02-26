@@ -34,6 +34,7 @@ import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
 import DocumentViewer from '../DocumentViewer';
 import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
+import { LEGAL_AGREEMENT_VERSION } from '../../constants/legal';
 
 // Map user type selection to appropriate role
 const getRoleFromUserType = (userType: string): string => {
@@ -223,7 +224,7 @@ export const RegistrationCard = () => {
 				promoCode.trim() || undefined,
 				{
 					agreedToTerms: true,
-					agreedVersion: '1.1', // You can update this version when terms change
+					agreedVersion: LEGAL_AGREEMENT_VERSION,
 				},
 			);
 

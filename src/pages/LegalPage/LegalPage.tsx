@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import DocumentViewer from '../../Components/DocumentViewer';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import SEO from 'Components/SEO/SEO';
+import { legalDocuments } from './legalDocuments';
 
 const Container = styled.div`
 	max-width: 1000px;
@@ -73,7 +73,7 @@ const DocumentDescription = styled.p`
 	line-height: 1.5;
 `;
 
-const DocumentLink = styled.button`
+const DocumentLink = styled(Link)`
 	display: inline-block;
 	padding: 8px 16px;
 	background: #10b981;
@@ -83,8 +83,6 @@ const DocumentLink = styled.button`
 	font-weight: 500;
 	font-size: 0.875rem;
 	transition: background 0.2s;
-	border: none;
-	cursor: pointer;
 
 	&:hover {
 		background: #059669;
@@ -95,49 +93,32 @@ const DocumentLink = styled.button`
 
 const LegalPage: React.FC = () => {
 	const navigate = useNavigate();
-	const [selectedDocument, setSelectedDocument] = useState<{
-		name: string;
-		title: string;
-	} | null>(null);
+	const location = useLocation();
 
-	const documents = [
-		{
-			title: 'Terms of Service',
-			description:
-				'The legal agreement that governs your use of Maintley, including user rights, responsibilities, and service limitations.',
-			filename: 'terms-of-service',
-		},
-		{
-			title: 'Privacy Policy',
-			description:
-				'Information about how we collect, use, and protect your personal data and maintain your privacy.',
-			filename: 'privacy-policy',
-		},
-		{
-			title: 'Maintenance Disclaimer',
-			description:
-				'Important limitations regarding the use of Maintley as a maintenance tracking tool and professional service disclaimers.',
-			filename: 'maintenance-disclaimer',
-		},
-	];
+	const handleBack = () => {
+		const from = (location.state as { from?: string } | null)?.from;
+		if (from) {
+			navigate(from);
+			return;
+		}
 
-	const handleViewDocument = (filename: string, title: string) => {
-		setSelectedDocument({ name: filename, title });
-	};
+		if ((window.history.state?.idx ?? 0) > 0) {
+			navigate(-1);
+			return;
+		}
 
-	const handleCloseViewer = () => {
-		setSelectedDocument(null);
+		navigate('/');
 	};
 
 	return (
 		<Container>
 			<SEO
-				title="Legal — Maintley"
-				description="Terms of Service, Privacy Policy, and Maintenance Disclaimer for Maintley."
+				title='Legal — Maintley'
+				description='Terms of Service, Privacy Policy, and Maintenance Disclaimer for Maintley.'
 				url={`${window.location.origin}/legal`}
-				keywords="terms of service, privacy policy, legal"
+				keywords='terms of service, privacy policy, legal'
 			/>
-			<BackButton onClick={() => navigate(-1)}>← Back</BackButton>
+			<BackButton onClick={handleBack}>← Back</BackButton>
 
 			<Title>Legal Documents</Title>
 
@@ -154,25 +135,18 @@ const LegalPage: React.FC = () => {
 			</p>
 
 			<DocumentGrid>
-				{documents.map((doc, index) => (
+				{legalDocuments.map((doc, index) => (
 					<DocumentCard key={index}>
 						<DocumentTitle>{doc.title}</DocumentTitle>
 						<DocumentDescription>{doc.description}</DocumentDescription>
 						<DocumentLink
-							as='button'
-							onClick={() => handleViewDocument(doc.filename, doc.title)}>
+							to={`/legal/${doc.filename}`}
+							state={{ from: location.pathname }}>
 							View Document
 						</DocumentLink>
 					</DocumentCard>
 				))}
 			</DocumentGrid>
-
-			<DocumentViewer
-				documentName={selectedDocument?.name || ''}
-				title={selectedDocument?.title || ''}
-				isOpen={!!selectedDocument}
-				onClose={handleCloseViewer}
-			/>
 		</Container>
 	);
 };

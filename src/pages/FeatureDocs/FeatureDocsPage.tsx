@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { COLORS } from '../../constants/colors';
 import SEO from 'Components/SEO/SEO';
 
@@ -154,6 +154,22 @@ const FeatureIcon = styled.span`
 
 export const FeatureDocsPage: React.FC = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
+
+	const handleBack = () => {
+		const from = (location.state as { from?: string } | null)?.from;
+		if (from) {
+			navigate(from);
+			return;
+		}
+
+		if ((window.history.state?.idx ?? 0) > 0) {
+			navigate(-1);
+			return;
+		}
+
+		navigate('/');
+	};
 
 	const screenshots = [
 		`${window.location.origin}/screenshots/dashboard.png`,
@@ -181,9 +197,7 @@ export const FeatureDocsPage: React.FC = () => {
 						Everything you need to manage property maintenance efficiently
 					</HeaderSubtitle>
 				</Header>
-				<LinkButton onClick={() => navigate('/dashboard')}>
-					← Back to Dashboard
-				</LinkButton>
+				<LinkButton onClick={handleBack}>← Back</LinkButton>
 				<FeatureGrid>
 					<FeatureCard>
 						<SubTitle>
@@ -293,13 +307,15 @@ export const FeatureDocsPage: React.FC = () => {
 						</SubTitle>
 						<Paragraph>
 							Comprehensive reporting tools for maintenance history, trends, and
-							compliance.
+							documentation.
 						</Paragraph>
 						<FeatureList>
 							<FeatureItem>Detailed maintenance history reports</FeatureItem>
 							<FeatureItem>Task completion analytics</FeatureItem>
 							<FeatureItem>Property performance metrics</FeatureItem>
-							<FeatureItem>Data export capabilities</FeatureItem>
+							<FeatureItem>
+								Data export capabilities for reference/supporting documentation
+							</FeatureItem>
 							<FeatureItem>Custom report generation</FeatureItem>
 							<FeatureItem>Historical trend analysis</FeatureItem>
 						</FeatureList>
@@ -389,7 +405,9 @@ export const FeatureDocsPage: React.FC = () => {
 							<FeatureItem>Photo and document attachments</FeatureItem>
 							<FeatureItem>Contractor work history tracking</FeatureItem>
 							<FeatureItem>Searchable maintenance database</FeatureItem>
-							<FeatureItem>Compliance and audit trail</FeatureItem>
+							<FeatureItem>
+								Documentation and audit trail for your records
+							</FeatureItem>
 							<FeatureItem>Visual maintenance documentation</FeatureItem>
 						</FeatureList>
 					</FeatureCard>

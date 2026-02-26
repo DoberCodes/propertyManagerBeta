@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {
-	registerNewAccount,
-	generateTestEmail,
-	waitForPageLoaded,
-} from './auth.helper';
+import { loginWithDemoUser, waitForPageLoaded } from './auth.helper';
 
 /**
  * Payment and subscription tests
@@ -13,10 +9,7 @@ import {
 
 test.describe('Payments & Subscriptions', () => {
 	test.beforeEach(async ({ page }) => {
-		// Register a new account before each test
-		const testEmail = generateTestEmail();
-		const testPassword = 'TestPassword123!';
-		await registerNewAccount(page, testEmail, testPassword);
+		await loginWithDemoUser(page);
 	});
 
 	test('user can view subscription/payment page', async ({ page }) => {
@@ -44,43 +37,47 @@ test.describe('Payments & Subscriptions', () => {
 				name: /subscribe|upgrade|get started|select plan/i,
 			})
 			.first();
-		if (await subscribeButton.isVisible()) {
-			await subscribeButton.click();
+		expect(await subscribeButton.isVisible()).toBeTruthy();
+		await subscribeButton.click();
 
-			// Wait for Stripe form to load
-			await page.waitForTimeout(500);
+		// Wait for either hosted Stripe redirect or embedded Stripe elements
+		await page.waitForTimeout(1500);
+		await page
+			.waitForURL(/stripe\.com/i, { timeout: 10000 })
+			.catch(() => undefined);
 
-			// Look for Stripe iframe/form
-			const stripeForm = page.frameLocator('iframe[name*="stripe"]').first();
-			if (stripeForm) {
-				// Fill card number using Stripe test card
-				const cardInput = stripeForm.locator('input[name="cardnumber"]');
-				if (await cardInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-					await cardInput.fill('4242424242424242');
+		const isHostedCheckout = /stripe\.com/i.test(page.url());
 
-					// Fill other card details
-					const expiryInput = stripeForm.locator('input[name="exp-date"]');
-					await expiryInput.fill('12/25');
+		if (isHostedCheckout) {
+			// Hosted Stripe Checkout confirms frontend/backend wiring.
+			await expect(page).toHaveURL(/stripe\.com/i);
+			return;
+		}
 
-					const cvcInput = stripeForm.locator('input[name="cvc"]');
-					await cvcInput.fill('123');
+		// Fallback: embedded Stripe flow (if present)
+		const stripeForm = page.frameLocator('iframe[name*="stripe"]').first();
+		const cardInput = stripeForm.locator('input[name="cardnumber"]');
+		if (await cardInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+			await cardInput.fill('4242424242424242');
 
-					const zipInput = stripeForm.locator('input[name="zip"]');
-					await zipInput.fill('12345');
-				}
+			const expiryInput = stripeForm.locator('input[name="exp-date"]');
+			await expiryInput.fill('12/25');
+
+			const cvcInput = stripeForm.locator('input[name="cvc"]');
+			await cvcInput.fill('123');
+
+			const zipInput = stripeForm.locator('input[name="zip"]');
+			if (await zipInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+				await zipInput.fill('12345');
 			}
 
-			// Submit payment
 			const payButton = page
 				.getByRole('button', { name: /subscribe|confirm|pay|complete/i })
 				.last();
-			await payButton.click();
-
-			// Wait for payment processing
-			await page.waitForTimeout(2000);
-
-			// Verify success
-			await page.waitForTimeout(500);
+			if (await payButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+				await payButton.click();
+				await page.waitForTimeout(1000);
+			}
 		}
 	});
 
@@ -93,36 +90,42 @@ test.describe('Payments & Subscriptions', () => {
 		const subscribeButton = page
 			.getByRole('button', { name: /subscribe|upgrade|get started/i })
 			.first();
-		if (await subscribeButton.isVisible()) {
-			await subscribeButton.click();
+		expect(await subscribeButton.isVisible()).toBeTruthy();
+		await subscribeButton.click();
 
-			// Wait for Stripe form
-			await page.waitForTimeout(1000);
+		// Wait for either hosted Stripe redirect or embedded Stripe elements
+		await page.waitForTimeout(1500);
+		await page
+			.waitForURL(/stripe\.com/i, { timeout: 10000 })
+			.catch(() => undefined);
 
-			// Try to find and fill card input with invalid card
-			const stripeForm = page.frameLocator('iframe[name*="stripe"]').first();
-			if (stripeForm) {
-				const cardInput = stripeForm.locator('input[name="cardnumber"]');
-				if (await cardInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-					// Use invalid card number
-					await cardInput.fill('4000000000000002');
+		const isHostedCheckout = /stripe\.com/i.test(page.url());
 
-					const expiryInput = stripeForm.locator('input[name="exp-date"]');
-					await expiryInput.fill('12/25');
+		if (isHostedCheckout) {
+			// Hosted Stripe Checkout confirms frontend/backend wiring.
+			await expect(page).toHaveURL(/stripe\.com/i);
+			return;
+		}
 
-					const cvcInput = stripeForm.locator('input[name="cvc"]');
-					await cvcInput.fill('123');
-				}
-			}
+		// Fallback: embedded Stripe flow (if present)
+		const stripeForm = page.frameLocator('iframe[name*="stripe"]').first();
+		const cardInput = stripeForm.locator('input[name="cardnumber"]');
+		if (await cardInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+			await cardInput.fill('4000000000000002');
 
-			// Submit payment
+			const expiryInput = stripeForm.locator('input[name="exp-date"]');
+			await expiryInput.fill('12/25');
+
+			const cvcInput = stripeForm.locator('input[name="cvc"]');
+			await cvcInput.fill('123');
+
 			const payButton = page
 				.getByRole('button', { name: /subscribe|confirm|pay/i })
 				.last();
-			await payButton.click();
-
-			// Wait for error
-			await page.waitForTimeout(500);
+			if (await payButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+				await payButton.click();
+				await page.waitForTimeout(1000);
+			}
 		}
 	});
 

@@ -32,8 +32,8 @@ const FeaturesSectionComponent = () => {
 					<FeatureTitle>Detailed Maintenance Records</FeatureTitle>
 					<FeatureDescription>
 						Create and maintain comprehensive maintenance history for every
-						property, unit, device, and component. Build records you can rely
-						on.
+						property, unit, device, and component. Build records you can
+						reference and organize.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
@@ -63,8 +63,8 @@ const FeaturesSectionComponent = () => {
 					<FeatureTitle>History Analytics & Reporting</FeatureTitle>
 					<FeatureDescription>
 						Generate detailed reports on maintenance history, patterns, and
-						trends. Export your complete maintenance records for reference or
-						compliance.
+						trends. Export your complete maintenance records as
+						reference/supporting documentation.
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>

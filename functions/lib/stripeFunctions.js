@@ -84,6 +84,27 @@ const db = admin.firestore();
 const removeUndefinedFields = (obj) => {
     return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
 };
+const buildMergedSubscription = (existingSubscription, patch) => {
+    return removeUndefinedFields({
+        ...(existingSubscription || {}),
+        ...patch,
+    });
+};
+const syncFamilyAccountSubscription = async (userData, subscription) => {
+    const accountId = userData === null || userData === void 0 ? void 0 : userData.accountId;
+    if (!accountId) {
+        return;
+    }
+    try {
+        await db.collection('familyAccounts').doc(accountId).set({
+            subscription: removeUndefinedFields(subscription),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+    }
+    catch (error) {
+        console.warn(`Failed to sync family account subscription for account ${accountId}:`, error);
+    }
+};
 /**
  * Create Stripe Checkout Session
  * POST /api/create-checkout-session
@@ -268,13 +289,19 @@ exports.verifyCheckoutSession = functions
             plan: getPlanFromPriceId(subscription.items.data[0].price.id),
             currentPeriodStart: subscription.current_period_start,
             currentPeriodEnd: subscription.current_period_end,
+            trialEndsAt: subscription.trial_end,
             stripeCustomerId: session.customer,
             stripeSubscriptionId: subscription.id,
         };
-        await db.collection('users').doc(firebaseUID).update({
-            subscription: subscriptionData,
+        const userRef = db.collection('users').doc(firebaseUID);
+        const userDoc = await userRef.get();
+        const userData = userDoc.data();
+        const mergedSubscription = buildMergedSubscription(userData === null || userData === void 0 ? void 0 : userData.subscription, subscriptionData);
+        await userRef.update({
+            subscription: mergedSubscription,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        await syncFamilyAccountSubscription(userData, mergedSubscription);
         return { success: true, subscription: subscriptionData };
     }
     catch (error) {
@@ -309,11 +336,16 @@ exports.cancelSubscription = functions
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
+            const mergedSubscription = buildMergedSubscription(userData.subscription, {
+                status: 'cancelled',
+                canceledAt: subscription.cancel_at,
+            });
             await userDoc.ref.update({
-                'subscription.status': 'cancelled',
-                'subscription.canceledAt': subscription.cancel_at,
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
         }
         return { success: true, cancelAt: subscription.cancel_at };
     }
@@ -460,12 +492,11 @@ const handleSubscriptionUpdate = async (subscription) => {
                 });
             }
             const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+            const mergedSubscription = buildMergedSubscription(userData.subscription, sanitizedSubscriptionData);
             await userDoc.ref.update({
-                subscription: {
-                    ...userData.subscription,
-                    ...sanitizedSubscriptionData,
-                },
+                subscription: mergedSubscription,
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Subscription updated for user:', userDoc.id);
         }
     }
@@ -485,11 +516,16 @@ const handleSubscriptionCancellation = async (subscription) => {
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
+            const mergedSubscription = buildMergedSubscription(userData.subscription, {
+                status: 'cancelled',
+                canceledAt: subscription.canceled_at,
+            });
             await userDoc.ref.update({
-                'subscription.status': 'cancelled',
-                'subscription.canceledAt': subscription.canceled_at,
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Subscription cancelled for user:', userDoc.id);
         }
     }
@@ -518,12 +554,11 @@ const handlePaymentSuccess = async (invoice) => {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
             const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+            const mergedSubscription = buildMergedSubscription(userData.subscription, sanitizedSubscriptionData);
             await userDoc.ref.update({
-                subscription: {
-                    ...userData.subscription,
-                    ...sanitizedSubscriptionData,
-                },
+                subscription: mergedSubscription,
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Payment succeeded for user:', userDoc.id);
         }
     }
@@ -543,12 +578,15 @@ const handlePaymentFailure = async (invoice) => {
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
             // Mark subscription as past due or cancelled based on retry attempts
             const newStatus = invoice.attempt_count >= 3 ? 'cancelled' : 'past_due';
+            const mergedSubscription = buildMergedSubscription(userData.subscription, { status: newStatus });
             await userDoc.ref.update({
-                'subscription.status': newStatus,
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log(`Payment failed for user: ${userDoc.id}, status: ${newStatus}`);
         }
     }
@@ -596,12 +634,11 @@ const handleSubscriptionCreated = async (subscription) => {
                 });
             }
             const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+            const mergedSubscription = buildMergedSubscription(userData.subscription, sanitizedSubscriptionData);
             await userDoc.ref.update({
-                subscription: {
-                    ...userData.subscription,
-                    ...sanitizedSubscriptionData,
-                },
+                subscription: mergedSubscription,
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('New subscription created for user:', userDoc.id, 'Plan:', subscriptionData.plan, 'Status:', subscriptionData.status);
         }
         else {
@@ -624,10 +661,13 @@ const handleSubscriptionPaused = async (subscription) => {
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
+            const mergedSubscription = buildMergedSubscription(userData.subscription, { status: 'paused' });
             await userDoc.ref.update({
-                'subscription.status': 'paused',
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Subscription paused for user:', userDoc.id);
         }
     }
@@ -647,10 +687,13 @@ const handleSubscriptionResumed = async (subscription) => {
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
+            const mergedSubscription = buildMergedSubscription(userData.subscription, { status: 'active' });
             await userDoc.ref.update({
-                'subscription.status': 'active',
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Subscription resumed for user:', userDoc.id);
         }
     }
@@ -715,12 +758,17 @@ const handlePaymentActionRequired = async (invoice) => {
             .get();
         if (!userQuery.empty) {
             const userDoc = userQuery.docs[0];
+            const userData = userDoc.data();
+            const mergedSubscription = buildMergedSubscription(userData.subscription, {
+                status: 'incomplete',
+                paymentActionRequired: true,
+            });
             // Mark subscription as requiring payment action
             await userDoc.ref.update({
-                'subscription.status': 'incomplete',
-                'subscription.paymentActionRequired': true,
+                subscription: mergedSubscription,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+            await syncFamilyAccountSubscription(userData, mergedSubscription);
             console.log('Payment action required for user:', userDoc.id);
         }
     }

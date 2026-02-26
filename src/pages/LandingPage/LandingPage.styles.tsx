@@ -1264,10 +1264,29 @@ export const FooterContent = styled.div`
 	max-width: 1200px;
 	margin: 0 auto 40px auto;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 60px;
+	grid-template-columns: 1fr minmax(420px, 560px);
+	column-gap: 40px;
+	row-gap: 10px;
+	align-items: start;
 
-	div h3 {
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+		margin-bottom: 30px;
+	}
+`;
+
+export const FooterBrand = styled.div`
+	width: 80%;
+	max-width: 400px;
+	padding: 0 10px;
+
+	@media (max-width: 480px) {
+		width: 100%;
+		max-width: none;
+		padding: 0;
+	}
+
+	h3 {
 		font-size: 24px;
 		font-weight: 800;
 		margin: 0 0 10px 0;
@@ -1277,29 +1296,54 @@ export const FooterContent = styled.div`
 		background-clip: text;
 	}
 
-	div p {
+	p {
 		font-size: 15px;
 		color: rgba(255, 255, 255, 0.7);
-		margin: 0;
+		margin: 0 0 18px 0;
 		line-height: 1.6;
-	}
-
-	@media (max-width: 1024px) {
-		grid-template-columns: 1fr;
-		gap: 30px;
-		margin-bottom: 30px;
 	}
 `;
 
 export const FooterLinks = styled.div`
 	display: flex;
-	gap: 30px;
-	justify-content: flex-end;
+	width: 80%;
+	max-width: 500px;
+	padding-top: 30px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 18px;
+	justify-content: center;
+	margin-left: auto;
 
 	@media (max-width: 1024px) {
+		max-width: none;
+		margin-left: 0;
 		justify-content: flex-start;
-		flex-wrap: wrap;
-		gap: 20px;
+		align-items: center;
+		gap: 10px 14px;
+	}
+
+	@media (max-width: 480px) {
+		width: 100%;
+		max-width: none;
+		padding-top: 20px;
+	}
+`;
+
+export const FooterLegalLinks = styled(FooterLinks)`
+	grid-column: 1 / -1;
+	width: 100%;
+	max-width: none;
+	margin-left: 0;
+	margin-top: 26px;
+	padding-top: 0;
+	gap: 10px 20px;
+	justify-content: center;
+
+	@media (max-width: 480px) {
+		width: 100%;
+		max-width: none;
+		padding-top: 6px;
 	}
 `;
 
@@ -1321,6 +1365,19 @@ export const FooterLink = styled.button`
 
 	@media (max-width: 1024px) {
 		font-size: 14px;
+	}
+`;
+
+export const FooterLegalLink = styled(FooterLink)`
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.68);
+
+	&:hover {
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	@media (max-width: 1024px) {
+		font-size: 13px;
 	}
 `;
 

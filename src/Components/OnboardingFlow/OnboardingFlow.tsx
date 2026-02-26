@@ -611,7 +611,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 				type: 'instruction',
 				title: 'Create Your First Task',
 				description:
-					'Tasks help you stay organized and never miss important maintenance work. Plus they add to your maintenance history which is super helpful for tracking and resale value.',
+					'Tasks help you stay organized and never miss important maintenance work. They also build your maintenance history, which is helpful for tracking and as supporting documentation.',
 				content: (
 					<div style={{ textAlign: 'left', marginTop: '20px' }}>
 						<p style={{ marginBottom: '16px', fontWeight: '500' }}>
@@ -729,8 +729,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 							}}>
 							Run reports to get insights on your maintenance history, property
 							details, and more. Use this information to make informed decisions
-							and keep your properties in top shape, or share it with potential
-							buyers to demonstrate the value of your well-maintained property!
+							and keep your properties in top shape, or share it as supporting
+							documentation when needed.
 						</p>
 					</div>
 				</div>

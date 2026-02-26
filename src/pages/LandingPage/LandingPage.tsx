@@ -51,8 +51,11 @@ import {
 	SubmitButton,
 	FooterSection,
 	FooterContent,
+	FooterBrand,
 	FooterLinks,
+	FooterLegalLinks,
 	FooterLink,
+	FooterLegalLink,
 	DownloadSection,
 	DownloadContainer,
 	DownloadHeading,
@@ -67,6 +70,7 @@ import packageJson from '../../../package.json';
 import { getAPKFileSize, getAPKDownloadURL } from '../../utils/versionCheck';
 import SEO from 'Components/SEO/SEO';
 import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
+import { legalDocuments } from '../LegalPage/legalDocuments';
 
 const formatBytes = (bytes: number) => {
 	var marker = 1024;
@@ -83,6 +87,9 @@ const formatBytes = (bytes: number) => {
 const LandingPageComponent = () => {
 	const navigate = useNavigate();
 	const apkDownloadUrl = getAPKDownloadURL();
+	const handleFooterLink = (href: string) => {
+		window.location.href = href;
+	};
 
 	// SEO — important for public landing page (site-wide defaults are in public/index.html)
 	const seo = {
@@ -306,7 +313,10 @@ const LandingPageComponent = () => {
 									Access your history anytime
 								</BenefitItem>
 								<BenefitItem>
-									<FontAwesomeIcon className='benefit-icon' icon={faShieldHalved} />
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faShieldHalved}
+									/>
 									Your logging, your peace of mind
 								</BenefitItem>
 							</BenefitList>
@@ -333,11 +343,17 @@ const LandingPageComponent = () => {
 									Encrypted data
 								</BenefitItem>
 								<BenefitItem>
-									<FontAwesomeIcon className='benefit-icon' icon={faShieldHalved} />
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faShieldHalved}
+									/>
 									Secure servers
 								</BenefitItem>
 								<BenefitItem>
-									<FontAwesomeIcon className='benefit-icon' icon={faUserShield} />
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faUserShield}
+									/>
 									Privacy-first design
 								</BenefitItem>
 							</BenefitList>
@@ -406,7 +422,10 @@ const LandingPageComponent = () => {
 									Equipment servicing schedules
 								</BenefitItem>
 								<BenefitItem>
-									<FontAwesomeIcon className='benefit-icon' icon={faChartLine} />
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faChartLine}
+									/>
 									Comprehensive asset overview
 								</BenefitItem>
 							</BenefitList>
@@ -497,10 +516,12 @@ const LandingPageComponent = () => {
 							Available on Android — download and get settled in.
 						</DownloadSubtext>
 						<DownloadButton href={apkDownloadUrl} download>
-							<FontAwesomeIcon icon={faDownload} /> Download Latest APK ({apkFileSize})
+							<FontAwesomeIcon icon={faDownload} /> Download Latest APK (
+							{apkFileSize})
 						</DownloadButton>
 						<DownloadButton href={versionedApkDownloadUrl} download>
-							<FontAwesomeIcon icon={faBoxArchive} /> Download v{previousVersion} APK ({versionedApkFileSize})
+							<FontAwesomeIcon icon={faBoxArchive} /> Download v
+							{previousVersion} APK ({versionedApkFileSize})
 						</DownloadButton>
 						<DownloadInfo>
 							<InfoItem>
@@ -521,13 +542,14 @@ const LandingPageComponent = () => {
 				{/* Footer */}
 				<FooterSection>
 					<FooterContent>
-						<div>
+						<FooterBrand>
 							<h3>Maintley</h3>
 							<p>
 								Simple, friendly maintenance tracking for homeowners, small
 								landlords, and folks who like to take care of their own.
 							</p>
-						</div>
+						</FooterBrand>
+
 						<FooterLinks>
 							<FooterLink
 								onClick={() => {
@@ -535,7 +557,7 @@ const LandingPageComponent = () => {
 										.getElementById('About')
 										?.scrollIntoView({ behavior: 'smooth' });
 								}}>
-								Our Story
+								About
 							</FooterLink>
 							<FooterLink
 								onClick={() => {
@@ -543,7 +565,7 @@ const LandingPageComponent = () => {
 										.getElementById('Mission')
 										?.scrollIntoView({ behavior: 'smooth' });
 								}}>
-								Why Us
+								Mission
 							</FooterLink>
 							<FooterLink
 								onClick={() => {
@@ -551,7 +573,7 @@ const LandingPageComponent = () => {
 										.getElementById('Features')
 										?.scrollIntoView({ behavior: 'smooth' });
 								}}>
-								Features
+								Feature Highlights
 							</FooterLink>
 							<FooterLink
 								as='a'
@@ -560,7 +582,7 @@ const LandingPageComponent = () => {
 									e.preventDefault();
 									window.location.href = '#/features';
 								}}>
-								All Features
+								Feature Catalog
 							</FooterLink>
 							<FooterLink
 								onClick={() => {
@@ -576,7 +598,7 @@ const LandingPageComponent = () => {
 										.getElementById('Contact')
 										?.scrollIntoView({ behavior: 'smooth' });
 								}}>
-								Get in Touch
+								Contact
 							</FooterLink>
 							<FooterLink
 								onClick={() => {
@@ -586,16 +608,31 @@ const LandingPageComponent = () => {
 								}}>
 								Download
 							</FooterLink>
-							<FooterLink
+						</FooterLinks>
+
+						<FooterLegalLinks>
+							<FooterLegalLink
 								as='a'
 								href='#/legal'
 								onClick={(e) => {
 									e.preventDefault();
-									window.location.href = '#/legal';
+									handleFooterLink('#/legal');
 								}}>
-								Legal
-							</FooterLink>
-						</FooterLinks>
+								Legal Hub
+							</FooterLegalLink>
+							{legalDocuments.map((doc) => (
+								<FooterLegalLink
+									key={doc.filename}
+									as='a'
+									href={`#/legal/${doc.filename}`}
+									onClick={(e) => {
+										e.preventDefault();
+										handleFooterLink(`#/legal/${doc.filename}`);
+									}}>
+									{doc.title}
+								</FooterLegalLink>
+							))}
+						</FooterLegalLinks>
 					</FooterContent>
 					<FooterCopyright>
 						&copy; 2026 Maintley. Built with ❤️ for property owners everywhere.

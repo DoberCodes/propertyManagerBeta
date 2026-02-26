@@ -74,7 +74,7 @@ export const SUBSCRIPTION_PLANS = {
 	HOMEOWNER: {
 		id: 'homeowner',
 		name: 'Homeowner',
-		priceMonthly: 2,
+		priceMonthly: 1.99,
 		maxProperties: 1,
 		features: [
 			'Single-family homes only',
@@ -82,7 +82,7 @@ export const SUBSCRIPTION_PLANS = {
 			'Unlimited maintenance tracking for devices and their maintenance history',
 			'Maintain a complete record of contractor/vendor work',
 			'Attach documents and photos to create a full property audit trail',
-			'Export reports for insurance or resale documentation',
+			'Export reports as reference/supporting documentation for insurance or resale',
 		],
 		permissions: {
 			canManageTeam: false,
@@ -101,7 +101,7 @@ export const SUBSCRIPTION_PLANS = {
 	BASIC: {
 		id: 'basic',
 		name: 'Basic',
-		priceMonthly: 9,
+		priceMonthly: 8.99,
 		maxProperties: 5,
 		features: [
 			'All of Homeowner features, plus:',
@@ -128,12 +128,12 @@ export const SUBSCRIPTION_PLANS = {
 	PROFESSIONAL: {
 		id: 'professional',
 		name: 'Professional',
-		priceMonthly: 16,
+		priceMonthly: 15.99,
 		maxProperties: 10,
 		features: [
 			'Everything in Basic, plus:',
 			'Track maintenance for up to 10 properties',
-			'Advanced reporting & export (PDF/CSV) for insurance, resale, or audits',
+			'Advanced reporting & export (PDF/CSV) for insurance, resale, or audits as reference/supporting documentation',
 			'Full audit trail for each property and unit',
 		],
 		permissions: {

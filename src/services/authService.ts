@@ -404,10 +404,44 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 		// Use family account subscription when available, but prefer user subscription
 		// if family data appears stale (e.g., family shows expired but user is active).
 		type UserSubscription = User['subscription'];
-		const userSubscription =
-			(rawData.subscription ?? undefined) as UserSubscription;
-		const familySubscription =
-			(familyAccountSubscription ?? undefined) as UserSubscription;
+		type NonNullableUserSubscription = NonNullable<UserSubscription>;
+		type UserSubscriptionStatus = NonNullableUserSubscription['status'];
+		const normalizeSubscriptionStatus = (
+			status: string | undefined,
+		): UserSubscriptionStatus | undefined => {
+			if (!status) return undefined;
+
+			if (status === 'trialing') return SUBSCRIPTION_STATUS.TRIAL;
+			if (
+				status === 'incomplete' ||
+				status === 'incomplete_expired' ||
+				status === 'unpaid'
+			) {
+				return SUBSCRIPTION_STATUS.PAST_DUE;
+			}
+
+			return status as UserSubscriptionStatus;
+		};
+
+		const normalizeSubscription = (
+			subscription: UserSubscription,
+		): UserSubscription => {
+			if (!subscription) return subscription;
+
+			return {
+				...subscription,
+				status:
+					normalizeSubscriptionStatus(subscription.status) ||
+					subscription.status,
+			};
+		};
+
+		const userSubscription = normalizeSubscription(
+			(rawData.subscription ?? undefined) as UserSubscription,
+		);
+		const familySubscription = normalizeSubscription(
+			(familyAccountSubscription ?? undefined) as UserSubscription,
+		);
 
 		const userStatus = userSubscription?.status;
 		const familyStatus = familySubscription?.status;
@@ -415,14 +449,30 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			userStatus === SUBSCRIPTION_STATUS.ACTIVE ||
 			userStatus === SUBSCRIPTION_STATUS.TRIAL ||
 			userStatus === SUBSCRIPTION_STATUS.PAST_DUE;
+		const familyHasNonExpiredStatus =
+			familyStatus === SUBSCRIPTION_STATUS.ACTIVE ||
+			familyStatus === SUBSCRIPTION_STATUS.TRIAL ||
+			familyStatus === SUBSCRIPTION_STATUS.PAST_DUE;
+		const userHasStripeSubscription = !!userSubscription?.stripeSubscriptionId;
+		const familyHasStripeSubscription =
+			!!familySubscription?.stripeSubscriptionId;
+		const userHasPaidPlan =
+			!!userSubscription?.plan && userSubscription.plan !== 'free';
+		const familyHasPaidPlan =
+			!!familySubscription?.plan && familySubscription.plan !== 'free';
 
 		const shouldPreferUserSubscription =
 			!!userStatus &&
-			!!familyStatus &&
-			((familyStatus === SUBSCRIPTION_STATUS.EXPIRED &&
-				userStatus !== SUBSCRIPTION_STATUS.EXPIRED) ||
+			(!familyStatus ||
+				(userHasStripeSubscription && !familyHasStripeSubscription) ||
+				(userHasPaidPlan && !familyHasPaidPlan) ||
+				(userHasNonExpiredStatus && !familyHasNonExpiredStatus) ||
+				(familyStatus === SUBSCRIPTION_STATUS.EXPIRED &&
+					userStatus !== SUBSCRIPTION_STATUS.EXPIRED) ||
 				(familyStatus === SUBSCRIPTION_STATUS.CANCELLED &&
-					userHasNonExpiredStatus));
+					userHasNonExpiredStatus) ||
+				(familyStatus === SUBSCRIPTION_STATUS.TRIAL &&
+					userStatus === SUBSCRIPTION_STATUS.ACTIVE));
 
 		const subscriptionData = shouldPreferUserSubscription
 			? userSubscription
@@ -469,7 +519,10 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 						updatedAt: serverTimestamp(),
 					});
 				} catch (syncError) {
-					console.warn('Failed to sync family account subscription:', syncError);
+					console.warn(
+						'Failed to sync family account subscription:',
+						syncError,
+					);
 				}
 			}
 		} else {

@@ -24,6 +24,7 @@ import {
 	selectIsContractor,
 } from '../../../../Redux/selectors/permissionSelectors';
 import { clearUserLocalStorage } from '../../../../utils/localStorageCleanup';
+import { signOutUser } from '../../../../services/authService';
 import TitleName from '../../../../Assets/images/TitleName.png';
 import { GenericModal } from '../../Modal/GenericModal';
 import { NotificationPanel } from '../../NotificationPanel/NotificationPanel';
@@ -70,11 +71,17 @@ export const TopNav = () => {
 	];
 
 	const handleLogout = () => {
-		clearUserLocalStorage(currentUser?.id);
-		dispatch(logout());
-		// Reset RTK Query cache to prevent stale data for next user
-		dispatch(apiSlice.util.resetApiState());
-		navigate('/');
+		void (async () => {
+			try {
+				await signOutUser();
+				dispatch(logout());
+				// Reset RTK Query cache to prevent stale data for next user
+				dispatch(apiSlice.util.resetApiState());
+				navigate('/');
+			} catch (error) {
+				console.error('Logout failed:', error);
+			}
+		})();
 	};
 
 	// Get notifications to check for unread ones

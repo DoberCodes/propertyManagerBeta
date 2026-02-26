@@ -27,12 +27,12 @@ export const NavWrapper = styled.div`
 	}
 
 	@media (max-width: 480px) {
-		height: 120px;
-		min-height: 120px;
+		height: 128px;
+		min-height: 128px;
 		flex-direction: column;
 		justify-content: center;
-		padding: 12px 8px;
-		gap: 8px;
+		padding: 8px 8px 24px 8px;
+		gap: 4px;
 		flex-wrap: nowrap;
 	}
 `;
@@ -43,12 +43,12 @@ export const NavTitle = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 35%;
+	width: 24%;
 	height: 100%;
 	margin: 0;
 
 	img {
-		max-height: 100%;
+		max-height: 72px;
 		width: auto;
 		max-width: none;
 	}
@@ -84,7 +84,7 @@ export const ButtonWrapper = styled.div`
 	flex-direction: row;
 	justify-content: flex-end;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
 	flex: 1;
 
 	@media (max-width: 1024px) {
@@ -95,19 +95,20 @@ export const ButtonWrapper = styled.div`
 	@media (max-width: 480px) {
 		width: 100%;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: 3px;
 		justify-content: center;
+		align-content: center;
 	}
 `;
 
 export const NavAnchor = styled(HashLink)`
-	font-size: 16px;
+	font-size: 15px;
 	font-weight: 600;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	margin: 0px 12px 0px 12px;
-	padding: 8px 12px;
+	margin: 0px 4px;
+	padding: 8px 10px;
 	text-decoration: none;
 	color: white;
 	white-space: nowrap;
@@ -126,23 +127,58 @@ export const NavAnchor = styled(HashLink)`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 12px;
-		margin: 4px 4px;
-		padding: 6px 8px;
-		flex: 1;
-		min-width: auto;
+		font-size: 11px;
+		margin: 2px 3px;
+		padding: 5px 7px;
+		flex: 0 1 auto;
+		min-width: fit-content;
+		text-align: center;
+	}
+`;
+
+export const NavRouteLink = styled(Link)`
+	font-size: 15px;
+	font-weight: 600;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin: 0px 4px;
+	padding: 8px 10px;
+	text-decoration: none;
+	color: white;
+	white-space: nowrap;
+	border-radius: 4px;
+	transition: background-color 0.2s, transform 0.2s;
+
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.2);
+		transform: translateY(-2px);
+	}
+
+	@media (max-width: 1024px) {
+		font-size: 14px;
+		margin: 0px 8px 0px 8px;
+		padding: 6px 10px;
+	}
+
+	@media (max-width: 480px) {
+		font-size: 11px;
+		margin: 2px 3px;
+		padding: 5px 7px;
+		flex: 0 1 auto;
+		min-width: fit-content;
 		text-align: center;
 	}
 `;
 
 export const NavButton = styled(Link)`
-	font-size: 20px;
+	font-size: 17px;
 	font-weight: 700;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	margin: 0px 20px 0px 20px;
-	padding: 10px;
+	margin: 0px 8px;
+	padding: 8px 10px;
 	text-decoration: none;
 	color: black;
 	white-space: nowrap;
@@ -160,9 +196,9 @@ export const NavButton = styled(Link)`
 	}
 
 	@media (max-width: 480px) {
-		font-size: 14px;
+		font-size: 13px;
 		margin: 0;
-		padding: 8px 16px;
+		padding: 6px 12px;
 		flex: 0 1 auto;
 		min-width: 80px;
 		background-color: white;

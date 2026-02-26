@@ -4,6 +4,7 @@ import {
 	IconWrapper,
 	NavAnchor,
 	NavButton,
+	NavRouteLink,
 	NavTitle,
 	NavWrapper,
 } from './LandingNavbar.styles';
@@ -25,22 +26,23 @@ export const LandingNavbar = () => {
 							block: 'start',
 						})
 					}>
-					Our Story
+					About
 				</NavAnchor>
 				<NavAnchor
 					to='#Mission'
 					scroll={(el) =>
 						el.scrollIntoView({ behavior: 'auto', block: 'start' })
 					}>
-					Our Mission
+					Mission
 				</NavAnchor>
 				<NavAnchor
 					to='#Features'
 					scroll={(el) =>
 						el.scrollIntoView({ behavior: 'auto', block: 'start' })
 					}>
-					Features
+					Feature Highlights
 				</NavAnchor>
+				<NavRouteLink to='/features'>Feature Catalog</NavRouteLink>
 				<NavAnchor
 					to='#Pricing'
 					scroll={(el) =>
@@ -53,7 +55,7 @@ export const LandingNavbar = () => {
 					scroll={(el) =>
 						el.scrollIntoView({ behavior: 'auto', block: 'start' })
 					}>
-					Contact Us
+					Contact
 				</NavAnchor>
 				<NavButton to='/login'>Login</NavButton>
 			</ButtonWrapper>

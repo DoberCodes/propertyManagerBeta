@@ -119,7 +119,7 @@ interface DocumentViewerProps {
 	documentName: string;
 	title: string;
 	isOpen: boolean;
-	onClose: () => void;
+	onClose?: () => void;
 }
 
 const DocumentViewer: React.FC<DocumentViewerProps> = ({

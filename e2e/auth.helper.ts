@@ -13,6 +13,19 @@ export function generateTestEmail(): string {
 	return `test.user.${timestamp}.${random}@maintley-test.com`;
 }
 
+export function getDemoCredentials(): { email: string; password: string } {
+	const email = process.env.E2E_DEMO_EMAIL?.trim() || '';
+	const password = process.env.E2E_DEMO_PASSWORD?.trim() || '';
+
+	if (!email || !password) {
+		throw new Error(
+			'Missing demo credentials. Set E2E_DEMO_EMAIL and E2E_DEMO_PASSWORD in your environment.',
+		);
+	}
+
+	return { email, password };
+}
+
 /**
  * Suppress the webpack dev server overlay that can interfere with tests
  */
@@ -134,7 +147,10 @@ export async function registerNewAccount(
 	page: Page,
 	email: string,
 	password: string,
+	options: { submitFinalStep?: boolean } = {},
 ) {
+	const { submitFinalStep = true } = options;
+
 	// Navigate directly to registration page (app uses hash routing)
 	await page.goto('/#/registration', {
 		waitUntil: 'domcontentloaded',
@@ -255,6 +271,21 @@ export async function registerNewAccount(
 	await page.waitForTimeout(500);
 
 	console.log('Successfully reached Step 4');
+
+	if (!submitFinalStep) {
+		console.log(
+			'Skipping final account submission for test/demo mode (no Firebase signup)',
+		);
+		const finalButton = page
+			.getByRole('button', {
+				name: /create account|sign up|register|submit|complete|finish|done/i,
+			})
+			.last();
+
+		await finalButton.waitFor({ state: 'visible', timeout: 10000 });
+		return;
+	}
+
 	console.log('Looking for final submit button on Step 4');
 
 	const submitButton = page
@@ -271,21 +302,7 @@ export async function registerNewAccount(
 	// Check for error messages
 	console.log('Checking for error messages after submission...');
 	await page.waitForTimeout(1000);
-
-	// Wait for successful registration (redirect away from registration page)
-	try {
-		await page.waitForURL(
-			(url) =>
-				!url.pathname.includes('registration') &&
-				!url.pathname.includes('register'),
-			{ timeout: 15000 },
-		);
-		console.log(
-			'Successfully registered and navigated away from registration page',
-		);
-	} catch {
-		console.log('Page did not redirect, but registration may have succeeded');
-	}
+	await page.waitForTimeout(1500);
 
 	// Aggressively dismiss guided setup modals
 	await dismissGuidedSetupIfPresent(page);
@@ -334,37 +351,42 @@ export async function login(page: Page, email: string, password: string) {
 		.last();
 	await suppressDevServerOverlay(page);
 	await submitButton.click();
-
-	// Wait for navigation or dashboard to load
-	try {
-		await page.waitForURL(
-			(url) =>
-				!url.pathname.includes('login') && !url.pathname.includes('signin'),
-			{
-				timeout: 15000,
-			},
-		);
-	} catch {
-		// Even if URL doesn't change, wait for page to stabilize
-		await page.waitForTimeout(2000);
-	}
+	await page.waitForTimeout(2000);
 
 	await dismissGuidedSetupIfPresent(page);
+}
+
+export async function loginWithDemoUser(page: Page) {
+	const { email, password } = getDemoCredentials();
+	await login(page, email, password);
 }
 
 /**
  * Logout from the application
  */
 export async function logout(page: Page) {
-	await page.goto('/#/settings', { waitUntil: 'domcontentloaded' });
 	await waitForPageLoaded(page);
-	const logoutButton = page.getByRole('button', {
-		name: /sign out|logout|delete account/i,
-	});
-	if (await logoutButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-		await logoutButton.click();
-		await page.waitForTimeout(2000);
+
+	const desktopProfileTrigger = page.locator('.desktop-profile').first();
+	if (
+		await desktopProfileTrigger.isVisible({ timeout: 3000 }).catch(() => false)
+	) {
+		await desktopProfileTrigger.click();
+	} else {
+		const mobileProfileTrigger = page.locator('.mobile-profile img').first();
+		if (
+			await mobileProfileTrigger.isVisible({ timeout: 3000 }).catch(() => false)
+		) {
+			await mobileProfileTrigger.click();
+		}
 	}
+
+	const logoutButton = page
+		.getByRole('button', { name: /log out|sign out|logout/i })
+		.first();
+	await logoutButton.waitFor({ state: 'visible', timeout: 10000 });
+	await logoutButton.click();
+	await page.waitForTimeout(1500);
 }
 
 /**

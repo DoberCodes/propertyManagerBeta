@@ -144,16 +144,9 @@ export const handleCheckoutSuccess = async (sessionId: string) => {
  */
 export const cancelSubscription = async (subscriptionId: string) => {
 	try {
-		const response = await fetch('/api/cancel-subscription', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ subscriptionId }),
-		});
-
-		const data = await response.json();
-		return data;
+		const cancel = httpsCallable(functions, 'cancelSubscription');
+		const result = await cancel({ subscriptionId });
+		return result.data;
 	} catch (error) {
 		console.error('Failed to cancel subscription:', error);
 		throw error;
@@ -165,9 +158,9 @@ export const cancelSubscription = async (subscriptionId: string) => {
  */
 export const getSubscriptionDetails = async (subscriptionId: string) => {
 	try {
-		const response = await fetch(`/api/subscription-details/${subscriptionId}`);
-		const data = await response.json();
-		return data;
+		const getDetails = httpsCallable(functions, 'getSubscriptionDetails');
+		const result = await getDetails({ subscriptionId });
+		return result.data;
 	} catch (error) {
 		console.error('Failed to get subscription details:', error);
 		throw error;

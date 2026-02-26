@@ -56,6 +56,44 @@ const removeUndefinedFields = (obj: Record<string, any>) => {
 	);
 };
 
+const buildMergedSubscription = (
+	existingSubscription: Record<string, any> | undefined,
+	patch: Record<string, any>,
+) => {
+	return removeUndefinedFields({
+		...(existingSubscription || {}),
+		...patch,
+	});
+};
+
+const syncFamilyAccountSubscription = async (
+	userData: Record<string, any> | undefined,
+	subscription: Record<string, any>,
+) => {
+	const accountId = userData?.accountId;
+	if (!accountId) {
+		return;
+	}
+
+	try {
+		await db
+			.collection('familyAccounts')
+			.doc(accountId)
+			.set(
+				{
+					subscription: removeUndefinedFields(subscription),
+					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+				},
+				{ merge: true },
+			);
+	} catch (error) {
+		console.warn(
+			`Failed to sync family account subscription for account ${accountId}:`,
+			error,
+		);
+	}
+};
+
 /**
  * Create Stripe Checkout Session
  * POST /api/create-checkout-session
@@ -63,8 +101,7 @@ const removeUndefinedFields = (obj: Record<string, any>) => {
  */
 export const createCheckoutSession = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
-	.https.onCall(
-	async (data, context) => {
+	.https.onCall(async (data, context) => {
 		// Verify user is authenticated
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
@@ -166,8 +203,7 @@ export const createCheckoutSession = functions
 				stripeError?.message || 'Failed to create checkout session',
 			);
 		}
-	},
-);
+	});
 
 /**
  * Create Trial Subscription in Stripe
@@ -176,8 +212,7 @@ export const createCheckoutSession = functions
  */
 export const createTrialSubscription = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
-	.https.onCall(
-	async (data, context) => {
+	.https.onCall(async (data, context) => {
 		// Verify user is authenticated
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
@@ -256,8 +291,7 @@ export const createTrialSubscription = functions
 				'Failed to create trial subscription',
 			);
 		}
-	},
-);
+	});
 
 /**
  * Verify Checkout Session Success
@@ -266,8 +300,7 @@ export const createTrialSubscription = functions
  */
 export const verifyCheckoutSession = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
-	.https.onCall(
-	async (data, context) => {
+	.https.onCall(async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
 				'unauthenticated',
@@ -314,14 +347,25 @@ export const verifyCheckoutSession = functions
 				plan: getPlanFromPriceId(subscription.items.data[0].price.id),
 				currentPeriodStart: subscription.current_period_start,
 				currentPeriodEnd: subscription.current_period_end,
+				trialEndsAt: subscription.trial_end,
 				stripeCustomerId: session.customer as string,
 				stripeSubscriptionId: subscription.id,
 			};
 
-			await db.collection('users').doc(firebaseUID).update({
-				subscription: subscriptionData,
+			const userRef = db.collection('users').doc(firebaseUID);
+			const userDoc = await userRef.get();
+			const userData = userDoc.data();
+			const mergedSubscription = buildMergedSubscription(
+				userData?.subscription,
+				subscriptionData,
+			);
+
+			await userRef.update({
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			return { success: true, subscription: subscriptionData };
 		} catch (error) {
@@ -331,8 +375,7 @@ export const verifyCheckoutSession = functions
 				'Failed to verify checkout session',
 			);
 		}
-	},
-);
+	});
 
 /**
  * Cancel Subscription
@@ -341,8 +384,7 @@ export const verifyCheckoutSession = functions
  */
 export const cancelSubscription = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
-	.https.onCall(
-	async (data, context) => {
+	.https.onCall(async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
 				'unauthenticated',
@@ -376,11 +418,21 @@ export const cancelSubscription = functions
 
 			if (!userQuery.empty) {
 				const userDoc = userQuery.docs[0];
+				const userData = userDoc.data();
+				const mergedSubscription = buildMergedSubscription(
+					userData.subscription,
+					{
+						status: 'cancelled',
+						canceledAt: subscription.cancel_at,
+					},
+				);
+
 				await userDoc.ref.update({
-					'subscription.status': 'cancelled',
-					'subscription.canceledAt': subscription.cancel_at,
+					subscription: mergedSubscription,
 					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 				});
+
+				await syncFamilyAccountSubscription(userData, mergedSubscription);
 			}
 
 			return { success: true, cancelAt: subscription.cancel_at };
@@ -391,8 +443,7 @@ export const cancelSubscription = functions
 				'Failed to cancel subscription',
 			);
 		}
-	},
-);
+	});
 
 /**
  * Get Subscription Details
@@ -400,8 +451,7 @@ export const cancelSubscription = functions
  */
 export const getSubscriptionDetails = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
-	.https.onCall(
-	async (data, context) => {
+	.https.onCall(async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
 				'unauthenticated',
@@ -430,8 +480,7 @@ export const getSubscriptionDetails = functions
 				'Failed to get subscription details',
 			);
 		}
-	},
-);
+	});
 
 /**
  * Handle Stripe Webhook Events
@@ -440,82 +489,82 @@ export const getSubscriptionDetails = functions
 export const stripeWebhook = functions
 	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
 	.https.onRequest(async (req, res) => {
-	const sig = req.headers['stripe-signature'] as string;
+		const sig = req.headers['stripe-signature'] as string;
 
-	try {
-		// Handle raw body for webhook signature verification
-		let rawBody: Buffer;
-		if (req.rawBody) {
-			rawBody = req.rawBody;
-		} else {
-			// For newer Firebase Functions versions, reconstruct raw body
-			rawBody = Buffer.from(JSON.stringify(req.body));
+		try {
+			// Handle raw body for webhook signature verification
+			let rawBody: Buffer;
+			if (req.rawBody) {
+				rawBody = req.rawBody;
+			} else {
+				// For newer Firebase Functions versions, reconstruct raw body
+				rawBody = Buffer.from(JSON.stringify(req.body));
+			}
+
+			const event = getStripe().webhooks.constructEvent(
+				rawBody,
+				sig,
+				process.env.STRIPE_WEBHOOK_SECRET!,
+			);
+
+			console.log('Received Stripe webhook event:', event.type);
+
+			switch (event.type) {
+				case 'customer.subscription.created':
+					await handleSubscriptionCreated(event.data.object);
+					break;
+				case 'customer.subscription.updated':
+					await handleSubscriptionUpdate(event.data.object);
+					break;
+				case 'customer.subscription.deleted':
+					await handleSubscriptionCancellation(event.data.object);
+					break;
+				case 'customer.subscription.paused':
+					await handleSubscriptionPaused(event.data.object);
+					break;
+				case 'customer.subscription.resumed':
+					await handleSubscriptionResumed(event.data.object);
+					break;
+				case 'invoice.created':
+					await handleInvoiceCreated(event.data.object);
+					break;
+				case 'invoice.finalized':
+					await handleInvoiceFinalized(event.data.object);
+					break;
+				case 'invoice.upcoming':
+					await handleInvoiceUpcoming(event.data.object);
+					break;
+				case 'invoice.payment_succeeded':
+					await handlePaymentSuccess(event.data.object);
+					break;
+				case 'invoice.payment_failed':
+					await handlePaymentFailure(event.data.object);
+					break;
+				case 'invoice.payment_action_required':
+					await handlePaymentActionRequired(event.data.object);
+					break;
+				case 'payment_method.attached':
+					await handlePaymentMethodAttached(event.data.object);
+					break;
+				case 'payment_method.detached':
+					await handlePaymentMethodDetached(event.data.object);
+					break;
+				case 'customer.discount.created':
+					await handleDiscountCreated(event.data.object);
+					break;
+				case 'customer.discount.deleted':
+					await handleDiscountDeleted(event.data.object);
+					break;
+				default:
+					console.log('Unhandled Stripe event type:', event.type);
+			}
+
+			res.json({ received: true });
+		} catch (error) {
+			console.error('Webhook error:', error);
+			res.status(400).send(`Webhook Error: ${error}`);
 		}
-
-		const event = getStripe().webhooks.constructEvent(
-			rawBody,
-			sig,
-			process.env.STRIPE_WEBHOOK_SECRET!,
-		);
-
-		console.log('Received Stripe webhook event:', event.type);
-
-		switch (event.type) {
-			case 'customer.subscription.created':
-				await handleSubscriptionCreated(event.data.object);
-				break;
-			case 'customer.subscription.updated':
-				await handleSubscriptionUpdate(event.data.object);
-				break;
-			case 'customer.subscription.deleted':
-				await handleSubscriptionCancellation(event.data.object);
-				break;
-			case 'customer.subscription.paused':
-				await handleSubscriptionPaused(event.data.object);
-				break;
-			case 'customer.subscription.resumed':
-				await handleSubscriptionResumed(event.data.object);
-				break;
-			case 'invoice.created':
-				await handleInvoiceCreated(event.data.object);
-				break;
-			case 'invoice.finalized':
-				await handleInvoiceFinalized(event.data.object);
-				break;
-			case 'invoice.upcoming':
-				await handleInvoiceUpcoming(event.data.object);
-				break;
-			case 'invoice.payment_succeeded':
-				await handlePaymentSuccess(event.data.object);
-				break;
-			case 'invoice.payment_failed':
-				await handlePaymentFailure(event.data.object);
-				break;
-			case 'invoice.payment_action_required':
-				await handlePaymentActionRequired(event.data.object);
-				break;
-			case 'payment_method.attached':
-				await handlePaymentMethodAttached(event.data.object);
-				break;
-			case 'payment_method.detached':
-				await handlePaymentMethodDetached(event.data.object);
-				break;
-			case 'customer.discount.created':
-				await handleDiscountCreated(event.data.object);
-				break;
-			case 'customer.discount.deleted':
-				await handleDiscountDeleted(event.data.object);
-				break;
-			default:
-				console.log('Unhandled Stripe event type:', event.type);
-		}
-
-		res.json({ received: true });
-	} catch (error) {
-		console.error('Webhook error:', error);
-		res.status(400).send(`Webhook Error: ${error}`);
-	}
-});
+	});
 
 /**
  * Handle subscription updates from Stripe webhooks
@@ -565,13 +614,16 @@ const handleSubscriptionUpdate = async (subscription: any) => {
 			}
 
 			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				sanitizedSubscriptionData,
+			);
 
 			await userDoc.ref.update({
-				subscription: {
-					...userData.subscription,
-					...sanitizedSubscriptionData,
-				},
+				subscription: mergedSubscription,
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log('Subscription updated for user:', userDoc.id);
 		}
@@ -593,12 +645,21 @@ const handleSubscriptionCancellation = async (subscription: any) => {
 
 		if (!userQuery.empty) {
 			const userDoc = userQuery.docs[0];
+			const userData = userDoc.data();
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				{
+					status: 'cancelled',
+					canceledAt: subscription.canceled_at,
+				},
+			);
 
 			await userDoc.ref.update({
-				'subscription.status': 'cancelled',
-				'subscription.canceledAt': subscription.canceled_at,
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log('Subscription cancelled for user:', userDoc.id);
 		}
@@ -631,13 +692,16 @@ const handlePaymentSuccess = async (invoice: any) => {
 			};
 
 			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				sanitizedSubscriptionData,
+			);
 
 			await userDoc.ref.update({
-				subscription: {
-					...userData.subscription,
-					...sanitizedSubscriptionData,
-				},
+				subscription: mergedSubscription,
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log('Payment succeeded for user:', userDoc.id);
 		}
@@ -659,14 +723,21 @@ const handlePaymentFailure = async (invoice: any) => {
 
 		if (!userQuery.empty) {
 			const userDoc = userQuery.docs[0];
+			const userData = userDoc.data();
 
 			// Mark subscription as past due or cancelled based on retry attempts
 			const newStatus = invoice.attempt_count >= 3 ? 'cancelled' : 'past_due';
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				{ status: newStatus },
+			);
 
 			await userDoc.ref.update({
-				'subscription.status': newStatus,
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log(
 				`Payment failed for user: ${userDoc.id}, status: ${newStatus}`,
@@ -726,13 +797,16 @@ const handleSubscriptionCreated = async (subscription: any) => {
 			}
 
 			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				sanitizedSubscriptionData,
+			);
 
 			await userDoc.ref.update({
-				subscription: {
-					...userData.subscription,
-					...sanitizedSubscriptionData,
-				},
+				subscription: mergedSubscription,
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log(
 				'New subscription created for user:',
@@ -763,10 +837,16 @@ const handleSubscriptionPaused = async (subscription: any) => {
 
 		if (!userQuery.empty) {
 			const userDoc = userQuery.docs[0];
+			const userData = userDoc.data();
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				{ status: 'paused' },
+			);
 			await userDoc.ref.update({
-				'subscription.status': 'paused',
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 			console.log('Subscription paused for user:', userDoc.id);
 		}
 	} catch (error) {
@@ -787,10 +867,16 @@ const handleSubscriptionResumed = async (subscription: any) => {
 
 		if (!userQuery.empty) {
 			const userDoc = userQuery.docs[0];
+			const userData = userDoc.data();
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				{ status: 'active' },
+			);
 			await userDoc.ref.update({
-				'subscription.status': 'active',
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 			console.log('Subscription resumed for user:', userDoc.id);
 		}
 	} catch (error) {
@@ -870,13 +956,22 @@ const handlePaymentActionRequired = async (invoice: any) => {
 
 		if (!userQuery.empty) {
 			const userDoc = userQuery.docs[0];
+			const userData = userDoc.data();
+			const mergedSubscription = buildMergedSubscription(
+				userData.subscription,
+				{
+					status: 'incomplete',
+					paymentActionRequired: true,
+				},
+			);
 
 			// Mark subscription as requiring payment action
 			await userDoc.ref.update({
-				'subscription.status': 'incomplete',
-				'subscription.paymentActionRequired': true,
+				subscription: mergedSubscription,
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			});
+
+			await syncFamilyAccountSubscription(userData, mergedSubscription);
 
 			console.log('Payment action required for user:', userDoc.id);
 		}

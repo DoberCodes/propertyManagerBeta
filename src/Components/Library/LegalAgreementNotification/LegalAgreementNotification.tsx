@@ -6,9 +6,7 @@ import { useUpdateUserMutation } from '../../../Redux/API/userSlice';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import DocumentViewer from '../../DocumentViewer';
 import { COLORS } from '../../../constants/colors';
-
-// Current version of legal documents
-const CURRENT_LEGAL_VERSION = '1.1';
+import { LEGAL_AGREEMENT_VERSION } from '../../../constants/legal';
 
 const NotificationWrapper = styled.div`
 	position: fixed;
@@ -274,7 +272,7 @@ export const LegalAgreementNotification: React.FC<
 		// Check if user needs to accept legal documents
 		const needsToAccept =
 			!currentUser.legalAgreement?.agreedToTerms ||
-			currentUser.legalAgreement?.agreedVersion !== CURRENT_LEGAL_VERSION;
+			currentUser.legalAgreement?.agreedVersion !== LEGAL_AGREEMENT_VERSION;
 
 		setShow(needsToAccept);
 	}, [currentUser]);
@@ -317,7 +315,7 @@ export const LegalAgreementNotification: React.FC<
 				updates: {
 					legalAgreement: {
 						agreedToTerms: true,
-						agreedVersion: CURRENT_LEGAL_VERSION,
+						agreedVersion: LEGAL_AGREEMENT_VERSION,
 						agreedAt: new Date().toISOString(),
 					},
 				},
@@ -329,7 +327,7 @@ export const LegalAgreementNotification: React.FC<
 					...currentUser,
 					legalAgreement: {
 						agreedToTerms: true,
-						agreedVersion: CURRENT_LEGAL_VERSION,
+						agreedVersion: LEGAL_AGREEMENT_VERSION,
 						agreedAt: new Date().toISOString(),
 					},
 				}),

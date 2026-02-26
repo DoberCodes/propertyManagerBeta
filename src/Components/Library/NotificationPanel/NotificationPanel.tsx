@@ -20,6 +20,7 @@ import { Notification } from '../../../types/Notification.types';
 import { setCurrentUser } from '../../../Redux/Slices/userSlice';
 import { GenericModal } from '../Modal/GenericModal';
 import DocumentViewer from '../../DocumentViewer';
+import { LEGAL_AGREEMENT_VERSION } from '../../../constants/legal';
 
 interface NotificationPanelProps {
 	userId?: string;
@@ -165,7 +166,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = () => {
 			return;
 		}
 
-		const agreedVersion = String(legalNotification.data?.legalVersion || '1.0');
+		const agreedVersion = String(
+			legalNotification.data?.legalVersion || LEGAL_AGREEMENT_VERSION,
+		);
 		const agreedAt = new Date().toISOString();
 
 		try {

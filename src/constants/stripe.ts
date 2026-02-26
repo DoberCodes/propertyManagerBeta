@@ -20,9 +20,9 @@ export const STRIPE_PLANS = {
 // Price mapping for display
 export const STRIPE_PRICES = {
 	FREE: 0,
-	HOMEOWNER: 2,
-	BASIC: 9,
-	PROFESSIONAL: 16,
+	HOMEOWNER: 1.99,
+	BASIC: 8.99,
+	PROFESSIONAL: 15.99,
 };
 
 // Billing intervals
