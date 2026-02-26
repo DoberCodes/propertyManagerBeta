@@ -1,5 +1,14 @@
-🎉 **Release Notes for Version 1.11.6** 🎉
+🎉 **Release Notes for Version 1.11.7** 🎉
 
 
 ## 🐛 Bug Fixes
-- fixing the notice of 14 day free trials
+- fixing the firestore rules and updating the components to handle them. Adding changes the family member and feedback messaging, also adding some testing scripts for firebase rules
+- fixing playwright to handle end to end testing on core features
+- fixing the gitignore so we can add the yarn.lock for github actions
+- fixing node issue
+- fixing some linting issues.
+- fixing the landing page icon and adding payment section also adding basic github action changes and playwright adjustments.
+
+## 🔧 Improvements & Maintenance
+- adding github actions to confirm accurate build
+- Updating actions to increase reliability of push
