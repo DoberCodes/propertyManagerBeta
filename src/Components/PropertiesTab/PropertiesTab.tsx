@@ -484,9 +484,13 @@ export const Properties = () => {
 	};
 
 	const handleSaveProperty = async (formData: any) => {
+		const effectivePropertyType = isHomeowner
+			? 'Single Family'
+			: formData.propertyType;
+
 		// Prepare units data for Multi-Family properties
 		const unitsData =
-			formData.propertyType === 'Multi-Family'
+			effectivePropertyType === 'Multi-Family'
 				? (formData.units || []).map((unitName: string) => ({
 						name: unitName,
 						occupants: [],
@@ -495,7 +499,7 @@ export const Properties = () => {
 
 		// Prepare suites data for Commercial properties
 		const suitesData =
-			formData.propertyType === 'Commercial' && formData.hasSuites
+			effectivePropertyType === 'Commercial' && formData.hasSuites
 				? (formData.suites || []).map((suiteName: string) => ({
 						name: suiteName,
 						occupants: [],
@@ -510,15 +514,15 @@ export const Properties = () => {
 					image: formData.photo || selectedPropertyForEdit.image,
 					owner: formData.owner,
 					address: formData.address,
-					propertyType: formData.propertyType,
+					propertyType: effectivePropertyType,
 					units:
-						formData.propertyType === 'Multi-Family' ? unitsData : undefined,
+						effectivePropertyType === 'Multi-Family' ? unitsData : undefined,
 					hasSuites:
-						formData.propertyType === 'Commercial'
+						effectivePropertyType === 'Commercial'
 							? !!formData.hasSuites
 							: undefined,
 					suites:
-						formData.propertyType === 'Commercial' && formData.hasSuites
+						effectivePropertyType === 'Commercial' && formData.hasSuites
 							? suitesData
 							: undefined,
 					bedrooms: formData.bedrooms,
@@ -537,7 +541,7 @@ export const Properties = () => {
 
 				// Create units for Multi-Family properties if units were added
 				if (
-					formData.propertyType === 'Multi-Family' &&
+					effectivePropertyType === 'Multi-Family' &&
 					unitsData &&
 					unitsData.length > 0
 				) {
@@ -609,7 +613,7 @@ export const Properties = () => {
 				...(formData.photo && { image: formData.photo }),
 				owner: formData.owner,
 				address: formData.address,
-				propertyType: formData.propertyType,
+				propertyType: effectivePropertyType,
 				bedrooms: formData.bedrooms,
 				bathrooms: formData.bathrooms,
 				isRental: !!formData.isRental,
@@ -618,10 +622,10 @@ export const Properties = () => {
 			};
 
 			// Only add type-specific fields if they have values
-			if (formData.propertyType === 'Multi-Family' && unitsData) {
+			if (effectivePropertyType === 'Multi-Family' && unitsData) {
 				newPropertyData.units = unitsData;
 			}
-			if (formData.propertyType === 'Commercial') {
+			if (effectivePropertyType === 'Commercial') {
 				newPropertyData.hasSuites = !!formData.hasSuites;
 				if (formData.hasSuites && suitesData) {
 					newPropertyData.suites = suitesData;
@@ -634,7 +638,7 @@ export const Properties = () => {
 				if ('data' in result) {
 					// Create units for Multi-Family properties
 					if (
-						formData.propertyType === 'Multi-Family' &&
+						effectivePropertyType === 'Multi-Family' &&
 						unitsData &&
 						unitsData.length > 0
 					) {
@@ -673,7 +677,7 @@ export const Properties = () => {
 							data: {
 								propertyId: result.data.id,
 								propertyTitle: result.data.title,
-								propertyType: formData.propertyType,
+								propertyType: effectivePropertyType,
 							},
 							status: 'unread',
 							actionUrl: `/property/${result.data.slug}`,
@@ -727,6 +731,7 @@ export const Properties = () => {
 					setSelectedPropertyForEdit(null);
 				}}
 				onSave={handleSaveProperty}
+				forceSingleFamily={isHomeowner}
 				groups={filteredGroups.map((g) => ({ id: g.id, name: g.name }))}
 				selectedGroupId={selectedGroupForDialog}
 				propertyId={selectedPropertyForEdit?.id}

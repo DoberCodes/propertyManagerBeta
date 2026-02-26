@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import {
 	Input,
 	Wrapper,
@@ -29,6 +30,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { signUpWithEmail, checkEmailExists } from '../../services/authService';
 import { USER_ROLES } from '../../constants/roles';
 import { useNavigate } from 'react-router-dom';
+import { setCurrentUser } from '../../Redux/Slices/userSlice';
 import { PaywallPage } from '../../pages/PaywallPage/PaywallPage';
 import DocumentViewer from '../DocumentViewer';
 import { TRIAL_DURATION_DAYS } from '../../constants/subscriptions';
@@ -45,6 +47,8 @@ const getRoleFromUserType = (userType: string): string => {
 };
 
 export const RegistrationCard = () => {
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
 	const [step, setStep] = useState<number>(1);
 	const [firstName, setFirstName] = useState<string>('');
 	const [lastName, setLastName] = useState<string>('');
@@ -69,7 +73,6 @@ export const RegistrationCard = () => {
 		name: string;
 		title: string;
 	} | null>(null);
-	const navigate = useNavigate();
 
 	const handleViewDocument = (filename: string, title: string) => {
 		setSelectedDocument({ name: filename, title });
@@ -151,8 +154,12 @@ export const RegistrationCard = () => {
 	};
 
 	const validateStep3 = () => {
+		console.log(
+			`[VAL-STEP3] userType="${userType}", selectedPlan="${selectedPlan}", promoCode="${promoCode}"`,
+		);
 		if (userType === 'tenant') {
 			if (!promoCode.trim()) {
+				console.log('[VAL-STEP3] Tenant needs promo code');
 				setError('Tenant promo code is required');
 				return false;
 			}
@@ -161,20 +168,32 @@ export const RegistrationCard = () => {
 		// Plan selection is handled by the embedded paywall
 		// User must select a plan to proceed
 		if (!selectedPlan) {
+			console.log('[VAL-STEP3] No plan selected, setting error');
 			setError('Please select a subscription plan');
 			return false;
 		}
+		console.log('[VAL-STEP3] Validation passed');
 		return true;
 	};
 
 	const handleNext = () => {
 		setError('');
+		console.log(
+			`[RegistrationCard] handleNext called, step=${step}, selectedPlan="${selectedPlan}"`,
+		);
 		if (step === 1 && validateStep1()) {
+			console.log('[RegistrationCard] Step 1 validated, moving to step 2');
 			setStep(2);
 		} else if (step === 2 && validateStep2()) {
+			console.log('[RegistrationCard] Step 2 validated, moving to step 3');
 			setStep(3);
 		} else if (step === 3 && validateStep3()) {
+			console.log('[RegistrationCard] Step 3 validated, moving to step 4');
 			setStep(4);
+		} else {
+			console.log(
+				`[RegistrationCard] Validation failed or wrong step. step=${step}`,
+			);
 		}
 	};
 
@@ -216,6 +235,9 @@ export const RegistrationCard = () => {
 					user,
 				}),
 			);
+
+			// Update Redux store to mark user as logged in
+			dispatch(setCurrentUser(user));
 
 			setLoading(false);
 			navigate('/dashboard');
@@ -521,7 +543,7 @@ export const RegistrationCard = () => {
 					<PaywallPage
 						subscription={{
 							status: 'trial',
-							plan: 'homeowner',
+							plan: '',
 							currentPeriodStart: Math.floor(Date.now() / 1000),
 							currentPeriodEnd:
 								Math.floor(Date.now() / 1000) +
@@ -537,8 +559,6 @@ export const RegistrationCard = () => {
 						onPlanSelect={(planId) => {
 							setSelectedPlan(planId);
 							setError('');
-							// Auto-advance to next step after plan selection
-							setTimeout(() => handleNext(), 500);
 						}}
 						onPromoCodeApplied={(appliedPromoCode) => {
 							setPromoCode(appliedPromoCode);
@@ -548,6 +568,9 @@ export const RegistrationCard = () => {
 					<ButtonGroup>
 						<Submit type='button' onClick={handleBack}>
 							Back
+						</Submit>
+						<Submit type='button' onClick={handleNext}>
+							Continue
 						</Submit>
 					</ButtonGroup>
 				</>

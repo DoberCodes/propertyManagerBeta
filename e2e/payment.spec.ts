@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { registerNewAccount, generateTestEmail } from './auth.helper';
+import {
+	registerNewAccount,
+	generateTestEmail,
+	waitForPageLoaded,
+} from './auth.helper';
 
 /**
  * Payment and subscription tests
@@ -16,35 +20,23 @@ test.describe('Payments & Subscriptions', () => {
 	});
 
 	test('user can view subscription/payment page', async ({ page }) => {
-		// Navigate to subscription/payment page
-		const paymentRoutes = [
-			'settings',
-			'subscription',
-			'billing',
-			'payment',
-			'account',
-		];
-		let found = false;
+		// Navigate to settings page where subscription/billing is managed
+		await page.goto('/#/settings', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
-		for (const route of paymentRoutes) {
-			try {
-				await page.goto(`/${route}`, { waitUntil: 'networkidle' });
-				await page.waitForTimeout(500);
-				if (!page.url().includes('404')) {
-					found = true;
-					break;
-				}
-			} catch {
-				// Continue to next route
-			}
-		}
+		// Verify we're on the settings page
+		const settingsTitle = page
+			.locator('text=/settings|account|billing|subscription/i')
+			.first();
+		await expect(settingsTitle).toBeVisible({ timeout: 10000 });
 	});
 
 	test('user can initiate a subscription with valid test card', async ({
 		page,
 	}) => {
-		// Navigate to pricing/subscription page
-		await page.goto('/pricing', { waitUntil: 'networkidle' });
+		// Navigate to paywall page
+		await page.goto('/#/paywall', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		// Click "Subscribe" or "Upgrade" button
 		const subscribeButton = page
@@ -85,7 +77,7 @@ test.describe('Payments & Subscriptions', () => {
 			await payButton.click();
 
 			// Wait for payment processing
-			await page.waitForLoadState('networkidle');
+			await page.waitForTimeout(2000);
 
 			// Verify success
 			await page.waitForTimeout(500);
@@ -93,8 +85,9 @@ test.describe('Payments & Subscriptions', () => {
 	});
 
 	test('user sees error with invalid card', async ({ page }) => {
-		// Navigate to pricing/subscription page
-		await page.goto('/pricing', { waitUntil: 'networkidle' });
+		// Navigate to paywall page
+		await page.goto('/#/paywall', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		// Click "Subscribe" button
 		const subscribeButton = page
@@ -104,7 +97,7 @@ test.describe('Payments & Subscriptions', () => {
 			await subscribeButton.click();
 
 			// Wait for Stripe form
-			await page.waitForLoadState('networkidle');
+			await page.waitForTimeout(1000);
 
 			// Try to find and fill card input with invalid card
 			const stripeForm = page.frameLocator('iframe[name*="stripe"]').first();
@@ -139,7 +132,8 @@ test.describe('Payments & Subscriptions', () => {
 
 		for (const route of settingsRoutes) {
 			try {
-				await page.goto(`/${route}`, { waitUntil: 'networkidle' });
+				await page.goto(`/#/${route}`, { waitUntil: 'domcontentloaded' });
+				await waitForPageLoaded(page);
 
 				// Look for subscription status info
 				await page.waitForTimeout(500);
@@ -156,7 +150,8 @@ test.describe('Payments & Subscriptions', () => {
 
 		for (const route of settingsRoutes) {
 			try {
-				await page.goto(`/${route}`, { waitUntil: 'networkidle' });
+				await page.goto(`/#/${route}`, { waitUntil: 'domcontentloaded' });
+				await waitForPageLoaded(page);
 
 				// Look for "Update Payment" or "Change Card" button
 				const updateButton = page.getByRole('button', {

@@ -12,6 +12,10 @@ package-lock.json
 /test-results
 /playwright-report
 .env.local
+/e2e-*.log
+/e2e-*.txt
+/full-e2e.txt
+/test-output.txt
 
 # production
 /build
@@ -38,6 +42,10 @@ Desktop.ini
 # Python bytecode (if any Python scripts are used)
 __pycache__/
 *.pyc
+*.log
+*.tmp
+*.cache
+.cache/
 
 npm-debug.log*
 yarn-debug.log*

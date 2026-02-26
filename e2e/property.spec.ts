@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { registerNewAccount, generateTestEmail } from './auth.helper';
+import {
+	registerNewAccount,
+	generateTestEmail,
+	waitForPageLoaded,
+} from './auth.helper';
 
 /**
  * Property management tests
@@ -16,28 +20,41 @@ test.describe('Property Management', () => {
 
 	test('user can create a new property', async ({ page }) => {
 		// Navigate to properties page
-		await page.goto('/properties');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/properties');
+		await waitForPageLoaded(page);
+
+		// Dismiss any remaining modals/tours
+		const skipTourBtn = page.getByRole('button', { name: /skip tour/i });
+		for (let i = 0; i < 3; i++) {
+			if (await skipTourBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+				await skipTourBtn.click({ force: true }).catch(() => {});
+				await page.waitForTimeout(500);
+			}
+		}
 
 		// Click "Add Property" or "Create Property" button
 		const createButton = page.getByRole('button', {
 			name: /add property|new property|create property/i,
 		});
-		await createButton.click();
+		await page.waitForTimeout(500);
+		await createButton.click({ force: true });
 
-		// Fill in property details
-		await page.fill(
-			'input[placeholder*="address" i], input[name*="address" i]',
-			'123 Main St, Springfield, IL 62701',
-		);
+		// Wait for modal to appear
+		await page.waitForTimeout(800);
 
-		// Fill in property name if separate field
+		// Fill in property name first
 		const nameInput = page.locator(
 			'input[name*="name" i], input[placeholder*="property name" i]',
 		);
 		if (await nameInput.isVisible()) {
 			await nameInput.fill('My Test Property');
 		}
+
+		// Fill in address
+		await page.fill(
+			'input[placeholder*="address" i], input[name*="address" i]',
+			'123 Main St, Springfield, IL 62701',
+		);
 
 		// Fill in property type if available
 		const typeSelect = page.locator(
@@ -54,25 +71,29 @@ test.describe('Property Management', () => {
 		}
 
 		// Submit the form
+		await page.waitForTimeout(500);
 		const submitButton = page
 			.getByRole('button', { name: /create|save|add/i })
 			.last();
+		await submitButton.scrollIntoViewIfNeeded().catch(() => {});
 		await submitButton.click();
 
-		// Verify property was created
-		await page.waitForTimeout(1000);
-		const successMessage = page.getByText(/success|created|added/i);
-		await expect(successMessage).toBeVisible({ timeout: 5000 });
+		// Wait for modal to close and property to appear in list
+		await page.waitForTimeout(2000);
 
-		// Verify property appears in list
-		const propertyAddress = page.getByText(/123 Main St|My Test Property/);
-		await expect(propertyAddress).toBeVisible({ timeout: 5000 });
+		// Verify property appears in the properties list
+		const propertyInList = page.getByText(/123 Main St|My Test Property/i);
+		const propertyVisible = await propertyInList
+			.isVisible({ timeout: 8000 })
+			.catch(() => false);
+
+		expect(propertyVisible).toBeTruthy();
 	});
 
 	test('user can view property details', async ({ page }) => {
 		// Navigate to properties page
-		await page.goto('/properties');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/properties');
+		await waitForPageLoaded(page);
 
 		// Click on first property
 		const propertyCard = page
@@ -90,8 +111,8 @@ test.describe('Property Management', () => {
 
 	test('user can update property details', async ({ page }) => {
 		// Navigate to properties page
-		await page.goto('/properties');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/properties');
+		await waitForPageLoaded(page);
 
 		// Click edit button on first property
 		const editButton = page
@@ -124,8 +145,8 @@ test.describe('Property Management', () => {
 
 	test('user can delete a property', async ({ page }) => {
 		// Navigate to properties page
-		await page.goto('/properties');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/properties');
+		await waitForPageLoaded(page);
 
 		// Get property count before deletion
 		const propertyItems = page.locator(

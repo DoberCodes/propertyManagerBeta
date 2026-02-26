@@ -196,6 +196,9 @@ exports.addFamilyMember = functions
             }
             catch (emailError) {
                 console.error('Error sending family member invitation email:', emailError);
+                if (emailError.response) {
+                    console.error('SendGrid error details:', JSON.stringify(emailError.response.body));
+                }
                 // Don't throw - user creation was successful, just log the email error
             }
         }

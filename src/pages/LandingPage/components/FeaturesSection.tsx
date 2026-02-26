@@ -1,4 +1,15 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+	faClipboardList,
+	faBuilding,
+	faScrewdriverWrench,
+	faChartLine,
+	faCamera,
+	faBell,
+	faMagnifyingGlass,
+	faMobileScreenButton,
+} from '@fortawesome/free-solid-svg-icons';
 import {
 	FeaturesSection,
 	FeaturesTitle,
@@ -15,7 +26,9 @@ const FeaturesSectionComponent = () => {
 			<FeaturesTitle>Comprehensive Maintenance History Tools</FeaturesTitle>
 			<FeatureGrid>
 				<FeatureCard>
-					<FeatureIcon>�</FeatureIcon>
+					<FeatureIcon className='history'>
+						<FontAwesomeIcon icon={faClipboardList} />
+					</FeatureIcon>
 					<FeatureTitle>Detailed Maintenance Records</FeatureTitle>
 					<FeatureDescription>
 						Create and maintain comprehensive maintenance history for every
@@ -24,7 +37,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>�</FeatureIcon>
+					<FeatureIcon className='unit'>
+						<FontAwesomeIcon icon={faBuilding} />
+					</FeatureIcon>
 					<FeatureTitle>Individual Unit History</FeatureTitle>
 					<FeatureDescription>
 						Track maintenance history for each individual unit and device
@@ -32,7 +47,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>👷</FeatureIcon>
+					<FeatureIcon className='contractor'>
+						<FontAwesomeIcon icon={faScrewdriverWrench} />
+					</FeatureIcon>
 					<FeatureTitle>Contractor History Tracking</FeatureTitle>
 					<FeatureDescription>
 						Maintain detailed records of all contractor work and services. Build
@@ -40,7 +57,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>📊</FeatureIcon>
+					<FeatureIcon className='analytics'>
+						<FontAwesomeIcon icon={faChartLine} />
+					</FeatureIcon>
 					<FeatureTitle>History Analytics & Reporting</FeatureTitle>
 					<FeatureDescription>
 						Generate detailed reports on maintenance history, patterns, and
@@ -49,7 +68,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>📸</FeatureIcon>
+					<FeatureIcon className='documentation'>
+						<FontAwesomeIcon icon={faCamera} />
+					</FeatureIcon>
 					<FeatureTitle>Visual Documentation</FeatureTitle>
 					<FeatureDescription>
 						Attach photos, notes, and details to every maintenance entry. Build
@@ -58,7 +79,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>🔔</FeatureIcon>
+					<FeatureIcon className='reminders'>
+						<FontAwesomeIcon icon={faBell} />
+					</FeatureIcon>
 					<FeatureTitle>Personalized Reminders</FeatureTitle>
 					<FeatureDescription>
 						Set custom reminders based on your own maintenance history patterns.
@@ -67,7 +90,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>�</FeatureIcon>
+					<FeatureIcon className='search'>
+						<FontAwesomeIcon icon={faMagnifyingGlass} />
+					</FeatureIcon>
 					<FeatureTitle>Searchable History</FeatureTitle>
 					<FeatureDescription>
 						Quickly find any maintenance record with powerful search and
@@ -75,7 +100,9 @@ const FeaturesSectionComponent = () => {
 					</FeatureDescription>
 				</FeatureCard>
 				<FeatureCard>
-					<FeatureIcon>📱</FeatureIcon>
+					<FeatureIcon className='mobile'>
+						<FontAwesomeIcon icon={faMobileScreenButton} />
+					</FeatureIcon>
 					<FeatureTitle>Mobile History Access</FeatureTitle>
 					<FeatureDescription>
 						Access your complete maintenance history on any device. Your records

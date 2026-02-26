@@ -401,31 +401,76 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			}
 		}
 
-		// Use family account subscription if available, otherwise fall back to user subscription
-		const subscriptionData = familyAccountSubscription || rawData.subscription;
+		// Use family account subscription when available, but prefer user subscription
+		// if family data appears stale (e.g., family shows expired but user is active).
+		type UserSubscription = User['subscription'];
+		const userSubscription =
+			(rawData.subscription ?? undefined) as UserSubscription;
+		const familySubscription =
+			(familyAccountSubscription ?? undefined) as UserSubscription;
+
+		const userStatus = userSubscription?.status;
+		const familyStatus = familySubscription?.status;
+		const userHasNonExpiredStatus =
+			userStatus === SUBSCRIPTION_STATUS.ACTIVE ||
+			userStatus === SUBSCRIPTION_STATUS.TRIAL ||
+			userStatus === SUBSCRIPTION_STATUS.PAST_DUE;
+
+		const shouldPreferUserSubscription =
+			!!userStatus &&
+			!!familyStatus &&
+			((familyStatus === SUBSCRIPTION_STATUS.EXPIRED &&
+				userStatus !== SUBSCRIPTION_STATUS.EXPIRED) ||
+				(familyStatus === SUBSCRIPTION_STATUS.CANCELLED &&
+					userHasNonExpiredStatus));
+
+		const subscriptionData = shouldPreferUserSubscription
+			? userSubscription
+			: familySubscription || userSubscription;
 		if (subscriptionData) {
 			serializedData.subscription = { ...subscriptionData };
 
 			// Convert subscription.updatedAt if it exists
+			const subscriptionUpdatedAt = (subscriptionData as any).updatedAt;
 			if (
-				subscriptionData.updatedAt &&
-				typeof subscriptionData.updatedAt === 'object' &&
-				'toDate' in subscriptionData.updatedAt
+				subscriptionUpdatedAt &&
+				typeof subscriptionUpdatedAt === 'object' &&
+				'toDate' in subscriptionUpdatedAt &&
+				typeof subscriptionUpdatedAt.toDate === 'function'
 			) {
-				serializedData.subscription.updatedAt = subscriptionData.updatedAt
+				serializedData.subscription.updatedAt = subscriptionUpdatedAt
 					.toDate()
 					.toISOString();
 			}
 
 			// Convert other timestamp fields in subscription if they exist
+			const subscriptionCanceledAt = (subscriptionData as any).canceledAt;
 			if (
-				subscriptionData.canceledAt &&
-				typeof subscriptionData.canceledAt === 'object' &&
-				'toDate' in subscriptionData.canceledAt
+				subscriptionCanceledAt &&
+				typeof subscriptionCanceledAt === 'object' &&
+				'toDate' in subscriptionCanceledAt &&
+				typeof subscriptionCanceledAt.toDate === 'function'
 			) {
-				serializedData.subscription.canceledAt = subscriptionData.canceledAt
+				serializedData.subscription.canceledAt = subscriptionCanceledAt
 					.toDate()
 					.toISOString();
+			}
+
+			// If we had to prefer the user subscription over family subscription,
+			// sync family account subscription for owners to prevent repeated stale reads.
+			if (
+				shouldPreferUserSubscription &&
+				userData.accountId &&
+				(rawData.isAccountOwner || userData.accountId === uid)
+			) {
+				try {
+					await updateDoc(doc(db, 'familyAccounts', userData.accountId), {
+						subscription: userSubscription as NonNullable<UserSubscription>,
+						updatedAt: serverTimestamp(),
+					});
+				} catch (syncError) {
+					console.warn('Failed to sync family account subscription:', syncError);
+				}
 			}
 		} else {
 			// Create default subscription for users who don't have one

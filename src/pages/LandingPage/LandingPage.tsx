@@ -1,10 +1,26 @@
-import { FormGroup } from 'Components/Library';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+	faBookOpen,
+	faMagnifyingGlass,
+	faShieldHalved,
+	faLock,
+	faUserShield,
+	faMobileScreenButton,
+	faDesktop,
+	faGlobe,
+	faCar,
+	faScrewdriverWrench,
+	faChartLine,
+	faDownload,
+	faBoxArchive,
+} from '@fortawesome/free-solid-svg-icons';
 import { LandingNavbar } from 'Components/Library/LandingNavbar';
 import HeroSection from './components/Hero';
 import MissionSectionComponent from './components/MissionSection';
 import FeaturesSectionComponent from './components/FeaturesSection';
+import PricingSectionComponent from './components/PricingSection';
 import {
 	Wrapper,
 	StorySection,
@@ -29,6 +45,7 @@ import {
 	ContactTitle,
 	ContactContent,
 	ContactForm,
+	FormGroup,
 	FormInput,
 	FormTextarea,
 	SubmitButton,
@@ -113,7 +130,6 @@ const LandingPageComponent = () => {
 				);
 				if (releaseResponse.ok) {
 					const release = await releaseResponse.json();
-					const latestVersion = release.tag_name.replace('v', '');
 					// Get file sizes for both APKs
 					const assets = release.assets || [];
 					const latestApk = assets.find(
@@ -213,36 +229,38 @@ const LandingPageComponent = () => {
 					<StoryContent>
 						<StoryTitle>How It All Started</StoryTitle>
 						<StoryText>
-							We’re a small-town company built on a simple idea: the people who
-							do the most don’t always have the biggest budgets—and they deserve
-							better tools.
+							I bought my first home three years ago and quickly realized
+							something: staying on top of home maintenance is harder than
+							anyone tells you. Small things pile up, calendars and reminders
+							get lost, and before you know it, a simple fix turns into a big
+							headache.
 						</StoryText>
 						<StoryText>
-							Our founder saw firsthand how local homeowners, small landlords,
-							and hands-on business owners were stretched thin, juggling repairs
-							and maintenance with little help. So we set out to create
-							something different—solutions that feel like a helping hand, not
-							another expense.
+							I wanted a way to keep track of it all — without needing to be a
+							maintenance expert or spending hours digging through old notes and
+							calendars. That’s why I built Maintley: a tool that helps
+							homeowners, landlords, and DIYers stay organized and ahead of the
+							little things before they become big problems.
 						</StoryText>
 						<StoryText>
-							We focus on keeping things simple, affordable, and genuinely
-							useful. No fluff. No over complication. Just tools that bring
-							peace of mind and help you stay on top of what matters.
+							Maintley keeps things simple, practical, and genuinely useful. No
+							fluff. No over-complication. Just a system to help you feel
+							confident in your home and in your responsibilities.
 						</StoryText>
 						<StoryText>
-							Today, homeowners, small landlords, and DIYers use our platform to
-							track property tasks, stay on top of home maintenance, and manage
-							responsibilities without the stress.
+							Today, people use Maintley to track home and property tasks, stay
+							on top of maintenance, and manage responsibilities without the
+							stress of trying to remember everything on their own.
 						</StoryText>
 						<StoryText>
-							Whether you’re managing a rental or caring for your own home,
-							we’re here to make life a little easier—one task, one record, one
+							Whether it’s your own home or a rental property, Maintley is
+							designed to make life a little easier — one task, one record, one
 							win at a time.
 						</StoryText>
 						<StoryText>
-							And we’re not done. We’re constantly improving, listening, and
-							building alongside the people who use our platform—because this
-							was made for you.
+							And we’re just getting started. We’re listening, improving, and
+							building alongside the people who use Maintley — because this was
+							made for homeowners like you (and me).
 						</StoryText>
 					</StoryContent>
 				</StorySection>
@@ -252,6 +270,9 @@ const LandingPageComponent = () => {
 
 				{/* Features Section */}
 				<FeaturesSectionComponent />
+
+				{/* Pricing Section */}
+				<PricingSectionComponent />
 
 				{/* Benefits Section */}
 				<BenefitsSection id='Benefits'>
@@ -273,14 +294,26 @@ const LandingPageComponent = () => {
 								comes from knowing your history is complete and accessible.
 							</BenefitDescription>
 							<BenefitList>
-								<BenefitItem>📚 Build comprehensive records</BenefitItem>
-								<BenefitItem>🔍 Access your history anytime</BenefitItem>
-								<BenefitItem>🛡️ Your logging, your peace of mind</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faBookOpen} />
+									Build comprehensive records
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faMagnifyingGlass}
+									/>
+									Access your history anytime
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faShieldHalved} />
+									Your logging, your peace of mind
+								</BenefitItem>
 							</BenefitList>
 						</BenefitContent>
 					</BenefitRow>
 
-					<BenefitRow reverse>
+					<BenefitRow $reverse>
 						<BenefitImage>
 							<img
 								src={require('../../Assets/images/privacy.jpg')}
@@ -295,9 +328,18 @@ const LandingPageComponent = () => {
 								reliable infrastructure you can trust.
 							</BenefitDescription>
 							<BenefitList>
-								<BenefitItem>🔒 Encrypted data</BenefitItem>
-								<BenefitItem>🛡️ Secure servers</BenefitItem>
-								<BenefitItem>👤 Privacy-first design</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faLock} />
+									Encrypted data
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faShieldHalved} />
+									Secure servers
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faUserShield} />
+									Privacy-first design
+								</BenefitItem>
 							</BenefitList>
 						</BenefitContent>
 					</BenefitRow>
@@ -317,9 +359,21 @@ const LandingPageComponent = () => {
 								keeps everything close at hand.
 							</BenefitDescription>
 							<BenefitList>
-								<BenefitItem>📱 Works on any device</BenefitItem>
-								<BenefitItem>💻 Desktop or mobile</BenefitItem>
-								<BenefitItem>🌐 Always synced</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faMobileScreenButton}
+									/>
+									Works on any device
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faDesktop} />
+									Desktop or mobile
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faGlobe} />
+									Always synced
+								</BenefitItem>
 							</BenefitList>
 						</BenefitContent>
 					</BenefitRow>
@@ -340,9 +394,21 @@ const LandingPageComponent = () => {
 								place.
 							</BenefitDescription>
 							<BenefitList>
-								<BenefitItem>🚗 Vehicle maintenance tracking</BenefitItem>
-								<BenefitItem>🛠️ Equipment servicing schedules</BenefitItem>
-								<BenefitItem>📊 Comprehensive asset overview</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faCar} />
+									Vehicle maintenance tracking
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon
+										className='benefit-icon'
+										icon={faScrewdriverWrench}
+									/>
+									Equipment servicing schedules
+								</BenefitItem>
+								<BenefitItem>
+									<FontAwesomeIcon className='benefit-icon' icon={faChartLine} />
+									Comprehensive asset overview
+								</BenefitItem>
 							</BenefitList>
 						</BenefitContent>
 					</BenefitRow>
@@ -431,10 +497,10 @@ const LandingPageComponent = () => {
 							Available on Android — download and get settled in.
 						</DownloadSubtext>
 						<DownloadButton href={apkDownloadUrl} download>
-							📱 Download Latest APK ({apkFileSize})
+							<FontAwesomeIcon icon={faDownload} /> Download Latest APK ({apkFileSize})
 						</DownloadButton>
 						<DownloadButton href={versionedApkDownloadUrl} download>
-							📦 Download v{previousVersion} APK ({versionedApkFileSize})
+							<FontAwesomeIcon icon={faBoxArchive} /> Download v{previousVersion} APK ({versionedApkFileSize})
 						</DownloadButton>
 						<DownloadInfo>
 							<InfoItem>

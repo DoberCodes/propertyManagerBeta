@@ -10,28 +10,60 @@ if (!admin.apps.length) {
 
 // Initialize Stripe lazily to avoid accessing secrets at deployment time
 let stripe: Stripe | null = null;
+
+const resolveStripeSecretKey = (): string => {
+	let secretFromManager = '';
+	try {
+		secretFromManager = STRIPE_SECRET_KEY.value() || '';
+	} catch (error) {
+		console.warn('Unable to read STRIPE_SECRET_KEY from Secret Manager');
+	}
+
+	let secretFromFunctionsConfig = '';
+	try {
+		const legacyConfig = (functions as any).config?.();
+		secretFromFunctionsConfig = legacyConfig?.stripe?.secret_key || '';
+	} catch (error) {
+		console.warn('Legacy functions.config() is unavailable in this runtime');
+	}
+	const secretFromEnv = process.env.STRIPE_SECRET_KEY || '';
+
+	return secretFromManager || secretFromFunctionsConfig || secretFromEnv;
+};
+
 const getStripe = () => {
 	if (!stripe) {
-		stripe = new Stripe(STRIPE_SECRET_KEY.value() || '', {
+		const stripeSecretKey = resolveStripeSecretKey();
+		if (!stripeSecretKey) {
+			throw new Error(
+				'Stripe secret key is not configured. Set STRIPE_SECRET_KEY (Secret Manager) or stripe.secret_key (functions config).',
+			);
+		}
+
+		stripe = new Stripe(stripeSecretKey, {
 			apiVersion: '2023-10-16',
 		});
-		console.log('Stripe key loaded:', STRIPE_SECRET_KEY.value() ? 'YES' : 'NO');
-		console.log(
-			'Stripe key starts with sk_live_:',
-			STRIPE_SECRET_KEY.value()?.startsWith('sk_live_'),
-		);
+		console.log('Stripe key loaded: YES');
 	}
 	return stripe;
 };
 
 const db = admin.firestore();
 
+const removeUndefinedFields = (obj: Record<string, any>) => {
+	return Object.fromEntries(
+		Object.entries(obj).filter(([, value]) => value !== undefined),
+	);
+};
+
 /**
  * Create Stripe Checkout Session
  * POST /api/create-checkout-session
  * Body: { priceId, userId, email, successUrl, cancelUrl }
  */
-export const createCheckoutSession = functions.https.onCall(
+export const createCheckoutSession = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onCall(
 	async (data, context) => {
 		// Verify user is authenticated
 		if (!context.auth) {
@@ -103,10 +135,35 @@ export const createCheckoutSession = functions.https.onCall(
 
 			return { sessionId: session.id, url: session.url };
 		} catch (error) {
-			console.error('Error creating checkout session:', error);
+			const stripeError = error as {
+				message?: string;
+				code?: string;
+				type?: string;
+			};
+
+			console.error('Error creating checkout session:', {
+				message: stripeError?.message,
+				code: stripeError?.code,
+				type: stripeError?.type,
+			});
+
+			if (stripeError?.message?.includes('No such price')) {
+				throw new functions.https.HttpsError(
+					'failed-precondition',
+					'Stripe price ID is invalid. Verify REACT_APP_STRIPE_*_PLAN_ID values and deployed function config.',
+				);
+			}
+
+			if (stripeError?.message?.includes('Invalid API Key')) {
+				throw new functions.https.HttpsError(
+					'failed-precondition',
+					'Stripe secret key is invalid or missing in backend configuration.',
+				);
+			}
+
 			throw new functions.https.HttpsError(
 				'internal',
-				'Failed to create checkout session',
+				stripeError?.message || 'Failed to create checkout session',
 			);
 		}
 	},
@@ -117,7 +174,9 @@ export const createCheckoutSession = functions.https.onCall(
  * POST /api/create-trial-subscription
  * Body: { priceId, userId, email, trialDays }
  */
-export const createTrialSubscription = functions.https.onCall(
+export const createTrialSubscription = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onCall(
 	async (data, context) => {
 		// Verify user is authenticated
 		if (!context.auth) {
@@ -205,7 +264,9 @@ export const createTrialSubscription = functions.https.onCall(
  * POST /api/verify-checkout-session
  * Body: { sessionId }
  */
-export const verifyCheckoutSession = functions.https.onCall(
+export const verifyCheckoutSession = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onCall(
 	async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
@@ -278,7 +339,9 @@ export const verifyCheckoutSession = functions.https.onCall(
  * POST /api/cancel-subscription
  * Body: { subscriptionId }
  */
-export const cancelSubscription = functions.https.onCall(
+export const cancelSubscription = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onCall(
 	async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
@@ -335,7 +398,9 @@ export const cancelSubscription = functions.https.onCall(
  * Get Subscription Details
  * GET /api/subscription-details/:subscriptionId
  */
-export const getSubscriptionDetails = functions.https.onCall(
+export const getSubscriptionDetails = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onCall(
 	async (data, context) => {
 		if (!context.auth) {
 			throw new functions.https.HttpsError(
@@ -372,7 +437,9 @@ export const getSubscriptionDetails = functions.https.onCall(
  * Handle Stripe Webhook Events
  * POST /stripe/webhook
  */
-export const stripeWebhook = functions.https.onRequest(async (req, res) => {
+export const stripeWebhook = functions
+	.runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+	.https.onRequest(async (req, res) => {
 	const sig = req.headers['stripe-signature'] as string;
 
 	try {
@@ -473,7 +540,10 @@ const handleSubscriptionUpdate = async (subscription: any) => {
 						: subscription.status === 'trialing'
 						? 'trial'
 						: subscription.status,
-				plan: getPlanFromPriceId(subscription.items.data[0].price.id),
+				plan: getPlanFromPriceId(
+					subscription.items.data[0].price.id,
+					userData?.subscription?.plan || 'free',
+				),
 				currentPeriodStart: subscription.current_period_start,
 				currentPeriodEnd: subscription.current_period_end,
 				trialEndsAt: subscription.trial_end,
@@ -494,8 +564,13 @@ const handleSubscriptionUpdate = async (subscription: any) => {
 				});
 			}
 
+			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+
 			await userDoc.ref.update({
-				subscription: { ...userData.subscription, ...subscriptionData },
+				subscription: {
+					...userData.subscription,
+					...sanitizedSubscriptionData,
+				},
 			});
 
 			console.log('Subscription updated for user:', userDoc.id);
@@ -555,8 +630,13 @@ const handlePaymentSuccess = async (invoice: any) => {
 				updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 			};
 
+			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+
 			await userDoc.ref.update({
-				subscription: { ...userData.subscription, ...subscriptionData },
+				subscription: {
+					...userData.subscription,
+					...sanitizedSubscriptionData,
+				},
 			});
 
 			console.log('Payment succeeded for user:', userDoc.id);
@@ -620,7 +700,10 @@ const handleSubscriptionCreated = async (subscription: any) => {
 						: subscription.status === 'trialing'
 						? 'trial'
 						: subscription.status,
-				plan: getPlanFromPriceId(subscription.items.data[0].price.id),
+				plan: getPlanFromPriceId(
+					subscription.items.data[0].price.id,
+					userData?.subscription?.plan || 'free',
+				),
 				currentPeriodStart: subscription.current_period_start,
 				currentPeriodEnd: subscription.current_period_end,
 				trialEndsAt: subscription.trial_end,
@@ -642,8 +725,13 @@ const handleSubscriptionCreated = async (subscription: any) => {
 				});
 			}
 
+			const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
+
 			await userDoc.ref.update({
-				subscription: { ...userData.subscription, ...subscriptionData },
+				subscription: {
+					...userData.subscription,
+					...sanitizedSubscriptionData,
+				},
 			});
 
 			console.log(
@@ -895,15 +983,23 @@ const handleDiscountDeleted = async (discount: any) => {
 /**
  * Helper function to map Stripe price ID to plan name
  */
-function getPlanFromPriceId(priceId: string): string {
+function getPlanFromPriceId(
+	priceId: string,
+	fallbackPlan: string = 'free',
+): string {
 	const priceMap: Record<string, string> = {
 		[process.env.STRIPE_HOMEOWNER_PRICE_ID || 'price_homeowner']: 'homeowner',
+		[process.env.REACT_APP_STRIPE_HOMEOWNER_PLAN_ID || 'price_homeowner']:
+			'homeowner',
 		[process.env.STRIPE_BASIC_PRICE_ID || 'price_basic']: 'basic',
+		[process.env.REACT_APP_STRIPE_BASIC_PLAN_ID || 'price_basic']: 'basic',
 		[process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional']:
+			'professional',
+		[process.env.REACT_APP_STRIPE_PROFESSIONAL_PLAN_ID || 'price_professional']:
 			'professional',
 	};
 
-	return priceMap[priceId] || 'free';
+	return priceMap[priceId] || fallbackPlan;
 }
 
 /**

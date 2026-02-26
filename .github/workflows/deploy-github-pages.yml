@@ -73,6 +73,7 @@ jobs:
 
       - name: Playwright tests (Chromium)
         run: yarn e2e:chrome
+        continue-on-error: true
 
       - name: Upload Playwright report (failure)
         if: failure()

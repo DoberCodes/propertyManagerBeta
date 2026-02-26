@@ -339,6 +339,27 @@ export const MissionCardIcon = styled.div`
 	font-size: 48px;
 	margin-bottom: 16px;
 	display: block;
+	line-height: 1;
+
+	svg {
+		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
+	}
+
+	&.history {
+		color: ${COLORS.primary};
+	}
+
+	&.unit {
+		color: ${COLORS.secondary};
+	}
+
+	&.security {
+		color: ${COLORS.infoDark};
+	}
+
+	&.mobile {
+		color: ${COLORS.warningDark};
+	}
 `;
 
 export const MissionCardTitle = styled.h3`
@@ -470,6 +491,43 @@ export const FeatureIcon = styled.div`
 	font-size: 48px;
 	margin-bottom: 16px;
 	display: block;
+	line-height: 1;
+
+	svg {
+		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
+	}
+
+	&.history {
+		color: ${COLORS.primary};
+	}
+
+	&.unit {
+		color: ${COLORS.secondary};
+	}
+
+	&.contractor {
+		color: ${COLORS.warning};
+	}
+
+	&.analytics {
+		color: ${COLORS.info};
+	}
+
+	&.documentation {
+		color: ${COLORS.secondaryDark};
+	}
+
+	&.reminders {
+		color: ${COLORS.warningDark};
+	}
+
+	&.search {
+		color: ${COLORS.primaryDark};
+	}
+
+	&.mobile {
+		color: ${COLORS.infoDark};
+	}
 `;
 
 export const FeatureTitle = styled.h3`
@@ -508,6 +566,243 @@ export const FeatureItem = styled.li`
 	color: ${COLORS.textPrimary};
 `;
 
+/* ============ PRICING SECTION ============ */
+
+export const PricingSection = styled.section`
+	width: 100%;
+	padding: 100px 40px;
+	background: ${COLORS.bgLight};
+
+	@media (max-width: 1024px) {
+		padding: 60px 20px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 40px 16px;
+	}
+`;
+
+export const PricingTitle = styled.h2`
+	font-size: 48px;
+	font-weight: 800;
+	text-align: center;
+	margin: 0 0 14px 0;
+	background: ${COLORS.gradientPrimary};
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+
+	@media (max-width: 1024px) {
+		font-size: 36px;
+	}
+
+	@media (max-width: 480px) {
+		font-size: 28px;
+	}
+`;
+
+export const PricingSubtitle = styled.p`
+	text-align: center;
+	font-size: 16px;
+	color: ${COLORS.textSecondary};
+	margin: 0 0 36px 0;
+`;
+
+export const PricingGrid = styled.div`
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px;
+	max-width: 1200px;
+	margin: 0 auto 34px auto;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+`;
+
+export const PricingCard = styled.div`
+	position: relative;
+	background: ${COLORS.bgWhite};
+	border: 1.5px solid ${COLORS.gray200};
+	border-radius: 14px;
+	padding: 26px 22px;
+	box-shadow: ${COLORS.shadow};
+
+	&.popular {
+		border-color: ${COLORS.primary};
+		box-shadow: ${COLORS.shadowLg};
+		transform: translateY(-4px);
+	}
+`;
+
+export const PricingBadge = styled.div`
+	position: absolute;
+	top: -10px;
+	right: 14px;
+	background: ${COLORS.gradientPrimary};
+	color: ${COLORS.textInverse};
+	font-size: 12px;
+	font-weight: 700;
+	padding: 4px 10px;
+	border-radius: 999px;
+`;
+
+export const PricingPlan = styled.h3`
+	margin: 0 0 10px 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 22px;
+	color: ${COLORS.textPrimary};
+`;
+
+export const PricingPrice = styled.div`
+	font-size: 40px;
+	font-weight: 800;
+	color: ${COLORS.primaryDark};
+	line-height: 1;
+	margin-bottom: 6px;
+`;
+
+export const PricingPeriod = styled.div`
+	font-size: 14px;
+	color: ${COLORS.textSecondary};
+	margin-bottom: 12px;
+`;
+
+export const PricingMeta = styled.div`
+	font-size: 13px;
+	font-weight: 600;
+	color: ${COLORS.secondaryDark};
+	margin-bottom: 14px;
+`;
+
+export const PricingFeatureList = styled.ul`
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+`;
+
+export const PricingFeatureItem = styled.li`
+	font-size: 14px;
+	line-height: 1.5;
+	color: ${COLORS.textPrimary};
+	padding-left: 18px;
+	position: relative;
+
+	&::before {
+		content: '•';
+		position: absolute;
+		left: 4px;
+		color: ${COLORS.primary};
+	}
+`;
+
+export const PricingComparison = styled.div`
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 22px;
+	border-radius: 14px;
+	background: ${COLORS.bgWhite};
+	border: 1.5px solid ${COLORS.gray200};
+	box-shadow: ${COLORS.shadow};
+`;
+
+export const PricingComparisonTitle = styled.h4`
+	margin: 0 0 14px 0;
+	font-size: 20px;
+	color: ${COLORS.textPrimary};
+`;
+
+export const PricingTable = styled.div`
+	display: grid;
+	grid-template-columns: 2fr 1fr 1fr 1fr;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1.6fr 1fr 1fr 1fr;
+		font-size: 13px;
+	}
+`;
+
+export const PricingTableHead = styled.div`
+	display: contents;
+`;
+
+export const PricingTableRow = styled.div`
+	display: contents;
+`;
+
+export const PricingTableCell = styled.div`
+	padding: 10px 8px;
+	border-bottom: 1px solid ${COLORS.gray200};
+	text-align: center;
+	color: ${COLORS.textSecondary};
+
+	&.head-cell {
+		font-weight: 700;
+		color: ${COLORS.textPrimary};
+		background: ${COLORS.gray100};
+	}
+
+	&:nth-child(4n + 1) {
+		text-align: left;
+		color: ${COLORS.textPrimary};
+		font-weight: 600;
+	}
+`;
+
+export const PricingCheck = styled.span`
+	color: ${COLORS.successDark};
+	font-size: 15px;
+`;
+
+export const PricingX = styled.span`
+	color: ${COLORS.errorDark};
+	font-size: 15px;
+`;
+
+export const PricingActionRow = styled.div`
+	max-width: 1200px;
+	margin: 22px auto 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+`;
+
+export const PricingActionButton = styled.button`
+	padding: 12px 22px;
+	border: none;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: 700;
+	color: ${COLORS.textInverse};
+	background: ${COLORS.gradientPrimary};
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: ${COLORS.shadowMd};
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: ${COLORS.shadowLg};
+	}
+`;
+
+export const PricingActionLink = styled.button`
+	padding: 10px 14px;
+	border: none;
+	background: transparent;
+	font-size: 14px;
+	font-weight: 600;
+	color: ${COLORS.secondaryDark};
+	cursor: pointer;
+	text-decoration: underline;
+`;
+
 /* ============ BENEFITS SECTION ============ */
 
 export const BenefitsSection = styled.section`
@@ -530,12 +825,12 @@ export const BenefitsContainer = styled.div`
 	margin: 0 auto;
 `;
 
-export const BenefitRow = styled.div<{ reverse?: boolean }>`
+export const BenefitRow = styled.div<{ $reverse?: boolean }>`
 	display: flex;
 	align-items: center;
 	gap: 60px;
 	margin-bottom: 80px;
-	flex-direction: ${(props) => (props.reverse ? 'row-reverse' : 'row')};
+	flex-direction: ${(props) => (props.$reverse ? 'row-reverse' : 'row')};
 
 	&:last-child {
 		margin-bottom: 0;
@@ -631,6 +926,30 @@ export const BenefitItem = styled.li`
 
 	&:last-child {
 		margin-bottom: 0;
+	}
+
+	.benefit-icon {
+		color: ${COLORS.primaryDark};
+		width: 18px;
+		font-size: 16px;
+		flex-shrink: 0;
+		transition: color 0.25s ease;
+	}
+
+	${BenefitRow}:nth-child(1) & .benefit-icon {
+		color: ${COLORS.primaryDark};
+	}
+
+	${BenefitRow}:nth-child(2) & .benefit-icon {
+		color: ${COLORS.secondaryDark};
+	}
+
+	${BenefitRow}:nth-child(3) & .benefit-icon {
+		color: ${COLORS.infoDark};
+	}
+
+	${BenefitRow}:nth-child(4) & .benefit-icon {
+		color: ${COLORS.warningDark};
 	}
 
 	@media (max-width: 1024px) {
@@ -1056,7 +1375,10 @@ export const DownloadSubtext = styled.p`
 `;
 
 export const DownloadButton = styled.a`
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
 	padding: 18px 48px;
 	background: white;
 	color: #667eea;
@@ -1069,6 +1391,10 @@ export const DownloadButton = styled.a`
 	border: 2px solid white;
 	cursor: pointer;
 
+	svg {
+		font-size: 16px;
+	}
+
 	&:hover {
 		background: transparent;
 		color: white;
@@ -1080,7 +1406,7 @@ export const DownloadButton = styled.a`
 		padding: 16px 32px;
 		font-size: 16px;
 		margin: 10px 0;
-		display: block;
+		display: inline-flex;
 		width: 100%;
 		box-sizing: border-box;
 	}

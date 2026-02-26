@@ -47,25 +47,52 @@ if (!admin.apps.length) {
 }
 // Initialize Stripe lazily to avoid accessing secrets at deployment time
 let stripe = null;
+const resolveStripeSecretKey = () => {
+    var _a, _b, _c;
+    let secretFromManager = '';
+    try {
+        secretFromManager = STRIPE_SECRET_KEY.value() || '';
+    }
+    catch (error) {
+        console.warn('Unable to read STRIPE_SECRET_KEY from Secret Manager');
+    }
+    let secretFromFunctionsConfig = '';
+    try {
+        const legacyConfig = (_b = (_a = functions).config) === null || _b === void 0 ? void 0 : _b.call(_a);
+        secretFromFunctionsConfig = ((_c = legacyConfig === null || legacyConfig === void 0 ? void 0 : legacyConfig.stripe) === null || _c === void 0 ? void 0 : _c.secret_key) || '';
+    }
+    catch (error) {
+        console.warn('Legacy functions.config() is unavailable in this runtime');
+    }
+    const secretFromEnv = process.env.STRIPE_SECRET_KEY || '';
+    return secretFromManager || secretFromFunctionsConfig || secretFromEnv;
+};
 const getStripe = () => {
-    var _a;
     if (!stripe) {
-        stripe = new stripe_1.default(STRIPE_SECRET_KEY.value() || '', {
+        const stripeSecretKey = resolveStripeSecretKey();
+        if (!stripeSecretKey) {
+            throw new Error('Stripe secret key is not configured. Set STRIPE_SECRET_KEY (Secret Manager) or stripe.secret_key (functions config).');
+        }
+        stripe = new stripe_1.default(stripeSecretKey, {
             apiVersion: '2023-10-16',
         });
-        console.log('Stripe key loaded:', STRIPE_SECRET_KEY.value() ? 'YES' : 'NO');
-        console.log('Stripe key starts with sk_live_:', (_a = STRIPE_SECRET_KEY.value()) === null || _a === void 0 ? void 0 : _a.startsWith('sk_live_'));
+        console.log('Stripe key loaded: YES');
     }
     return stripe;
 };
 const db = admin.firestore();
+const removeUndefinedFields = (obj) => {
+    return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined));
+};
 /**
  * Create Stripe Checkout Session
  * POST /api/create-checkout-session
  * Body: { priceId, userId, email, successUrl, cancelUrl }
  */
-exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
-    var _a;
+exports.createCheckoutSession = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onCall(async (data, context) => {
+    var _a, _b, _c;
     // Verify user is authenticated
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -122,8 +149,19 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         return { sessionId: session.id, url: session.url };
     }
     catch (error) {
-        console.error('Error creating checkout session:', error);
-        throw new functions.https.HttpsError('internal', 'Failed to create checkout session');
+        const stripeError = error;
+        console.error('Error creating checkout session:', {
+            message: stripeError === null || stripeError === void 0 ? void 0 : stripeError.message,
+            code: stripeError === null || stripeError === void 0 ? void 0 : stripeError.code,
+            type: stripeError === null || stripeError === void 0 ? void 0 : stripeError.type,
+        });
+        if ((_b = stripeError === null || stripeError === void 0 ? void 0 : stripeError.message) === null || _b === void 0 ? void 0 : _b.includes('No such price')) {
+            throw new functions.https.HttpsError('failed-precondition', 'Stripe price ID is invalid. Verify REACT_APP_STRIPE_*_PLAN_ID values and deployed function config.');
+        }
+        if ((_c = stripeError === null || stripeError === void 0 ? void 0 : stripeError.message) === null || _c === void 0 ? void 0 : _c.includes('Invalid API Key')) {
+            throw new functions.https.HttpsError('failed-precondition', 'Stripe secret key is invalid or missing in backend configuration.');
+        }
+        throw new functions.https.HttpsError('internal', (stripeError === null || stripeError === void 0 ? void 0 : stripeError.message) || 'Failed to create checkout session');
     }
 });
 /**
@@ -131,7 +169,9 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
  * POST /api/create-trial-subscription
  * Body: { priceId, userId, email, trialDays }
  */
-exports.createTrialSubscription = functions.https.onCall(async (data, context) => {
+exports.createTrialSubscription = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onCall(async (data, context) => {
     var _a;
     // Verify user is authenticated
     if (!context.auth) {
@@ -199,7 +239,9 @@ exports.createTrialSubscription = functions.https.onCall(async (data, context) =
  * POST /api/verify-checkout-session
  * Body: { sessionId }
  */
-exports.verifyCheckoutSession = functions.https.onCall(async (data, context) => {
+exports.verifyCheckoutSession = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onCall(async (data, context) => {
     var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -245,7 +287,9 @@ exports.verifyCheckoutSession = functions.https.onCall(async (data, context) => 
  * POST /api/cancel-subscription
  * Body: { subscriptionId }
  */
-exports.cancelSubscription = functions.https.onCall(async (data, context) => {
+exports.cancelSubscription = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -282,7 +326,9 @@ exports.cancelSubscription = functions.https.onCall(async (data, context) => {
  * Get Subscription Details
  * GET /api/subscription-details/:subscriptionId
  */
-exports.getSubscriptionDetails = functions.https.onCall(async (data, context) => {
+exports.getSubscriptionDetails = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
@@ -303,7 +349,9 @@ exports.getSubscriptionDetails = functions.https.onCall(async (data, context) =>
  * Handle Stripe Webhook Events
  * POST /stripe/webhook
  */
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+exports.stripeWebhook = functions
+    .runWith({ secrets: ['STRIPE_SECRET_KEY'] })
+    .https.onRequest(async (req, res) => {
     const sig = req.headers['stripe-signature'];
     try {
         // Handle raw body for webhook signature verification
@@ -377,7 +425,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
  * Handle subscription updates from Stripe webhooks
  */
 const handleSubscriptionUpdate = async (subscription) => {
-    var _a;
+    var _a, _b;
     try {
         // Find user by Stripe customer ID
         const userQuery = await db
@@ -394,7 +442,7 @@ const handleSubscriptionUpdate = async (subscription) => {
                     : subscription.status === 'trialing'
                         ? 'trial'
                         : subscription.status,
-                plan: getPlanFromPriceId(subscription.items.data[0].price.id),
+                plan: getPlanFromPriceId(subscription.items.data[0].price.id, ((_a = userData === null || userData === void 0 ? void 0 : userData.subscription) === null || _a === void 0 ? void 0 : _a.plan) || 'free'),
                 currentPeriodStart: subscription.current_period_start,
                 currentPeriodEnd: subscription.current_period_end,
                 trialEndsAt: subscription.trial_end,
@@ -402,7 +450,7 @@ const handleSubscriptionUpdate = async (subscription) => {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
             // Check if this is a pre-scheduled subscription
-            if (((_a = subscription.metadata) === null || _a === void 0 ? void 0 : _a.preScheduled) === 'true' &&
+            if (((_b = subscription.metadata) === null || _b === void 0 ? void 0 : _b.preScheduled) === 'true' &&
                 subscription.status === 'trialing') {
                 subscriptionData.scheduledPlan = subscriptionData.plan;
                 subscriptionData.hasScheduledSubscription = true;
@@ -411,8 +459,12 @@ const handleSubscriptionUpdate = async (subscription) => {
                     trialEnd: subscription.trial_end,
                 });
             }
+            const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
             await userDoc.ref.update({
-                subscription: { ...userData.subscription, ...subscriptionData },
+                subscription: {
+                    ...userData.subscription,
+                    ...sanitizedSubscriptionData,
+                },
             });
             console.log('Subscription updated for user:', userDoc.id);
         }
@@ -465,8 +517,12 @@ const handlePaymentSuccess = async (invoice) => {
                 status: 'active', // Ensure status is active after successful payment
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
+            const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
             await userDoc.ref.update({
-                subscription: { ...userData.subscription, ...subscriptionData },
+                subscription: {
+                    ...userData.subscription,
+                    ...sanitizedSubscriptionData,
+                },
             });
             console.log('Payment succeeded for user:', userDoc.id);
         }
@@ -504,7 +560,7 @@ const handlePaymentFailure = async (invoice) => {
  * Handle subscription creation from Stripe webhooks
  */
 const handleSubscriptionCreated = async (subscription) => {
-    var _a;
+    var _a, _b;
     try {
         // Find user by Stripe customer ID
         const userQuery = await db
@@ -521,7 +577,7 @@ const handleSubscriptionCreated = async (subscription) => {
                     : subscription.status === 'trialing'
                         ? 'trial'
                         : subscription.status,
-                plan: getPlanFromPriceId(subscription.items.data[0].price.id),
+                plan: getPlanFromPriceId(subscription.items.data[0].price.id, ((_a = userData === null || userData === void 0 ? void 0 : userData.subscription) === null || _a === void 0 ? void 0 : _a.plan) || 'free'),
                 currentPeriodStart: subscription.current_period_start,
                 currentPeriodEnd: subscription.current_period_end,
                 trialEndsAt: subscription.trial_end,
@@ -530,7 +586,7 @@ const handleSubscriptionCreated = async (subscription) => {
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             };
             // Check if this is a pre-scheduled subscription
-            if (((_a = subscription.metadata) === null || _a === void 0 ? void 0 : _a.preScheduled) === 'true' &&
+            if (((_b = subscription.metadata) === null || _b === void 0 ? void 0 : _b.preScheduled) === 'true' &&
                 subscription.status === 'trialing') {
                 subscriptionData.scheduledPlan = subscriptionData.plan;
                 subscriptionData.hasScheduledSubscription = true;
@@ -539,8 +595,12 @@ const handleSubscriptionCreated = async (subscription) => {
                     trialEnd: subscription.trial_end,
                 });
             }
+            const sanitizedSubscriptionData = removeUndefinedFields(subscriptionData);
             await userDoc.ref.update({
-                subscription: { ...userData.subscription, ...subscriptionData },
+                subscription: {
+                    ...userData.subscription,
+                    ...sanitizedSubscriptionData,
+                },
             });
             console.log('New subscription created for user:', userDoc.id, 'Plan:', subscriptionData.plan, 'Status:', subscriptionData.status);
         }
@@ -748,13 +808,16 @@ const handleDiscountDeleted = async (discount) => {
 /**
  * Helper function to map Stripe price ID to plan name
  */
-function getPlanFromPriceId(priceId) {
+function getPlanFromPriceId(priceId, fallbackPlan = 'free') {
     const priceMap = {
         [process.env.STRIPE_HOMEOWNER_PRICE_ID || 'price_homeowner']: 'homeowner',
+        [process.env.REACT_APP_STRIPE_HOMEOWNER_PLAN_ID || 'price_homeowner']: 'homeowner',
         [process.env.STRIPE_BASIC_PRICE_ID || 'price_basic']: 'basic',
+        [process.env.REACT_APP_STRIPE_BASIC_PLAN_ID || 'price_basic']: 'basic',
         [process.env.STRIPE_PROFESSIONAL_PRICE_ID || 'price_professional']: 'professional',
+        [process.env.REACT_APP_STRIPE_PROFESSIONAL_PLAN_ID || 'price_professional']: 'professional',
     };
-    return priceMap[priceId] || 'free';
+    return priceMap[priceId] || fallbackPlan;
 }
 /**
  * Helper function to map plan name to Stripe price ID

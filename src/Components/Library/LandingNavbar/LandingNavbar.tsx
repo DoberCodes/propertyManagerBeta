@@ -35,13 +35,18 @@ export const LandingNavbar = () => {
 					Our Mission
 				</NavAnchor>
 				<NavAnchor
-					as='a'
-					href='#/features'
-					onClick={(e) => {
-						e.preventDefault();
-						window.location.href = '#/features';
-					}}>
+					to='#Features'
+					scroll={(el) =>
+						el.scrollIntoView({ behavior: 'auto', block: 'start' })
+					}>
 					Features
+				</NavAnchor>
+				<NavAnchor
+					to='#Pricing'
+					scroll={(el) =>
+						el.scrollIntoView({ behavior: 'auto', block: 'start' })
+					}>
+					Pricing
 				</NavAnchor>
 				<NavAnchor
 					to='#Contact'

@@ -1,4 +1,11 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+	faBookOpen,
+	faBuilding,
+	faShieldHalved,
+	faMobileScreenButton,
+} from '@fortawesome/free-solid-svg-icons';
 import {
 	MissionSection,
 	MissionTitle,
@@ -17,7 +24,9 @@ const MissionSectionComponent = () => {
 			</MissionTitle>
 			<MissionContent>
 				<MissionCard>
-					<MissionCardIcon>📚</MissionCardIcon>
+					<MissionCardIcon className='history'>
+						<FontAwesomeIcon icon={faBookOpen} />
+					</MissionCardIcon>
 					<MissionCardTitle>Complete Maintenance History</MissionCardTitle>
 					<MissionCardDescription>
 						Build a comprehensive record of every repair, service, and update.
@@ -26,7 +35,9 @@ const MissionSectionComponent = () => {
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>🏠</MissionCardIcon>
+					<MissionCardIcon className='unit'>
+						<FontAwesomeIcon icon={faBuilding} />
+					</MissionCardIcon>
 					<MissionCardTitle>Individual Unit Tracking</MissionCardTitle>
 					<MissionCardDescription>
 						Track maintenance for each unit, device, and component separately.
@@ -35,7 +46,9 @@ const MissionSectionComponent = () => {
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>🛡️</MissionCardIcon>
+					<MissionCardIcon className='security'>
+						<FontAwesomeIcon icon={faShieldHalved} />
+					</MissionCardIcon>
 					<MissionCardTitle>Your Records, Your Responsibility</MissionCardTitle>
 					<MissionCardDescription>
 						You maintain the logging discipline—we provide the tools. Build the
@@ -43,7 +56,9 @@ const MissionSectionComponent = () => {
 					</MissionCardDescription>
 				</MissionCard>
 				<MissionCard>
-					<MissionCardIcon>📱</MissionCardIcon>
+					<MissionCardIcon className='mobile'>
+						<FontAwesomeIcon icon={faMobileScreenButton} />
+					</MissionCardIcon>
 					<MissionCardTitle>Always Available History</MissionCardTitle>
 					<MissionCardDescription>
 						Access your complete maintenance history anywhere, anytime. Whether

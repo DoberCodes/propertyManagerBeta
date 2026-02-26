@@ -62,6 +62,7 @@ interface PropertyDialogProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onSave: (data: PropertyFormData) => Promise<void>;
+	forceSingleFamily?: boolean;
 	initialData?: PropertyFormData;
 	groups: Array<{ id: string; name: string }>;
 	selectedGroupId?: string | null;
@@ -77,6 +78,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 	isOpen,
 	onClose,
 	onSave,
+	forceSingleFamily = false,
 	initialData,
 	groups,
 	selectedGroupId,
@@ -142,6 +144,9 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 
 				setFormData({
 					...initialData,
+					propertyType: forceSingleFamily
+						? 'Single Family'
+						: initialData.propertyType,
 					units: unitStrings,
 					suites: suiteStrings,
 					hasSuites: initialData.hasSuites ?? false,
@@ -169,7 +174,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 			setSuiteInput('');
 			setNewGroupName('');
 		}
-	}, [isOpen, initialData, selectedGroupId]);
+	}, [isOpen, initialData, selectedGroupId, forceSingleFamily]);
 
 	if (!isOpen) return null;
 
@@ -244,7 +249,12 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 
 		setIsSubmitting(true);
 		try {
-			await onSave(formData);
+			await onSave({
+				...formData,
+				propertyType: forceSingleFamily
+					? 'Single Family'
+					: formData.propertyType,
+			});
 			// Close dialog on successful save
 			onClose();
 		} catch (error) {
@@ -407,6 +417,7 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 								<Label>Property Type</Label>
 								<select
 									value={formData.propertyType}
+									disabled={forceSingleFamily}
 									onChange={(e) =>
 										handleInputChange(
 											'propertyType',
@@ -421,9 +432,23 @@ export const PropertyDialog: React.FC<PropertyDialogProps> = ({
 										width: '100%',
 									}}>
 									<option value='Single Family'>Single Family</option>
-									<option value='Multi-Family'>Multi-Family</option>
-									<option value='Commercial'>Commercial</option>
+									{!forceSingleFamily && (
+										<>
+											<option value='Multi-Family'>Multi-Family</option>
+											<option value='Commercial'>Commercial</option>
+										</>
+									)}
 								</select>
+								{forceSingleFamily && (
+									<div
+										style={{
+											marginTop: '6px',
+											fontSize: '12px',
+											color: '#6b7280',
+										}}>
+										Homeowner plans are limited to Single Family homes.
+									</div>
+								)}
 							</FormField>
 							{formData.propertyType === 'Commercial' && (
 								<FormField>

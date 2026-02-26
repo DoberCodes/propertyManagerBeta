@@ -18,17 +18,29 @@ interface ButtonGroupProps {
 	responsive?: boolean;
 }
 
-export const ButtonGroup = styled.div.attrs({
-	role: 'group',
-})<ButtonGroupProps>`
+interface ButtonGroupStyleProps {
+	$justify?: 'flex-start' | 'center' | 'flex-end' | 'space-between';
+	$gap?: string;
+	$marginTop?: string;
+	$responsive?: boolean;
+}
+
+export const ButtonGroup = styled.div
+	.attrs({
+		role: 'group',
+	})
+	.withConfig({
+		shouldForwardProp: (prop) =>
+			!['$justify', '$gap', '$marginTop', '$responsive'].includes(prop),
+	})<ButtonGroupProps & ButtonGroupStyleProps>`
 	display: flex;
-	gap: ${(props) => props.gap || '12px'};
-	justify-content: ${(props) => props.justify || 'flex-end'};
+	gap: ${(props) => props.$gap ?? props.gap ?? '12px'};
+	justify-content: ${(props) => props.$justify ?? props.justify ?? 'flex-end'};
 	align-items: center;
-	margin-top: ${(props) => props.marginTop || '0'};
+	margin-top: ${(props) => props.$marginTop ?? props.marginTop ?? '0'};
 
 	${(props) =>
-		props.responsive &&
+		(props.$responsive ?? props.responsive) &&
 		`
 		@media (max-width: 480px) {
 			flex-direction: column;

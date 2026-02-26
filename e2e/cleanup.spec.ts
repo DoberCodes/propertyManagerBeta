@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { registerNewAccount, generateTestEmail } from './auth.helper';
+import {
+	registerNewAccount,
+	generateTestEmail,
+	waitForPageLoaded,
+} from './auth.helper';
 
 /**
  * Cleanup and Data Lifecycle Tests
@@ -23,7 +27,8 @@ test.describe('Data Cleanup & Lifecycle', () => {
 		console.log('✅ Account created and logged in successfully');
 
 		// Step 3: Create some test data to be cleaned up
-		await page.goto('/properties', { waitUntil: 'domcontentloaded' });
+		await page.goto('/#/properties', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 		const createButton = page.getByRole('button', {
 			name: /add property|new property|create/i,
 		});
@@ -48,7 +53,8 @@ test.describe('Data Cleanup & Lifecycle', () => {
 
 		// Step 5: Try to log in with the test account again (should work)
 		console.log(`\n🔄 Attempting to log in with ${testEmail}`);
-		await page.goto('/', { waitUntil: 'domcontentloaded' });
+		await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 		const loginBtn = page
 			.getByRole('button', { name: /sign in|login/i })
 			.first();

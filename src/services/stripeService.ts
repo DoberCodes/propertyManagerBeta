@@ -10,6 +10,51 @@ import { functions } from '../config/firebase';
 
 let stripeInstance: Stripe | null = null;
 
+const mapCheckoutErrorMessage = (error: unknown): string => {
+	const e = error as {
+		message?: string;
+		code?: string;
+		details?: unknown;
+	};
+
+	const rawMessage = (e?.message || '').toLowerCase();
+	const code = e?.code || '';
+
+	if (rawMessage.includes('err_blocked_by_client')) {
+		return 'A browser extension blocked the payment request. Please disable ad/privacy blockers for this site and try again.';
+	}
+
+	if (rawMessage.includes('no such price')) {
+		return 'This plan is temporarily unavailable due to a billing configuration issue. Please contact support.';
+	}
+
+	if (
+		rawMessage.includes('invalid api key') ||
+		rawMessage.includes('stripe secret key is invalid') ||
+		rawMessage.includes('stripe secret key is not configured')
+	) {
+		return 'Billing is temporarily unavailable due to a payment configuration issue. Please try again shortly.';
+	}
+
+	if (code.includes('unauthenticated')) {
+		return 'Your session has expired. Please sign in again and retry payment.';
+	}
+
+	if (code.includes('failed-precondition')) {
+		return 'Billing setup is incomplete for this plan. Please contact support.';
+	}
+
+	if (
+		code.includes('unavailable') ||
+		rawMessage.includes('network') ||
+		rawMessage.includes('failed to fetch')
+	) {
+		return 'Unable to reach the payment service right now. Please check your connection and try again.';
+	}
+
+	return 'Unable to start checkout right now. Please try again in a moment.';
+};
+
 /**
  * Initialize Stripe with public key
  */
@@ -66,7 +111,7 @@ export const createCheckoutSession = async (
 		return data.url;
 	} catch (error) {
 		console.error('Failed to create checkout session:', error);
-		throw error;
+		throw new Error(mapCheckoutErrorMessage(error));
 	}
 };
 

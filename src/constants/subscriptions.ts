@@ -10,8 +10,11 @@ export const SUBSCRIPTION_PLANS = {
 		features: ['Limited to 1 home', 'Basic features only'],
 		permissions: {
 			canManageTeam: false,
+			canManageTenants: false,
 			canViewReports: false,
 			canExportData: false,
+			canAdvancedAuditTrail: false,
+			canManageMultiUnit: false,
 			prioritySupport: false,
 			canCreateProperties: true, // Can create properties
 			canManageProperties: true, // Can manage properties
@@ -31,8 +34,11 @@ export const SUBSCRIPTION_PLANS = {
 		],
 		permissions: {
 			canManageTeam: false,
+			canManageTenants: false,
 			canViewReports: false,
 			canExportData: false,
+			canAdvancedAuditTrail: false,
+			canManageMultiUnit: false,
 			prioritySupport: false,
 			canCreateProperties: false, // Cannot create properties
 			canManageProperties: false, // Cannot manage properties
@@ -53,8 +59,11 @@ export const SUBSCRIPTION_PLANS = {
 		],
 		permissions: {
 			canManageTeam: false,
+			canManageTenants: false,
 			canViewReports: false,
 			canExportData: false,
+			canAdvancedAuditTrail: false,
+			canManageMultiUnit: false,
 			prioritySupport: false,
 			canCreateProperties: false, // Explicitly cannot create properties
 			canManageProperties: false, // Cannot manage properties
@@ -68,16 +77,20 @@ export const SUBSCRIPTION_PLANS = {
 		priceMonthly: 2,
 		maxProperties: 1,
 		features: [
+			'Single-family homes only',
 			'Continuous service record for properties',
 			'Unlimited maintenance tracking for devices and their maintenance history',
 			'Maintain a complete record of contractor/vendor work',
 			'Attach documents and photos to create a full property audit trail',
-			'Basic reporting for insurance or resale documentation',
+			'Export reports for insurance or resale documentation',
 		],
 		permissions: {
 			canManageTeam: false,
+			canManageTenants: false,
 			canViewReports: false,
-			canExportData: false,
+			canExportData: true,
+			canAdvancedAuditTrail: false,
+			canManageMultiUnit: false,
 			prioritySupport: false,
 			canCreateProperties: true, // Can create properties
 			canManageProperties: true, // Can manage properties
@@ -100,8 +113,11 @@ export const SUBSCRIPTION_PLANS = {
 		],
 		permissions: {
 			canManageTeam: true,
+			canManageTenants: true,
 			canViewReports: false,
 			canExportData: true,
+			canAdvancedAuditTrail: true,
+			canManageMultiUnit: true,
 			prioritySupport: false,
 			canCreateProperties: true, // Can create properties
 			canManageProperties: true, // Can manage properties
@@ -122,8 +138,11 @@ export const SUBSCRIPTION_PLANS = {
 		],
 		permissions: {
 			canManageTeam: true,
+			canManageTenants: true,
 			canViewReports: true,
 			canExportData: true,
+			canAdvancedAuditTrail: true,
+			canManageMultiUnit: true,
 			prioritySupport: true,
 			canCreateProperties: true, // Can create properties
 			canManageProperties: true, // Can manage properties

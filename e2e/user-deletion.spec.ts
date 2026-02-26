@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { registerNewAccount, generateTestEmail } from './auth.helper';
+import {
+	registerNewAccount,
+	generateTestEmail,
+	waitForPageLoaded,
+} from './auth.helper';
 
 /**
  * User Data Deletion & Account Cleanup Tests
@@ -22,8 +26,8 @@ test.describe('User Account & Data Deletion', () => {
 		// Step 2: Create multiple properties
 		console.log('📦 Creating test properties...');
 		for (let i = 1; i <= 2; i++) {
-			await page.goto('/properties', { waitUntil: 'domcontentloaded' });
-			await page.waitForTimeout(500);
+			await page.goto('/#/properties', { waitUntil: 'domcontentloaded' });
+			await waitForPageLoaded(page);
 
 			const createButton = page.getByRole('button', {
 				name: /add property|new property|create/i,
@@ -51,8 +55,8 @@ test.describe('User Account & Data Deletion', () => {
 
 		// Step 3: Navigate to properties and delete them
 		console.log('🗑️  Deleting properties...');
-		await page.goto('/properties', { waitUntil: 'domcontentloaded' });
-		await page.waitForTimeout(500);
+		await page.goto('/#/properties', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		let propertyCount = 0;
 		let keepDeleting = true;
@@ -100,8 +104,8 @@ test.describe('User Account & Data Deletion', () => {
 		// Step 2: Create multiple tasks
 		console.log('📋 Creating test tasks...');
 		for (let i = 1; i <= 2; i++) {
-			await page.goto('/tasks', { waitUntil: 'domcontentloaded' });
-			await page.waitForTimeout(500);
+			await page.goto('/#/tasks', { waitUntil: 'domcontentloaded' });
+			await waitForPageLoaded(page);
 
 			const createButton = page.getByRole('button', {
 				name: /create task|new task|add task/i,
@@ -127,8 +131,8 @@ test.describe('User Account & Data Deletion', () => {
 
 		// Step 3: Navigate to tasks and delete them
 		console.log('🗑️  Deleting tasks...');
-		await page.goto('/tasks', { waitUntil: 'domcontentloaded' });
-		await page.waitForTimeout(500);
+		await page.goto('/#/tasks', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		let taskCount = 0;
 		let keepDeleting = true;
@@ -180,18 +184,13 @@ test.describe('User Account & Data Deletion', () => {
 
 		// Step 2: Look for account/settings page to delete account
 		console.log('🔍 Looking for account deletion option...');
-		const settingsRoutes = [
-			'/settings',
-			'/account',
-			'/profile',
-			'/preferences',
-		];
+		const settingsRoutes = ['settings', 'account', 'profile', 'preferences'];
 		let foundAccountSettings = false;
 
 		for (const route of settingsRoutes) {
 			try {
-				await page.goto(route, { waitUntil: 'domcontentloaded' });
-				await page.waitForTimeout(500);
+				await page.goto(`/#/${route}`, { waitUntil: 'domcontentloaded' });
+				await waitForPageLoaded(page);
 
 				// Look for "Delete Account" button or link
 				const deleteAccountBtn = page
@@ -236,7 +235,8 @@ test.describe('User Account & Data Deletion', () => {
 							console.log(
 								`\n🔄 Verifying deletion: Attempting to log in with ${testEmail}`,
 							);
-							await page.goto('/', { waitUntil: 'domcontentloaded' });
+							await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
+							await waitForPageLoaded(page);
 							const loginBtn = page
 								.getByRole('button', { name: /sign in|login/i })
 								.first();
@@ -314,7 +314,8 @@ test.describe('User Account & Data Deletion', () => {
 
 		// Step 2: Create test data
 		console.log('📦 Creating test data...');
-		await page.goto('/properties', { waitUntil: 'domcontentloaded' });
+		await page.goto('/#/properties', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 		const createPropBtn = page.getByRole('button', {
 			name: /add property|new property|create/i,
 		});

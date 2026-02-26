@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerNewAccount, generateTestEmail } from './auth.helper';
+import { waitForPageLoaded } from './auth.helper';
 
 /**
  * Task management tests
@@ -16,8 +17,8 @@ test.describe('Task Management', () => {
 
 	test('user can create a new task', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Click "Create Task" or "Add Task" button
 		const createButton = page.getByRole('button', {
@@ -94,8 +95,8 @@ test.describe('Task Management', () => {
 
 	test('user can view task details', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Click on first task
 		const taskCard = page
@@ -115,8 +116,8 @@ test.describe('Task Management', () => {
 
 	test('user can update task details', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Click edit button on first task
 		const editButton = page
@@ -164,8 +165,8 @@ test.describe('Task Management', () => {
 
 	test('user can mark task as completed', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Find a task and click the complete/check button
 		const completeButton = page
@@ -183,8 +184,8 @@ test.describe('Task Management', () => {
 
 	test('user can delete a task', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Get task count before deletion
 		const taskItems = page.locator(
@@ -221,8 +222,8 @@ test.describe('Task Management', () => {
 
 	test('user can filter tasks by status', async ({ page }) => {
 		// Navigate to tasks page
-		await page.goto('/tasks');
-		await page.waitForLoadState('networkidle');
+		await page.goto('/#/tasks');
+		await waitForPageLoaded(page);
 
 		// Click filter button
 		const filterButton = page.getByRole('button', { name: /filter|status/i });

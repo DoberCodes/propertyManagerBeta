@@ -8,7 +8,6 @@ import { selectIsHomeowner } from '../../Redux/selectors/permissionSelectors';
 import {
 	useCreatePropertyMutation,
 	useCreatePropertyGroupMutation,
-	useCreateUnitMutation,
 } from '../../Redux/API/propertySlice';
 
 /**
@@ -25,7 +24,6 @@ const HomeownerPropertyWrapper: React.FC = () => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [createProperty] = useCreatePropertyMutation();
 	const [createPropertyGroup] = useCreatePropertyGroupMutation();
-	const [createUnit] = useCreateUnitMutation();
 
 	// Find all properties for this user
 	const allProperties = propertyGroups.flatMap(
@@ -42,6 +40,8 @@ const HomeownerPropertyWrapper: React.FC = () => {
 
 	const handleSaveProperty = async (formData: any) => {
 		try {
+			const effectivePropertyType = 'Single Family';
+
 			// If no groups exist, create a default one
 			let groupId = propertyGroups[0]?.id;
 			if (!groupId) {
@@ -58,36 +58,10 @@ const HomeownerPropertyWrapper: React.FC = () => {
 			// Create the property
 			const propertyResult = await createProperty({
 				...formData,
+				propertyType: effectivePropertyType,
 				groupId,
 				userId: currentUser!.id,
 			});
-
-			// Create units for Multi-Family properties
-			if (
-				formData.propertyType === 'Multi-Family' &&
-				formData.units &&
-				formData.units.length > 0
-			) {
-				if ('data' in propertyResult && propertyResult.data) {
-					try {
-						for (const unitName of formData.units) {
-							await createUnit({
-								userId: currentUser!.id,
-								propertyId: propertyResult.data.id,
-								name: unitName,
-								floor: 1, // Default floor
-								area: 1000, // Default area
-								isOccupied: false,
-								deviceIds: [],
-								occupants: [],
-							}).unwrap();
-						}
-					} catch (unitError) {
-						console.error('Failed to create units:', unitError);
-						// Don't fail property creation if unit creation fails
-					}
-				}
-			}
 
 			setDialogOpen(false);
 		} catch (error) {
@@ -116,6 +90,7 @@ const HomeownerPropertyWrapper: React.FC = () => {
 					isOpen={dialogOpen}
 					onClose={() => setDialogOpen(false)}
 					onSave={handleSaveProperty}
+					forceSingleFamily={true}
 					groups={propertyGroups.map((g) => ({ id: g.id, name: g.name }))}
 					selectedGroupId={propertyGroups[0]?.id}
 					onCreateGroup={async (name: string) => {

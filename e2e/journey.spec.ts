@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerNewAccount, generateTestEmail } from './auth.helper';
+import { waitForPageLoaded } from './auth.helper';
 
 /**
  * Complete user journey test
@@ -21,7 +22,8 @@ test.describe('Complete User Journey', () => {
 		await expect(logoutButton).toBeVisible();
 
 		// Step 2: Navigate to properties
-		await page.goto('/properties', { waitUntil: 'domcontentloaded' });
+		await page.goto('/#/properties', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		// Step 3: Create a property
 		const createPropertyButton = page.getByRole('button', {
@@ -53,7 +55,8 @@ test.describe('Complete User Journey', () => {
 		await page.waitForLoadState('networkidle');
 
 		// Step 4: Navigate to tasks
-		await page.goto('/tasks', { waitUntil: 'domcontentloaded' });
+		await page.goto('/#/tasks', { waitUntil: 'domcontentloaded' });
+		await waitForPageLoaded(page);
 
 		// Step 5: Create a task
 		const createTaskButton = page.getByRole('button', {

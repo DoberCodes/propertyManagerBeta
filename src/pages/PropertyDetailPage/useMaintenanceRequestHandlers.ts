@@ -92,7 +92,7 @@ export const useMaintenanceRequestHandlers = (
 		}
 	};
 
-	const handleConvertToTask = async (taskData: TaskData) => {
+	const handleConvertToTask = async (_taskData: TaskData) => {
 		if (!convertingRequest || !property || !currentUser) return;
 
 		try {
