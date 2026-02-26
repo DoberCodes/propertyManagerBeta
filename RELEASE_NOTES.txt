@@ -1,14 +1,6 @@
-🎉 **Release Notes for Version 1.11.7** 🎉
+🎉 **Release Notes for Version 1.11.8** 🎉
 
 
 ## 🐛 Bug Fixes
-- fixing the firestore rules and updating the components to handle them. Adding changes the family member and feedback messaging, also adding some testing scripts for firebase rules
-- fixing playwright to handle end to end testing on core features
-- fixing the gitignore so we can add the yarn.lock for github actions
-- fixing node issue
-- fixing some linting issues.
-- fixing the landing page icon and adding payment section also adding basic github action changes and playwright adjustments.
-
-## 🔧 Improvements & Maintenance
-- adding github actions to confirm accurate build
-- Updating actions to increase reliability of push
+- Fixing some playwright testing, fixing the landing page and modifying the legal document navigation
+- updating the legal document notification to include more required docs.
