@@ -27,13 +27,9 @@ import TeamPage from './pages/TeamPage';
 import { ReportPage } from './pages/ReportPage';
 import { UserProfile } from './pages/UserProfile';
 import { TenantProfilePage } from './pages/TenantProfilePage';
-import { TEAM_VIEW_ROLES, FULL_ACCESS_ROLES } from './constants/roles';
 import { isNativeApp } from './utils/platform';
 import { useSelector } from 'react-redux';
-import {
-	selectIsHomeowner,
-	selectCanAccessTeam,
-} from './Redux/selectors/permissionSelectors';
+import { selectCanAccessTeam } from './Redux/selectors/permissionSelectors';
 import PaywallPageIndex from './pages/PaywallPage';
 import { MaintenanceHistoryGroupPage } from 'pages/MaintenanceHistoryGroup';
 import { SettingsPage } from 'pages/SettingsPage';
@@ -48,9 +44,9 @@ const RootRoute = () => {
 
 export const RouterComponent = () => {
 	const currentUser = useSelector((state: any) => state.user.currentUser);
-	const isUserHomeowner = useSelector(selectIsHomeowner);
 	const canAccessTeam = useSelector(selectCanAccessTeam);
-	const shouldShowTeamRoute = !!currentUser && canAccessTeam;
+	const shouldShowTeamRoute =
+		!!currentUser && (canAccessTeam || !!currentUser?.accountId);
 	return (
 		<Router>
 			<Routes>
@@ -114,7 +110,7 @@ export const RouterComponent = () => {
 					<Route
 						path='property/:slug'
 						element={
-							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
+							<ProtectedRoutes>
 								<PropertyDetailPage />
 							</ProtectedRoutes>
 						}
@@ -122,7 +118,7 @@ export const RouterComponent = () => {
 					<Route
 						path='property/:slug/unit/:unitName'
 						element={
-							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
+							<ProtectedRoutes>
 								<UnitDetailPage />
 							</ProtectedRoutes>
 						}
@@ -130,7 +126,7 @@ export const RouterComponent = () => {
 					<Route
 						path='property/:slug/suite/:suiteName'
 						element={
-							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
+							<ProtectedRoutes>
 								<SuiteDetailPage />
 							</ProtectedRoutes>
 						}
@@ -138,7 +134,7 @@ export const RouterComponent = () => {
 					<Route
 						path='property/:slug/maintenance-history/:groupId'
 						element={
-							<ProtectedRoutes requiredRoles={FULL_ACCESS_ROLES}>
+							<ProtectedRoutes>
 								<MaintenanceHistoryGroupPage />
 							</ProtectedRoutes>
 						}
@@ -147,7 +143,7 @@ export const RouterComponent = () => {
 						<Route
 							path='team'
 							element={
-								<ProtectedRoutes requiredRoles={TEAM_VIEW_ROLES}>
+								<ProtectedRoutes>
 									<TeamPage />
 								</ProtectedRoutes>
 							}
@@ -159,7 +155,6 @@ export const RouterComponent = () => {
 						path='report'
 						element={
 							<ProtectedRoutes
-								requiredRoles={FULL_ACCESS_ROLES}
 								requireSubscription={true}
 								allowExpiredUsers={true}>
 								<ReportPage />

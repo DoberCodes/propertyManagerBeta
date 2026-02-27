@@ -13,6 +13,7 @@ import { CompletionFile, Task } from '../../types/Task.types';
 import { apiSlice, docToData } from './apiSlice';
 import { auth, db } from '../../config/firebase';
 import { PropertyShare } from '../../types/Property.types';
+import { resolveTargetUserId } from './accountContext';
 
 export const taskSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -20,29 +21,17 @@ export const taskSlice = apiSlice.injectEndpoints({
 		getTasks: builder.query<Task[], void>({
 			async queryFn() {
 				try {
-					// Get authenticated user from Firebase Auth
 					const currentUser = auth.currentUser;
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
 					const userId = currentUser.uid;
-
-					// Get user data to check for family account
-					const userDocRef = doc(db, 'users', userId);
-					const userDoc = await getDoc(userDocRef);
-					const userData = userDoc.data();
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					// Determine which user's data to fetch
-					// For family members, use the account owner's ID
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : userId;
+					const targetUserId = await resolveTargetUserId();
 
 					// Get all properties for this user's groups
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', targetUserId),
+						where('accountId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -93,30 +82,46 @@ export const taskSlice = apiSlice.injectEndpoints({
 						...new Set([...ownedPropertyIds, ...sharedPropertyIds]),
 					];
 
-					if (allPropertyIds.length === 0) {
-						return { data: [] };
-					}
-
-					if (allPropertyIds.length === 0) {
-						return { data: [] };
-					}
+					const accountTasksQuery = query(
+						collection(db, 'tasks'),
+						where('accountId', '==', targetUserId),
+					);
+					const accountTasksSnapshot = await getDocs(accountTasksQuery);
+					const accountTasks = accountTasksSnapshot.docs
+						.map((doc) => docToData(doc) as Task)
+						.filter(Boolean) as Task[];
 
 					// Fetch all tasks for these properties
 					const allTasks: Task[] = [];
-					for (let i = 0; i < allPropertyIds.length; i += 10) {
-						const batch = allPropertyIds.slice(i, i + 10);
-						const tasksQuery = query(
-							collection(db, 'tasks'),
-							where('propertyId', 'in', batch),
-						);
-						const tasksSnapshot = await getDocs(tasksQuery);
-						const tasks = tasksSnapshot.docs
-							.map((doc) => docToData(doc) as Task)
-							.filter(Boolean) as Task[];
-						allTasks.push(...tasks);
+					if (allPropertyIds.length > 0) {
+						for (let i = 0; i < allPropertyIds.length; i += 10) {
+							const batch = allPropertyIds.slice(i, i + 10);
+							try {
+								const tasksQuery = query(
+									collection(db, 'tasks'),
+									where('propertyId', 'in', batch),
+								);
+								const tasksSnapshot = await getDocs(tasksQuery);
+								const tasks = tasksSnapshot.docs
+									.map((doc) => docToData(doc) as Task)
+									.filter(Boolean) as Task[];
+								allTasks.push(...tasks);
+							} catch (propertyTaskError) {
+								console.warn(
+									'Could not fetch property-linked tasks batch:',
+									propertyTaskError,
+								);
+							}
+						}
 					}
 
-					return { data: allTasks };
+					const uniqueTasks = Array.from(
+						new Map(
+							[...accountTasks, ...allTasks].map((task) => [task.id, task]),
+						).values(),
+					) as Task[];
+
+					return { data: uniqueTasks };
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -127,12 +132,26 @@ export const taskSlice = apiSlice.injectEndpoints({
 		createTask: builder.mutation<Task, Omit<Task, 'id'>>({
 			async queryFn(newTask) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'tasks'), {
 						...newTask,
+						userId: newTask.userId || targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newTask } as Task };
+					return {
+						data: {
+							id: docRef.id,
+							...newTask,
+							userId: newTask.userId || targetUserId,
+							accountId: targetUserId,
+						} as Task,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -198,6 +217,7 @@ export const taskSlice = apiSlice.injectEndpoints({
 						return { error: 'Task not found' };
 					}
 					const taskData = taskSnapshot.data() as Task;
+					const targetUserId = await resolveTargetUserId();
 					const historyData = {
 						...taskData,
 						status: 'Completed',
@@ -210,6 +230,7 @@ export const taskSlice = apiSlice.injectEndpoints({
 						userId: taskData.userId,
 						ownerId: taskData.userId,
 						propertyId: taskData.propertyId,
+						accountId: (taskData as any).accountId || targetUserId,
 						propertyTitle: taskData.propertyTitle || taskData.property,
 						// Link recurring tasks together
 						recurringTaskId: taskData.isRecurring
@@ -257,6 +278,7 @@ export const taskSlice = apiSlice.injectEndpoints({
 						return { error: 'Task not found' };
 					}
 					const taskData = taskSnapshot.data() as Task;
+					const targetUserId = await resolveTargetUserId();
 					const approvedAt = new Date().toISOString();
 					const updates = {
 						status: 'Completed' as const,
@@ -268,6 +290,7 @@ export const taskSlice = apiSlice.injectEndpoints({
 					const historyData = {
 						...taskData,
 						...updates,
+						accountId: (taskData as any).accountId || targetUserId,
 						originalTaskId: taskId,
 						// Link recurring tasks together
 						recurringTaskId: taskData.isRecurring

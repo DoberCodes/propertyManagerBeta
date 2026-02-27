@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { apiSlice } from './apiSlice';
 import { auth, db } from '../../config/firebase';
+import { resolveTargetUserId } from './accountContext';
 import {
 	TenantInvitationCode,
 	TenantProfile,
@@ -221,6 +222,7 @@ const tenantSlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
+					const targetUserId = await resolveTargetUserId();
 
 					const now = new Date().toISOString();
 					const promoData = {
@@ -229,6 +231,7 @@ const tenantSlice = apiSlice.injectEndpoints({
 						status: 'active' as const,
 						createdByUserId: currentUser.uid,
 						createdByEmail: currentUser.email || undefined,
+						accountId: targetUserId,
 						propertyId,
 						tenantEmail: tenantEmail?.toLowerCase() || undefined,
 						createdAt: now,
@@ -412,10 +415,12 @@ const tenantSlice = apiSlice.injectEndpoints({
 					if (!profileData.userId) {
 						return { error: 'User ID is required' };
 					}
+					const targetUserId = await resolveTargetUserId();
 
 					const now = new Date().toISOString();
 					const newProfile: Partial<TenantProfile> = {
 						...profileData,
+						accountId: (profileData as any).accountId || targetUserId,
 						createdAt: now,
 						updatedAt: now,
 						profileCompleteness: 0,
@@ -450,8 +455,14 @@ const tenantSlice = apiSlice.injectEndpoints({
 						return { error: 'Tenant profile not found' };
 					}
 
+					const existingProfile = profileSnap.data() as TenantProfile;
+					const targetUserId = await resolveTargetUserId();
 					const updatedData = {
 						...updates,
+						accountId:
+							(updates as any).accountId ||
+							(existingProfile as any).accountId ||
+							targetUserId,
 						updatedAt: new Date().toISOString(),
 					};
 

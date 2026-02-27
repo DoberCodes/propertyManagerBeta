@@ -352,14 +352,16 @@ export const SettingsPage: React.FC = () => {
 	);
 	const occupiedFamilySeats = nonOwnerFamilyMembers.length;
 	const canAddMoreFamilyMembers = occupiedFamilySeats < 2;
+	const canManageFamilyRoles =
+		currentUser?.isAccountOwner ||
+		currentUser?.accountId === currentUser?.id ||
+		currentUser?.role === 'admin';
 
 	const handleAddFamilyMember = async () => {
-		if (
-			!currentUser?.accountId ||
-			(!currentUser?.isAccountOwner &&
-				currentUser?.accountId !== currentUser?.id)
-		) {
-			setAddFamilyMemberError('Only account owners can add family members');
+		if (!currentUser?.accountId || !canManageFamilyRoles) {
+			setAddFamilyMemberError(
+				'Only account owners or admins can add family members',
+			);
 			return;
 		}
 
@@ -377,12 +379,16 @@ export const SettingsPage: React.FC = () => {
 		setFamilyMemberSuccess('');
 
 		try {
+			const requestedRole = canManageFamilyRoles
+				? familyMemberForm.role
+				: 'member';
+
 			const memberResult = await addFamilyMember(
 				currentUser.accountId,
 				familyMemberForm.email.trim(),
 				familyMemberForm.firstName.trim(),
 				familyMemberForm.lastName.trim(),
-				familyMemberForm.role,
+				requestedRole,
 			);
 
 			const members = await getFamilyMembers(currentUser.accountId);
@@ -407,11 +413,7 @@ export const SettingsPage: React.FC = () => {
 	};
 
 	const handleRemoveFamilyMember = async (memberId: string) => {
-		if (
-			!currentUser?.accountId ||
-			(!currentUser?.isAccountOwner &&
-				currentUser?.accountId !== currentUser?.id)
-		) {
+		if (!currentUser?.accountId || !canManageFamilyRoles) {
 			return;
 		}
 
@@ -440,11 +442,7 @@ export const SettingsPage: React.FC = () => {
 	};
 
 	const handleResendPasswordSetup = async (memberId: string) => {
-		if (
-			!currentUser?.accountId ||
-			(!currentUser?.isAccountOwner &&
-				currentUser?.accountId !== currentUser?.id)
-		) {
+		if (!currentUser?.accountId || !canManageFamilyRoles) {
 			return;
 		}
 
@@ -679,8 +677,7 @@ export const SettingsPage: React.FC = () => {
 				</ButtonContainer>
 			</SubscriptionSection>
 
-			{(currentUser?.isAccountOwner ||
-				currentUser?.accountId === currentUser?.id) && (
+			{canManageFamilyRoles && (
 				<>
 					<AccountSection>
 						<SectionTitle>Family Members</SectionTitle>
@@ -1062,104 +1059,108 @@ export const SettingsPage: React.FC = () => {
 				</p>
 			</GenericModal>
 
-			<GenericModal
-				isOpen={showAddFamilyMemberModal}
-				onClose={() => {
-					setShowAddFamilyMemberModal(false);
-					setFamilyMemberForm({
-						firstName: '',
-						lastName: '',
-						email: '',
-						role: 'member',
-					});
-					setAddFamilyMemberError('');
-				}}
-				title='Add Family Member'
-				primaryButtonLabel={isAddingFamilyMember ? 'Adding...' : 'Add Member'}
-				primaryButtonAction={handleAddFamilyMember}
-				secondaryButtonLabel='Cancel'
-				showActions={true}
-				primaryButtonDisabled={isAddingFamilyMember}>
-				<FormGroup>
-					<FormLabel>First Name</FormLabel>
-					<FormInput
-						type='text'
-						value={familyMemberForm.firstName}
-						onChange={(e) =>
-							setFamilyMemberForm((prev) => ({
-								...prev,
-								firstName: e.target.value,
-							}))
-						}
-						placeholder='Enter first name'
-					/>
-				</FormGroup>
+			{canManageFamilyRoles && (
+				<GenericModal
+					isOpen={showAddFamilyMemberModal}
+					onClose={() => {
+						setShowAddFamilyMemberModal(false);
+						setFamilyMemberForm({
+							firstName: '',
+							lastName: '',
+							email: '',
+							role: 'member',
+						});
+						setAddFamilyMemberError('');
+					}}
+					title='Add Family Member'
+					primaryButtonLabel={isAddingFamilyMember ? 'Adding...' : 'Add Member'}
+					primaryButtonAction={handleAddFamilyMember}
+					secondaryButtonLabel='Cancel'
+					showActions={true}
+					primaryButtonDisabled={isAddingFamilyMember}>
+					<FormGroup>
+						<FormLabel>First Name</FormLabel>
+						<FormInput
+							type='text'
+							value={familyMemberForm.firstName}
+							onChange={(e) =>
+								setFamilyMemberForm((prev) => ({
+									...prev,
+									firstName: e.target.value,
+								}))
+							}
+							placeholder='Enter first name'
+						/>
+					</FormGroup>
 
-				<FormGroup>
-					<FormLabel>Last Name</FormLabel>
-					<FormInput
-						type='text'
-						value={familyMemberForm.lastName}
-						onChange={(e) =>
-							setFamilyMemberForm((prev) => ({
-								...prev,
-								lastName: e.target.value,
-							}))
-						}
-						placeholder='Enter last name'
-					/>
-				</FormGroup>
+					<FormGroup>
+						<FormLabel>Last Name</FormLabel>
+						<FormInput
+							type='text'
+							value={familyMemberForm.lastName}
+							onChange={(e) =>
+								setFamilyMemberForm((prev) => ({
+									...prev,
+									lastName: e.target.value,
+								}))
+							}
+							placeholder='Enter last name'
+						/>
+					</FormGroup>
 
-				<FormGroup>
-					<FormLabel>Email Address</FormLabel>
-					<FormInput
-						type='email'
-						value={familyMemberForm.email}
-						onChange={(e) =>
-							setFamilyMemberForm((prev) => ({
-								...prev,
-								email: e.target.value,
-							}))
-						}
-						placeholder='Enter email address'
-					/>
-				</FormGroup>
+					<FormGroup>
+						<FormLabel>Email Address</FormLabel>
+						<FormInput
+							type='email'
+							value={familyMemberForm.email}
+							onChange={(e) =>
+								setFamilyMemberForm((prev) => ({
+									...prev,
+									email: e.target.value,
+								}))
+							}
+							placeholder='Enter email address'
+						/>
+					</FormGroup>
 
-				<FormGroup>
-					<FormLabel>Role</FormLabel>
-					<select
-						value={familyMemberForm.role}
-						onChange={(e) =>
-							setFamilyMemberForm((prev) => ({
-								...prev,
-								role: e.target.value as 'owner' | 'admin' | 'member',
-							}))
-						}
-						style={{
-							width: '100%',
-							padding: '12px',
-							border: '1px solid #d1d5db',
-							borderRadius: '8px',
-							fontSize: '14px',
-							background: '#fff',
-						}}>
-						<option value='owner'>Owner</option>
-						<option value='admin'>Admin</option>
-						<option value='member'>Member</option>
-					</select>
-				</FormGroup>
+					{canManageFamilyRoles ? (
+						<FormGroup>
+							<FormLabel>Role</FormLabel>
+							<select
+								value={familyMemberForm.role}
+								onChange={(e) =>
+									setFamilyMemberForm((prev) => ({
+										...prev,
+										role: e.target.value as 'owner' | 'admin' | 'member',
+									}))
+								}
+								style={{
+									width: '100%',
+									padding: '12px',
+									border: '1px solid #d1d5db',
+									borderRadius: '8px',
+									fontSize: '14px',
+									background: '#fff',
+								}}>
+								<option value='owner'>Owner</option>
+								<option value='admin'>Admin</option>
+								<option value='member'>Member</option>
+							</select>
+						</FormGroup>
+					) : null}
 
-				{addFamilyMemberError && (
-					<ErrorMessage style={{ marginTop: '16px' }}>
-						{addFamilyMemberError}
-					</ErrorMessage>
-				)}
+					{addFamilyMemberError && (
+						<ErrorMessage style={{ marginTop: '16px' }}>
+							{addFamilyMemberError}
+						</ErrorMessage>
+					)}
 
-				<p style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
-					The family member account is created immediately and they receive a
-					password setup email to activate access.
-				</p>
-			</GenericModal>
+					<p style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+						The family member account is created immediately and they receive a
+						password setup email to activate access.
+					</p>
+				</GenericModal>
+			)}
 		</Container>
 	);
 };

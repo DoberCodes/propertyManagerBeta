@@ -13,6 +13,7 @@ import { auth } from '../../config/firebase';
 import { db } from '../../config/firebase';
 import { Device } from '../../types/Property.types';
 import { apiSlice, docToData } from './apiSlice';
+import { resolveTargetUserId } from './accountContext';
 
 const deviceSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -73,12 +74,26 @@ const deviceSlice = apiSlice.injectEndpoints({
 		createDevice: builder.mutation<Device, Omit<Device, 'id'>>({
 			async queryFn(newDevice) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'devices'), {
 						...newDevice,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newDevice } as Device };
+					return {
+						data: {
+							id: docRef.id,
+							...newDevice,
+							userId: targetUserId,
+							accountId: targetUserId,
+						} as Device,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -126,11 +141,11 @@ const deviceSlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-					const userId = currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 
 					const q = query(
 						collection(db, 'devices'),
-						where('userId', '==', userId),
+						where('accountId', '==', targetUserId),
 					);
 					const querySnapshot = await getDocs(q);
 					const devices = querySnapshot.docs

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
 	faTrash,
@@ -22,6 +23,7 @@ import { UserInvitation } from '../../types/User.types';
 import { SHARE_PERMISSIONS } from '../../constants/roles';
 import { getSharePermissionLabel } from '../../utils/permissions';
 import { PropertyShare } from '../../types/Property.types';
+import { RootState } from '../../Redux/store/store';
 
 interface SharePropertyModalProps {
 	open: boolean;
@@ -40,11 +42,17 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 	ownerId,
 	ownerEmail,
 }) => {
+	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [email, setEmail] = useState('');
 	const [permission, setPermission] = useState<'admin' | 'viewer'>('viewer');
 	const [editingShareId, setEditingShareId] = useState<string | null>(null);
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const canManageShares =
+		currentUser?.id === ownerId ||
+		currentUser?.isAccountOwner ||
+		currentUser?.accountId === currentUser?.id ||
+		currentUser?.role === 'admin';
 
 	const { data: shares = [], isLoading } =
 		useGetPropertySharesQuery(propertyId);
@@ -62,6 +70,11 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 	const handleSendInvitation = async () => {
 		setError('');
 		setSuccess('');
+
+		if (!canManageShares) {
+			setError('Only account owners or admins can manage sharing');
+			return;
+		}
 
 		if (!email || !email.includes('@')) {
 			setError('Please enter a valid email address');
@@ -114,6 +127,10 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 		newPermission: 'co-owner' | 'admin' | 'viewer',
 	) => {
 		setError('');
+		if (!canManageShares) {
+			setError('Only account owners or admins can manage sharing');
+			return;
+		}
 		try {
 			await updateShare({ id: shareId, permission: newPermission }).unwrap();
 			setEditingShareId(null);
@@ -125,6 +142,10 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 
 	const handleDeleteShare = async (shareId: string) => {
 		setError('');
+		if (!canManageShares) {
+			setError('Only account owners or admins can manage sharing');
+			return;
+		}
 		if (
 			window.confirm('Are you sure you want to revoke access for this user?')
 		) {
@@ -138,6 +159,10 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 	};
 
 	const handleCancelInvitation = async (invitationId: string) => {
+		if (!canManageShares) {
+			setError('Only account owners or admins can manage sharing');
+			return;
+		}
 		if (window.confirm('Are you sure you want to cancel this invitation?')) {
 			try {
 				await cancelInvitation(invitationId).unwrap();
@@ -180,46 +205,54 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 				{/* Invite New User */}
 				<Section>
 					<SectionTitle>Share with Existing User</SectionTitle>
-					<SectionDescription>
-						Enter the email address of an existing user to share this property
-						with them.
-					</SectionDescription>
-					<InviteForm>
-						<Input
-							type='email'
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							placeholder='user@example.com'
-						/>
-						<Select
-							value={permission}
-							onChange={(e) =>
-								setPermission(e.target.value as 'admin' | 'viewer')
-							}>
-							<option value={SHARE_PERMISSIONS.ADMIN}>
-								{getSharePermissionLabel(SHARE_PERMISSIONS.ADMIN)}
-							</option>
-							<option value={SHARE_PERMISSIONS.VIEWER}>
-								{getSharePermissionLabel(SHARE_PERMISSIONS.VIEWER)}
-							</option>
-						</Select>
-						<Button
-							onClick={handleSendInvitation}
-							disabled={isSending || !email}>
-							{isSending ? (
-								<FontAwesomeIcon icon={faSpinner} spin />
-							) : (
-								<>
-									<FontAwesomeIcon icon={faUserPlus} /> Share
-								</>
-							)}
-						</Button>
-					</InviteForm>
-					<HelperText>
-						<strong>Admin:</strong> Can view and edit property details
-						<br />
-						<strong>Viewer:</strong> Can only view property details
-					</HelperText>
+					{canManageShares ? (
+						<>
+							<SectionDescription>
+								Enter the email address of an existing user to share this
+								property with them.
+							</SectionDescription>
+							<InviteForm>
+								<Input
+									type='email'
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									placeholder='user@example.com'
+								/>
+								<Select
+									value={permission}
+									onChange={(e) =>
+										setPermission(e.target.value as 'admin' | 'viewer')
+									}>
+									<option value={SHARE_PERMISSIONS.ADMIN}>
+										{getSharePermissionLabel(SHARE_PERMISSIONS.ADMIN)}
+									</option>
+									<option value={SHARE_PERMISSIONS.VIEWER}>
+										{getSharePermissionLabel(SHARE_PERMISSIONS.VIEWER)}
+									</option>
+								</Select>
+								<Button
+									onClick={handleSendInvitation}
+									disabled={isSending || !email}>
+									{isSending ? (
+										<FontAwesomeIcon icon={faSpinner} spin />
+									) : (
+										<>
+											<FontAwesomeIcon icon={faUserPlus} /> Share
+										</>
+									)}
+								</Button>
+							</InviteForm>
+							<HelperText>
+								<strong>Admin:</strong> Can view and edit property details
+								<br />
+								<strong>Viewer:</strong> Can only view property details
+							</HelperText>
+						</>
+					) : (
+						<SectionDescription>
+							Only account owners or admins can change sharing permissions.
+						</SectionDescription>
+					)}
 				</Section>
 
 				{/* Current Shares */}
@@ -239,7 +272,7 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 								<ShareItem key={share.id}>
 									<ShareInfo>
 										<ShareEmail>{share.sharedWithEmail}</ShareEmail>
-										{editingShareId === share.id ? (
+										{editingShareId === share.id && canManageShares ? (
 											<div style={{ marginTop: '4px' }}>
 												<Select
 													value={share.permission}
@@ -267,31 +300,33 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 											</Badge>
 										)}
 									</ShareInfo>
-									<ShareActions>
-										{editingShareId === share.id ? (
-											<SecondaryButton
-												onClick={() => setEditingShareId(null)}
-												disabled={isUpdating}>
-												Cancel
-											</SecondaryButton>
-										) : (
-											<>
-												<IconButton
-													onClick={() => setEditingShareId(share.id)}
-													disabled={isDeleting}
-													title='Edit permission'>
-													<FontAwesomeIcon icon={faEdit} />
-												</IconButton>
-												<IconButton
-													onClick={() => handleDeleteShare(share.id)}
-													disabled={isDeleting}
-													title='Revoke access'
-													color='danger'>
-													<FontAwesomeIcon icon={faTrash} />
-												</IconButton>
-											</>
-										)}
-									</ShareActions>
+									{canManageShares && (
+										<ShareActions>
+											{editingShareId === share.id ? (
+												<SecondaryButton
+													onClick={() => setEditingShareId(null)}
+													disabled={isUpdating}>
+													Cancel
+												</SecondaryButton>
+											) : (
+												<>
+													<IconButton
+														onClick={() => setEditingShareId(share.id)}
+														disabled={isDeleting}
+														title='Edit permission'>
+														<FontAwesomeIcon icon={faEdit} />
+													</IconButton>
+													<IconButton
+														onClick={() => handleDeleteShare(share.id)}
+														disabled={isDeleting}
+														title='Revoke access'
+														color='danger'>
+														<FontAwesomeIcon icon={faTrash} />
+													</IconButton>
+												</>
+											)}
+										</ShareActions>
+									)}
 								</ShareItem>
 							))}
 						</SharesList>
@@ -341,7 +376,7 @@ export const SharePropertyModal: React.FC<SharePropertyModalProps> = ({
 											)}
 										</PendingText>
 									</ShareInfo>
-									{invitation.status === 'pending' && (
+									{invitation.status === 'pending' && canManageShares && (
 										<ShareActions>
 											<IconButton
 												color='danger'

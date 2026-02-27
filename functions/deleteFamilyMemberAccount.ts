@@ -33,6 +33,9 @@ export const deleteFamilyMemberAccount = functions.https.onCall(
 			);
 		}
 
+		const callerDoc = await db.collection('users').doc(callerUid).get();
+		const callerData = callerDoc.data() || {};
+
 		try {
 			const accountRef = db.collection('familyAccounts').doc(accountId);
 			let accountData: FirebaseFirestore.DocumentData | undefined;
@@ -48,10 +51,14 @@ export const deleteFamilyMemberAccount = functions.https.onCall(
 				}
 
 				accountData = accountDoc.data();
-				if (accountData?.ownerId !== callerUid) {
+				const callerIsOwner = accountData?.ownerId === callerUid;
+				const callerIsAdmin =
+					callerData?.accountId === accountId && callerData?.role === 'admin';
+
+				if (!callerIsOwner && !callerIsAdmin) {
 					throw new functions.https.HttpsError(
 						'permission-denied',
-						'Only account owners can delete family members',
+						'Only account owners or admins can delete family members',
 					);
 				}
 
@@ -59,6 +66,13 @@ export const deleteFamilyMemberAccount = functions.https.onCall(
 					throw new functions.https.HttpsError(
 						'invalid-argument',
 						'Cannot delete yourself from the account',
+					);
+				}
+
+				if (memberId === accountData?.ownerId) {
+					throw new functions.https.HttpsError(
+						'permission-denied',
+						'Cannot delete the account owner',
 					);
 				}
 

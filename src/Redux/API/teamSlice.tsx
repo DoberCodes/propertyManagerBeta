@@ -17,6 +17,7 @@ import {
 	TeamMember,
 	TeamMemberInvitationCode,
 } from '../../types/Team.types';
+import { resolveTargetUserId } from './accountContext';
 
 export const teamSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -184,10 +185,10 @@ export const teamSlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-					const userId = currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 					const q = query(
 						collection(db, 'teamGroups'),
-						where('userId', '==', userId),
+						where('accountId', '==', targetUserId),
 					);
 					const querySnapshot = await getDocs(q);
 					const groups = querySnapshot.docs.map((doc) => {
@@ -210,12 +211,26 @@ export const teamSlice = apiSlice.injectEndpoints({
 		createTeamGroup: builder.mutation<TeamGroup, Omit<TeamGroup, 'id'>>({
 			async queryFn(newGroup) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'teamGroups'), {
 						...newGroup,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newGroup } as TeamGroup };
+					return {
+						data: {
+							id: docRef.id,
+							...newGroup,
+							userId: targetUserId,
+							accountId: targetUserId,
+						} as TeamGroup,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -263,11 +278,11 @@ export const teamSlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-					const userId = currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 					// Fetch all team members where userId matches current user
 					const membersQuery = query(
 						collection(db, 'teamMembers'),
-						where('userId', '==', userId),
+						where('accountId', '==', targetUserId),
 					);
 					const membersSnapshot = await getDocs(membersQuery);
 					const members = membersSnapshot.docs
@@ -284,12 +299,26 @@ export const teamSlice = apiSlice.injectEndpoints({
 		createTeamMember: builder.mutation<TeamMember, Omit<TeamMember, 'id'>>({
 			async queryFn(newMember) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'teamMembers'), {
 						...newMember,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newMember } as TeamMember };
+					return {
+						data: {
+							id: docRef.id,
+							...newMember,
+							userId: targetUserId,
+							accountId: targetUserId,
+						} as TeamMember,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}

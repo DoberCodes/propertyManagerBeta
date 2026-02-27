@@ -10,6 +10,7 @@
 		"serve": "npm run build && firebase emulators:start --only functions",
 		"deploy": "npm run build && firebase deploy --only functions",
 		"test": "npx ts-node test-stripe-integration.ts",
+		"migrate:account-rbac": "npm run build && node lib/scripts/migrate-account-rbac.js",
 		"check-resend": "node scripts/check-resend.cjs",
 		"stripe:webhook": "stripe listen --forward-to localhost:3000/webhook",
 		"stripe:webhook:auto": "bash listen-and-update-webhook-secret.sh"

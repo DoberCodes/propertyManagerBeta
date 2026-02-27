@@ -13,6 +13,7 @@ import { db, auth } from '../../config/firebase';
 import { Contractor } from '../../types/Contractor.types';
 import { PropertyShare } from '../../types/Property.types';
 import { apiSlice, docToData } from './apiSlice';
+import { resolveTargetUserId } from './accountContext';
 
 const contractorSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -68,6 +69,7 @@ const contractorSlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
+					const targetUserId = await resolveTargetUserId();
 
 					const contractorData = {
 						propertyId,
@@ -78,7 +80,8 @@ const contractorSlice = apiSlice.injectEndpoints({
 						address: address || '',
 						email: email || '',
 						notes: notes || '',
-						userId: currentUser.uid,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					};
@@ -169,23 +172,12 @@ const contractorSlice = apiSlice.injectEndpoints({
 						return { error: 'User not authenticated' };
 					}
 					const userId = currentUser.uid;
-
-					// Get user data to check for family account
-					const userDocRef = doc(db, 'users', userId);
-					const userDoc = await getDoc(userDocRef);
-					const userData = userDoc.data();
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					// Determine which user's data to fetch
-					// For family members, use the account owner's ID
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : userId;
+					const targetUserId = await resolveTargetUserId();
 
 					// Get all properties for this user's groups
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', targetUserId),
+						where('accountId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -236,26 +228,51 @@ const contractorSlice = apiSlice.injectEndpoints({
 						...new Set([...ownedPropertyIds, ...sharedPropertyIds]),
 					];
 
-					if (allPropertyIds.length === 0) {
-						return { data: [] };
-					}
+					const accountContractorsQuery = query(
+						collection(db, 'contractors'),
+						where('accountId', '==', targetUserId),
+					);
+					const accountContractorsSnapshot = await getDocs(
+						accountContractorsQuery,
+					);
+					const accountContractors = accountContractorsSnapshot.docs
+						.map((doc) => docToData(doc) as Contractor)
+						.filter(Boolean) as Contractor[];
 
 					// Fetch all contractors for these properties
 					const allContractors: any[] = [];
-					for (let i = 0; i < allPropertyIds.length; i += 10) {
-						const batch = allPropertyIds.slice(i, i + 10);
-						const contractorsQuery = query(
-							collection(db, 'contractors'),
-							where('propertyId', 'in', batch),
-						);
-						const contractorsSnapshot = await getDocs(contractorsQuery);
-						const contractors = contractorsSnapshot.docs
-							.map((doc) => docToData(doc) as Contractor)
-							.filter(Boolean) as Contractor[];
-						allContractors.push(...contractors);
+					if (allPropertyIds.length > 0) {
+						for (let i = 0; i < allPropertyIds.length; i += 10) {
+							const batch = allPropertyIds.slice(i, i + 10);
+							try {
+								const contractorsQuery = query(
+									collection(db, 'contractors'),
+									where('propertyId', 'in', batch),
+								);
+								const contractorsSnapshot = await getDocs(contractorsQuery);
+								const contractors = contractorsSnapshot.docs
+									.map((doc) => docToData(doc) as Contractor)
+									.filter(Boolean) as Contractor[];
+								allContractors.push(...contractors);
+							} catch (propertyContractorError) {
+								console.warn(
+									'Could not fetch property-linked contractors batch:',
+									propertyContractorError,
+								);
+							}
+						}
 					}
 
-					return { data: allContractors };
+					const uniqueContractors = Array.from(
+						new Map(
+							[...accountContractors, ...allContractors].map((contractor) => [
+								contractor.id,
+								contractor,
+							]),
+						).values(),
+					) as Contractor[];
+
+					return { data: uniqueContractors };
 				} catch (error: any) {
 					return { error: error.message };
 				}

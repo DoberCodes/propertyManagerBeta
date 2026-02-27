@@ -48,6 +48,7 @@ export interface EmergencyContact {
 export interface TenantProfile {
 	id: string;
 	userId: string; // Link to User
+	accountId?: string;
 	createdAt: string;
 	updatedAt: string;
 
@@ -121,6 +122,7 @@ export interface TenantInvitationCode {
 	status: 'active' | 'redeemed' | 'revoked';
 	createdByUserId: string;
 	createdByEmail?: string;
+	accountId?: string;
 	propertyId?: string;
 	tenantEmail?: string;
 	redeemedByUserId?: string;

@@ -46,7 +46,7 @@ export const resendFamilyMemberInvite = functions
 		}
 
 		try {
-			// Verify the account exists and current user is the owner
+			// Verify the account exists and current user is owner/admin
 			const accountDoc = await db
 				.collection('familyAccounts')
 				.doc(accountId)
@@ -60,10 +60,18 @@ export const resendFamilyMemberInvite = functions
 			}
 
 			const accountData = accountDoc.data();
-			if (accountData?.ownerId !== context.auth.uid) {
+			const callerDoc = await db
+				.collection('users')
+				.doc(context.auth.uid)
+				.get();
+			const callerData = callerDoc.data() || {};
+			const callerIsOwner = accountData?.ownerId === context.auth.uid;
+			const callerIsAdmin =
+				callerData.accountId === accountId && callerData.role === 'admin';
+			if (!callerIsOwner && !callerIsAdmin) {
 				throw new functions.https.HttpsError(
 					'permission-denied',
-					'Only account owners can resend password reset emails',
+					'Only account owners or admins can resend password reset emails',
 				);
 			}
 

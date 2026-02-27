@@ -15,6 +15,7 @@ import { SharePermission } from '../../constants/roles';
 import { Property, PropertyShare } from '../../types/Property.types';
 import { Favorite, UserInvitation } from '../../types/User.types';
 import { User } from '../Slices/userSlice';
+import { resolveTargetUserId } from './accountContext';
 
 const userSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -267,7 +268,9 @@ const userSlice = apiSlice.injectEndpoints({
 					// Get user's email first
 					const userDocRef = doc(db, 'users', userId);
 					const userDoc = await getDoc(userDocRef);
-					const userEmail = userDoc.data()?.email;
+					const userData = userDoc.data();
+					const userEmail = userData?.email;
+					const targetUserId = await resolveTargetUserId();
 
 					if (!userEmail) {
 						return { data: [] };
@@ -276,7 +279,7 @@ const userSlice = apiSlice.injectEndpoints({
 					// Get all property groups for this user to find owned properties
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', userId),
+						where('accountId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -313,20 +316,43 @@ const userSlice = apiSlice.injectEndpoints({
 					// Combine all property IDs the user has access to
 					const allPropertyIds = [...ownedPropertyIds, ...sharedPropertyIds];
 
+					const accountMaintenanceQuery = query(
+						collection(db, 'maintenanceHistory'),
+						where('accountId', '==', targetUserId),
+					);
+					const accountMaintenanceSnapshot = await getDocs(
+						accountMaintenanceQuery,
+					);
+					const accountMaintenanceHistory = accountMaintenanceSnapshot.docs
+						.map((doc) => docToData(doc) as Record<string, unknown>)
+						.filter(Boolean) as Record<string, unknown>[];
+
 					// Get all maintenance history for these properties
 					let allMaintenanceHistory: any[] = [];
 					for (let i = 0; i < allPropertyIds.length; i += 10) {
 						const batch = allPropertyIds.slice(i, i + 10);
-						const maintenanceQuery = query(
-							collection(db, 'maintenanceHistory'),
-							where('propertyId', 'in', batch),
-						);
-						const maintenanceSnapshot = await getDocs(maintenanceQuery);
-						const maintenanceRecords = maintenanceSnapshot.docs
-							.map((doc) => docToData(doc) as Record<string, unknown>)
-							.filter(Boolean) as Record<string, unknown>[];
-						allMaintenanceHistory.push(...maintenanceRecords);
+						try {
+							const maintenanceQuery = query(
+								collection(db, 'maintenanceHistory'),
+								where('propertyId', 'in', batch),
+							);
+							const maintenanceSnapshot = await getDocs(maintenanceQuery);
+							const maintenanceRecords = maintenanceSnapshot.docs
+								.map((doc) => docToData(doc) as Record<string, unknown>)
+								.filter(Boolean) as Record<string, unknown>[];
+							allMaintenanceHistory.push(...maintenanceRecords);
+						} catch (propertyHistoryError) {
+							console.warn(
+								'Could not fetch property-linked maintenance history batch:',
+								propertyHistoryError,
+							);
+						}
 					}
+
+					allMaintenanceHistory = [
+						...accountMaintenanceHistory,
+						...allMaintenanceHistory,
+					];
 
 					// Remove duplicates
 					const uniqueMaintenanceHistory = allMaintenanceHistory.filter(
@@ -634,6 +660,7 @@ const userSlice = apiSlice.injectEndpoints({
 						const nowIso = new Date().toISOString();
 						await addDoc(collection(db, 'propertyGroups'), {
 							userId,
+							accountId: userId,
 							name: sharedGroupName,
 							createdAt: nowIso,
 							updatedAt: nowIso,

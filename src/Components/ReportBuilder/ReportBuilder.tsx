@@ -102,7 +102,8 @@ export const ReportBuilder: React.FC = () => {
 	const canManageTeam = useSelector(selectCanAccessTeam);
 	const canViewPages = useSelector(selectCanViewAllPages);
 	const isHomeowner = useSelector(selectIsHomeowner);
-	const canAccessTeamReport = !!currentUser && canManageTeam && canViewPages;
+	const canAccessTeamReport =
+		!!currentUser && (canManageTeam || canViewPages || !!currentUser.accountId);
 
 	// Helper: homeowners may only access Single Family properties in reports
 	const isSingleFamilyProperty = (ptype?: string) => {

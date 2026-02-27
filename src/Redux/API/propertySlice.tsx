@@ -13,6 +13,7 @@ import { auth, db } from '../../config/firebase';
 import { PropertyShare, Suite, Unit } from '../../types/Property.types';
 import { PropertyGroup, Property } from '../Slices/propertyDataSlice';
 import { apiSlice, docToData } from './apiSlice';
+import { resolveTargetUserId } from './accountContext';
 
 const propertySlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -31,18 +32,12 @@ const propertySlice = apiSlice.injectEndpoints({
 					const userDoc = await getDoc(userDocRef);
 					const userData = userDoc.data();
 					const userEmail = userData?.email;
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					// Determine which user's property groups to fetch
-					// For family members, use the account owner's ID
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : userId;
+					const targetUserId = await resolveTargetUserId();
 
 					// Get property groups
 					const q = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', targetUserId),
+						where('accountId', '==', targetUserId),
 					);
 					const querySnapshot = await getDocs(q);
 					const groups = querySnapshot.docs
@@ -197,26 +192,16 @@ const propertySlice = apiSlice.injectEndpoints({
 		>({
 			async queryFn(newGroup) {
 				try {
-					// Get current user to determine correct userId for family accounts
 					const currentUser = auth.currentUser;
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-
-					// Get user data to check for family account
-					const userDocRef = doc(db, 'users', currentUser.uid);
-					const userDoc = await getDoc(userDocRef);
-					const userData = userDoc.data();
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					// For family accounts, property groups should be owned by the account owner
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 
 					const docRef = await addDoc(collection(db, 'propertyGroups'), {
 						...newGroup,
 						userId: targetUserId, // Ensure property group is owned by account owner
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
@@ -225,6 +210,7 @@ const propertySlice = apiSlice.injectEndpoints({
 							id: docRef.id,
 							...newGroup,
 							userId: targetUserId,
+							accountId: targetUserId,
 						} as PropertyGroup,
 					};
 				} catch (error: any) {
@@ -281,15 +267,11 @@ const propertySlice = apiSlice.injectEndpoints({
 					const userDoc = await getDoc(userDocRef);
 					const userData = userDoc.data();
 					const userEmail = userData?.email;
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : userId;
+					const targetUserId = await resolveTargetUserId();
 
 					const groupsQuery = query(
 						collection(db, 'propertyGroups'),
-						where('userId', '==', targetUserId),
+						where('accountId', '==', targetUserId),
 					);
 					const groupsSnapshot = await getDocs(groupsQuery);
 					const groupIds = groupsSnapshot.docs.map((doc) => doc.id);
@@ -299,103 +281,139 @@ const propertySlice = apiSlice.injectEndpoints({
 						// Process in batches of 10 (Firestore limitation)
 						for (let i = 0; i < groupIds.length; i += 10) {
 							const batch = groupIds.slice(i, i + 10);
-							const propertiesQuery = query(
-								collection(db, 'properties'),
-								where('groupId', 'in', batch),
-							);
-							const propertiesSnapshot = await getDocs(propertiesQuery);
-							const properties = propertiesSnapshot.docs
-								.map((doc) => docToData(doc) as Property)
-								.filter(Boolean) as Property[];
-							ownedProperties.push(...properties);
+							try {
+								const propertiesQuery = query(
+									collection(db, 'properties'),
+									where('groupId', 'in', batch),
+								);
+								const propertiesSnapshot = await getDocs(propertiesQuery);
+								const properties = propertiesSnapshot.docs
+									.map((doc) => docToData(doc) as Property)
+									.filter(Boolean) as Property[];
+								ownedProperties.push(...properties);
+							} catch (groupQueryError) {
+								console.warn(
+									'Could not fetch group-linked properties batch:',
+									groupQueryError,
+								);
+							}
 						}
 					}
 
-					// Also fetch properties where user is a co-owner
-					const coOwnerPropertiesQuery = query(
+					const accountPropertiesQuery = query(
 						collection(db, 'properties'),
-						where('coOwners', 'array-contains', userId),
+						where('accountId', '==', targetUserId),
 					);
-					const coOwnerPropertiesSnapshot = await getDocs(
-						coOwnerPropertiesQuery,
+					const accountPropertiesSnapshot = await getDocs(
+						accountPropertiesQuery,
 					);
-					const coOwnerProperties = coOwnerPropertiesSnapshot.docs
+					const accountProperties = accountPropertiesSnapshot.docs
 						.map((doc) => docToData(doc) as Property)
 						.filter(Boolean) as Property[];
 
+					// Also fetch properties where user is a co-owner
+					let coOwnerProperties: Property[] = [];
+					try {
+						const coOwnerPropertiesQuery = query(
+							collection(db, 'properties'),
+							where('coOwners', 'array-contains', userId),
+						);
+						const coOwnerPropertiesSnapshot = await getDocs(
+							coOwnerPropertiesQuery,
+						);
+						coOwnerProperties = coOwnerPropertiesSnapshot.docs
+							.map((doc) => docToData(doc) as Property)
+							.filter(Boolean) as Property[];
+					} catch (coOwnerError) {
+						console.warn('Could not fetch co-owner properties:', coOwnerError);
+					}
+
 					// Also fetch properties where user is an administrator
-					const adminPropertiesQuery = query(
-						collection(db, 'properties'),
-						where('administrators', 'array-contains', userId),
-					);
-					const adminPropertiesSnapshot = await getDocs(adminPropertiesQuery);
-					const adminProperties = adminPropertiesSnapshot.docs
-						.map((doc) => docToData(doc) as Property)
-						.filter(Boolean) as Property[];
+					let adminProperties: Property[] = [];
+					try {
+						const adminPropertiesQuery = query(
+							collection(db, 'properties'),
+							where('administrators', 'array-contains', userId),
+						);
+						const adminPropertiesSnapshot = await getDocs(adminPropertiesQuery);
+						adminProperties = adminPropertiesSnapshot.docs
+							.map((doc) => docToData(doc) as Property)
+							.filter(Boolean) as Property[];
+					} catch (adminError) {
+						console.warn('Could not fetch admin properties:', adminError);
+					}
 
 					// Get shared properties - separate co-owners from regular shares
 					const coOwnerSharedProperties: Property[] = [];
 					const regularSharedProperties: Property[] = [];
 					if (userEmail) {
-						const sharesQuery = query(
-							collection(db, 'propertyShares'),
-							where('sharedWithEmail', '==', userEmail),
-						);
-						const sharesSnapshot = await getDocs(sharesQuery);
-						const shares = sharesSnapshot.docs
-							.map((doc) => docToData(doc) as PropertyShare)
-							.filter(Boolean) as PropertyShare[];
+						try {
+							const sharesQuery = query(
+								collection(db, 'propertyShares'),
+								where('sharedWithEmail', '==', userEmail),
+							);
+							const sharesSnapshot = await getDocs(sharesQuery);
+							const shares = sharesSnapshot.docs
+								.map((doc) => docToData(doc) as PropertyShare)
+								.filter(Boolean) as PropertyShare[];
 
-						const coOwnerShares = shares.filter(
-							(share) => share.permission === 'co-owner',
-						);
-						const regularShares = shares.filter(
-							(share) => share.permission !== 'co-owner',
-						);
+							const coOwnerShares = shares.filter(
+								(share) => share.permission === 'co-owner',
+							);
+							const regularShares = shares.filter(
+								(share) => share.permission !== 'co-owner',
+							);
 
-						// Process co-owner shares (treated as ownership)
-						const coOwnerPropertyIds = coOwnerShares.map(
-							(share) => share.propertyId,
-						);
-						if (coOwnerPropertyIds.length > 0) {
-							// Process in batches of 10
-							for (let i = 0; i < coOwnerPropertyIds.length; i += 10) {
-								const batch = coOwnerPropertyIds.slice(i, i + 10);
-								const propertiesQuery = query(
-									collection(db, 'properties'),
-									where('__name__', 'in', batch),
-								);
-								const propertiesSnapshot = await getDocs(propertiesQuery);
-								const properties = propertiesSnapshot.docs
-									.map((doc) => docToData(doc) as Property)
-									.filter(Boolean) as Property[];
-								coOwnerSharedProperties.push(...properties);
+							// Process co-owner shares (treated as ownership)
+							const coOwnerPropertyIds = coOwnerShares.map(
+								(share) => share.propertyId,
+							);
+							if (coOwnerPropertyIds.length > 0) {
+								// Process in batches of 10
+								for (let i = 0; i < coOwnerPropertyIds.length; i += 10) {
+									const batch = coOwnerPropertyIds.slice(i, i + 10);
+									const propertiesQuery = query(
+										collection(db, 'properties'),
+										where('__name__', 'in', batch),
+									);
+									const propertiesSnapshot = await getDocs(propertiesQuery);
+									const properties = propertiesSnapshot.docs
+										.map((doc) => docToData(doc) as Property)
+										.filter(Boolean) as Property[];
+									coOwnerSharedProperties.push(...properties);
+								}
 							}
-						}
 
-						// Process regular shares
-						const regularPropertyIds = regularShares.map(
-							(share) => share.propertyId,
-						);
-						if (regularPropertyIds.length > 0) {
-							// Process in batches of 10
-							for (let i = 0; i < regularPropertyIds.length; i += 10) {
-								const batch = regularPropertyIds.slice(i, i + 10);
-								const propertiesQuery = query(
-									collection(db, 'properties'),
-									where('__name__', 'in', batch),
-								);
-								const propertiesSnapshot = await getDocs(propertiesQuery);
-								const properties = propertiesSnapshot.docs
-									.map((doc) => docToData(doc) as Property)
-									.filter(Boolean) as Property[];
-								regularSharedProperties.push(...properties);
+							// Process regular shares
+							const regularPropertyIds = regularShares.map(
+								(share) => share.propertyId,
+							);
+							if (regularPropertyIds.length > 0) {
+								// Process in batches of 10
+								for (let i = 0; i < regularPropertyIds.length; i += 10) {
+									const batch = regularPropertyIds.slice(i, i + 10);
+									const propertiesQuery = query(
+										collection(db, 'properties'),
+										where('__name__', 'in', batch),
+									);
+									const propertiesSnapshot = await getDocs(propertiesQuery);
+									const properties = propertiesSnapshot.docs
+										.map((doc) => docToData(doc) as Property)
+										.filter(Boolean) as Property[];
+									regularSharedProperties.push(...properties);
+								}
 							}
+						} catch (shareLookupError) {
+							console.warn(
+								'Could not fetch shared/co-owner properties:',
+								shareLookupError,
+							);
 						}
 					}
 
 					// Combine and deduplicate
 					const allProperties = [
+						...accountProperties,
 						...ownedProperties,
 						...coOwnerProperties,
 						...coOwnerSharedProperties,
@@ -403,6 +421,7 @@ const propertySlice = apiSlice.injectEndpoints({
 						...regularSharedProperties,
 					];
 					console.log('DEBUG getProperties: allProperties breakdown:', {
+						accountProperties: accountProperties.length,
 						ownedProperties: ownedProperties.length,
 						coOwnerProperties: coOwnerProperties.length,
 						coOwnerSharedProperties: coOwnerSharedProperties.length,
@@ -448,26 +467,16 @@ const propertySlice = apiSlice.injectEndpoints({
 		createProperty: builder.mutation<Property, Omit<Property, 'id'>>({
 			async queryFn(newProperty) {
 				try {
-					// Get current user to determine correct userId for family accounts
 					const currentUser = auth.currentUser;
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-
-					// Get user data to check for family account
-					const userDocRef = doc(db, 'users', currentUser.uid);
-					const userDoc = await getDoc(userDocRef);
-					const userData = userDoc.data();
-					const accountId = userData?.accountId;
-					const isAccountOwner = userData?.isAccountOwner;
-
-					// For family accounts, properties should be owned by the account owner
-					const targetUserId =
-						!isAccountOwner && accountId ? accountId : currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 
 					const docRef = await addDoc(collection(db, 'properties'), {
 						...newProperty,
 						userId: targetUserId, // Ensure property is owned by account owner
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
@@ -564,12 +573,26 @@ const propertySlice = apiSlice.injectEndpoints({
 		createSuite: builder.mutation<Suite, Omit<Suite, 'id'>>({
 			async queryFn(newSuite) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'suites'), {
 						...newSuite,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newSuite } as Suite };
+					return {
+						data: {
+							id: docRef.id,
+							...newSuite,
+							userId: targetUserId,
+							accountId: targetUserId,
+						} as Suite,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -645,12 +668,26 @@ const propertySlice = apiSlice.injectEndpoints({
 		createUnit: builder.mutation<Unit, Omit<Unit, 'id'>>({
 			async queryFn(newUnit) {
 				try {
+					const currentUser = auth.currentUser;
+					if (!currentUser) {
+						return { error: 'User not authenticated' };
+					}
+					const targetUserId = await resolveTargetUserId();
 					const docRef = await addDoc(collection(db, 'units'), {
 						...newUnit,
+						userId: targetUserId,
+						accountId: targetUserId,
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
 					});
-					return { data: { id: docRef.id, ...newUnit } as Unit };
+					return {
+						data: {
+							id: docRef.id,
+							...newUnit,
+							userId: targetUserId,
+							accountId: targetUserId,
+						} as Unit,
+					};
 				} catch (error: any) {
 					return { error: error.message };
 				}
@@ -697,11 +734,11 @@ const propertySlice = apiSlice.injectEndpoints({
 					if (!currentUser) {
 						return { error: 'User not authenticated' };
 					}
-					const userId = currentUser.uid;
+					const targetUserId = await resolveTargetUserId();
 
 					const q = query(
 						collection(db, 'units'),
-						where('userId', '==', userId),
+						where('accountId', '==', targetUserId),
 					);
 					const querySnapshot = await getDocs(q);
 					const units = querySnapshot.docs.map((doc) => docToData(doc) as Unit);

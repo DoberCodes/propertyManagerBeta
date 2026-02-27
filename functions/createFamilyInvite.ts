@@ -53,7 +53,7 @@ export const createFamilyInvite = functions
 		const apiKey = RESEND_API_KEY.value();
 		const resend = getResendClient(apiKey);
 
-		// Verify family account exists and caller is owner
+		// Verify family account exists and caller is owner/admin on that account
 		const accountDoc = await db
 			.collection('familyAccounts')
 			.doc(accountId)
@@ -66,10 +66,16 @@ export const createFamilyInvite = functions
 		}
 
 		const accountData = accountDoc.data() || {};
-		if (accountData.ownerId !== context.auth.uid) {
+		const callerDoc = await db.collection('users').doc(context.auth.uid).get();
+		const callerData = callerDoc.data() || {};
+		const callerIsOwner = accountData.ownerId === context.auth.uid;
+		const callerIsAdmin =
+			callerData.accountId === accountId && callerData.role === 'admin';
+
+		if (!callerIsOwner && !callerIsAdmin) {
 			throw new functions.https.HttpsError(
 				'permission-denied',
-				'Only account owners can add family members',
+				'Only account owners or admins can add family members',
 			);
 		}
 

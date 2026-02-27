@@ -14,6 +14,60 @@ service cloud.firestore {
       return request.auth.token.email;
     }
 
+    function callerMembershipId(accountId) {
+      return accountId + '_' + request.auth.uid;
+    }
+
+    function hasMembership(accountId) {
+      return exists(/databases/$(database)/documents/accountMemberships/$(callerMembershipId(accountId)));
+    }
+
+    function membershipData(accountId) {
+      return get(/databases/$(database)/documents/accountMemberships/$(callerMembershipId(accountId))).data;
+    }
+
+    function isActiveMember(accountId) {
+      return isAuthenticated() &&
+        hasMembership(accountId) &&
+        (
+          !('status' in membershipData(accountId)) ||
+          membershipData(accountId).status == 'active'
+        );
+    }
+
+    function hasAnyRole(accountId, roles) {
+      return isActiveMember(accountId) &&
+        membershipData(accountId).roles.hasAny(roles);
+    }
+
+    function canReadAccount(accountId) {
+      return isActiveMember(accountId);
+    }
+
+    function canManageAccount(accountId) {
+      return hasAnyRole(accountId, ['account_owner', 'admin', 'manager']);
+    }
+
+    function callerUserDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function callerUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAccountOwnerOrAdmin(accountId) {
+      return canManageAccount(accountId);
+    }
+
+    function canManageFamilyMemberRole(userId) {
+      return isAuthenticated() &&
+        userId != request.auth.uid &&
+        exists(/databases/$(database)/documents/users/$(userId)) &&
+        canManageAccount(get(/databases/$(database)/documents/users/$(userId)).data.accountId) &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['role', 'updatedAt']);
+    }
+
     // Family membership helper for read-only access paths.
     function isFamilyMember(accountId) {
       return isAuthenticated() &&
@@ -26,20 +80,33 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow update: if isOwner(userId) || canManageFamilyMemberRole(userId);
+      allow delete: if isOwner(userId);
       allow create: if isAuthenticated() && request.auth.uid == userId;
     }
 
     match /propertyGroups/{groupId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /properties/{propertyId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /propertyShares/{shareId} {
@@ -48,8 +115,14 @@ service cloud.firestore {
         resource.data.sharedWithUserId == request.auth.uid ||
         resource.data.sharedWithEmail == getUserEmail()
       );
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow create: if isAuthenticated() && (
+        request.resource.data.ownerId == request.auth.uid ||
+        isAccountOwnerOrAdmin(request.resource.data.ownerId)
+      );
+      allow update, delete: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        isAccountOwnerOrAdmin(resource.data.ownerId)
+      );
     }
 
     match /userInvitations/{invitationId} {
@@ -63,55 +136,87 @@ service cloud.firestore {
     }
 
     match /tasks/{taskId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.propertyId != null
-      );
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /maintenanceHistory/{historyId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.completedBy == request.auth.uid ||
-        resource.data.propertyId != null
-      );
-      allow create: if isAuthenticated() && (
-        request.resource.data.userId == request.auth.uid ||
-        request.resource.data.completedBy == request.auth.uid
-      );
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /teamGroups/{groupId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /teamMembers/{memberId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /devices/{deviceId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /suites/{suiteId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /units/{unitId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /favorites/{favoriteId} {
@@ -128,18 +233,29 @@ service cloud.firestore {
     }
 
     match /contractors/{contractorId} {
-      allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.propertyId != null
-      );
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canReadAccount(resource.data.accountId);
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     // Family account records: client read-only for members/owners.
     // All writes handled by Cloud Functions callables.
     match /familyAccounts/{accountId} {
-      allow read: if isFamilyMember(accountId);
+      allow read: if canReadAccount(accountId);
+      allow create, update, delete: if false;
+    }
+
+    match /accountMemberships/{membershipId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        hasAnyRole(resource.data.accountId, ['account_owner', 'admin'])
+      );
       allow create, update, delete: if false;
     }
 
@@ -150,24 +266,28 @@ service cloud.firestore {
 
     match /tenantInvitationCodes/{codeId} {
       allow read: if isAuthenticated() && (
-        resource.data.landlordId == request.auth.uid ||
+        ('accountId' in resource.data && canReadAccount(resource.data.accountId)) ||
         resource.data.email == getUserEmail()
       );
-      allow create: if isAuthenticated() && request.resource.data.landlordId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.landlordId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /tenantProfiles/{profileId} {
       allow read: if isAuthenticated() && (
-        resource.data.tenantId == request.auth.uid ||
-        resource.data.landlordId == request.auth.uid
+        ('accountId' in resource.data && canReadAccount(resource.data.accountId)) ||
+        resource.data.tenantId == request.auth.uid
       );
-      allow create: if isAuthenticated() && request.resource.data.tenantId == request.auth.uid;
-      allow update: if isAuthenticated() && (
-        resource.data.tenantId == request.auth.uid ||
-        resource.data.landlordId == request.auth.uid
-      );
-      allow delete: if isAuthenticated() && resource.data.landlordId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        ('accountId' in request.resource.data) &&
+        canManageAccount(request.resource.data.accountId);
+      allow update, delete: if isAuthenticated() &&
+        ('accountId' in resource.data) &&
+        canManageAccount(resource.data.accountId);
     }
 
     match /teamMemberInvitationCodes/{codeId} {
