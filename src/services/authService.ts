@@ -33,6 +33,45 @@ import {
 import { STRIPE_PLANS } from '../constants/stripe';
 import { createLegalAgreementDocuments } from '../constants/legal';
 
+export interface FamilyInvite {
+	id: string;
+	accountId: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	role?: string;
+	status: 'pending' | 'accepted' | 'revoked' | 'expired';
+	createdAt: string | number;
+	updatedAt?: string | number;
+	expiresAt?: string | number;
+	lastSentAt?: string | number;
+	sentCount?: number;
+}
+
+const serializeFirestoreValue = (value: unknown): unknown => {
+	if (value === null || value === undefined) return value;
+
+	if (Array.isArray(value)) {
+		return value.map((item) => serializeFirestoreValue(item));
+	}
+
+	if (typeof value === 'object') {
+		if (value && typeof (value as { toDate?: unknown }).toDate === 'function') {
+			return ((value as { toDate: () => Date }).toDate() as Date).toISOString();
+		}
+
+		const serializedObject: Record<string, unknown> = {};
+		for (const [key, nestedValue] of Object.entries(
+			value as Record<string, unknown>,
+		)) {
+			serializedObject[key] = serializeFirestoreValue(nestedValue);
+		}
+		return serializedObject;
+	}
+
+	return value;
+};
+
 /**
  * Sign in with email and password
  */
@@ -318,14 +357,22 @@ export const signUpWithEmail = async (
 			subscription,
 		});
 
-		// Create family account for new user
-		await setDoc(doc(db, 'familyAccounts', userCredential.user.uid), {
-			id: userCredential.user.uid,
-			ownerId: userCredential.user.uid,
-			memberIds: [userCredential.user.uid],
-			subscription,
-			createdAt: serverTimestamp(),
-			updatedAt: serverTimestamp(),
+		const ensureFamilyAccountCallable = httpsCallable<
+			{
+				accountId?: string;
+				syncSubscription?: boolean;
+				subscription?: Record<string, unknown>;
+			},
+			{
+				id: string;
+				subscription?: Record<string, unknown>;
+			}
+		>(functions, 'ensureFamilyAccount');
+
+		await ensureFamilyAccountCallable({
+			accountId: userCredential.user.uid,
+			syncSubscription: true,
+			subscription: subscription as unknown as Record<string, unknown>,
 		});
 
 		// Auto-accept pending guest invitations for property guests
@@ -422,17 +469,27 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			throw new Error('User profile not found');
 		}
 
-		// Get family account to load shared subscription
-		let familyAccountSubscription = null;
+		const ensureFamilyAccountCallable = httpsCallable<
+			{
+				accountId?: string;
+				syncSubscription?: boolean;
+				subscription?: Record<string, unknown>;
+			},
+			{
+				id: string;
+				subscription?: Record<string, unknown>;
+			}
+		>(functions, 'ensureFamilyAccount');
+
+		// Get family account summary via backend callable (rules-safe)
+		let familyAccountSubscription: Record<string, unknown> | null = null;
 		const userData = userDoc.data();
 		if (userData.accountId) {
 			try {
-				const accountDoc = await getDoc(
-					doc(db, 'familyAccounts', userData.accountId),
-				);
-				if (accountDoc.exists()) {
-					familyAccountSubscription = accountDoc.data().subscription;
-				}
+				const accountSummary = await ensureFamilyAccountCallable({
+					accountId: String(userData.accountId),
+				});
+				familyAccountSubscription = accountSummary.data?.subscription || null;
 			} catch (accountError) {
 				console.warn(
 					'Failed to load family account subscription:',
@@ -441,38 +498,11 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			}
 		}
 
-		// Convert Firestore Timestamps to ISO strings for Redux serialization
 		const rawData: any = userDoc.data();
-		const serializedData: any = { ...rawData, id: uid };
-		if (
-			rawData.createdAt &&
-			typeof rawData.createdAt === 'object' &&
-			'toDate' in rawData.createdAt
-		) {
-			serializedData.createdAt = rawData.createdAt.toDate().toISOString();
-		}
-		if (
-			rawData.updatedAt &&
-			typeof rawData.updatedAt === 'object' &&
-			'toDate' in rawData.updatedAt
-		) {
-			serializedData.updatedAt = rawData.updatedAt.toDate().toISOString();
-		}
-
-		// Convert legal agreement timestamp if it exists
-		if (rawData.legalAgreement?.agreedAt) {
-			if (
-				typeof rawData.legalAgreement.agreedAt === 'object' &&
-				'toDate' in rawData.legalAgreement.agreedAt
-			) {
-				serializedData.legalAgreement = {
-					...rawData.legalAgreement,
-					agreedAt: rawData.legalAgreement.agreedAt.toDate().toISOString(),
-				};
-			} else {
-				serializedData.legalAgreement = rawData.legalAgreement;
-			}
-		}
+		const serializedData: any = {
+			...(serializeFirestoreValue(rawData) as Record<string, unknown>),
+			id: uid,
+		};
 
 		// Use family account subscription when available, but prefer user subscription
 		// if family data appears stale (e.g., family shows expired but user is active).
@@ -513,7 +543,8 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			(rawData.subscription ?? undefined) as UserSubscription,
 		);
 		const familySubscription = normalizeSubscription(
-			(familyAccountSubscription ?? undefined) as UserSubscription,
+			(serializeFirestoreValue(familyAccountSubscription) ??
+				undefined) as UserSubscription,
 		);
 
 		const userStatus = userSubscription?.status;
@@ -551,33 +582,12 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 			? userSubscription
 			: familySubscription || userSubscription;
 		if (subscriptionData) {
-			serializedData.subscription = { ...subscriptionData };
-
-			// Convert subscription.updatedAt if it exists
-			const subscriptionUpdatedAt = (subscriptionData as any).updatedAt;
-			if (
-				subscriptionUpdatedAt &&
-				typeof subscriptionUpdatedAt === 'object' &&
-				'toDate' in subscriptionUpdatedAt &&
-				typeof subscriptionUpdatedAt.toDate === 'function'
-			) {
-				serializedData.subscription.updatedAt = subscriptionUpdatedAt
-					.toDate()
-					.toISOString();
-			}
-
-			// Convert other timestamp fields in subscription if they exist
-			const subscriptionCanceledAt = (subscriptionData as any).canceledAt;
-			if (
-				subscriptionCanceledAt &&
-				typeof subscriptionCanceledAt === 'object' &&
-				'toDate' in subscriptionCanceledAt &&
-				typeof subscriptionCanceledAt.toDate === 'function'
-			) {
-				serializedData.subscription.canceledAt = subscriptionCanceledAt
-					.toDate()
-					.toISOString();
-			}
+			serializedData.subscription = {
+				...(serializeFirestoreValue(subscriptionData) as Record<
+					string,
+					unknown
+				>),
+			};
 
 			// If we had to prefer the user subscription over family subscription,
 			// sync family account subscription for owners to prevent repeated stale reads.
@@ -587,9 +597,13 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 				(rawData.isAccountOwner || userData.accountId === uid)
 			) {
 				try {
-					await updateDoc(doc(db, 'familyAccounts', userData.accountId), {
-						subscription: userSubscription as NonNullable<UserSubscription>,
-						updatedAt: serverTimestamp(),
+					await ensureFamilyAccountCallable({
+						accountId: String(userData.accountId),
+						syncSubscription: true,
+						subscription: userSubscription as unknown as Record<
+							string,
+							unknown
+						>,
 					});
 				} catch (syncError) {
 					console.warn(
@@ -646,18 +660,11 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 					updatedAt: serverTimestamp(),
 				});
 
-				// Also create family account if it doesn't exist
-				const accountDoc = await getDoc(doc(db, 'familyAccounts', uid));
-				if (!accountDoc.exists()) {
-					await setDoc(doc(db, 'familyAccounts', uid), {
-						id: uid,
-						ownerId: uid,
-						memberIds: [uid],
-						subscription: serializedData.subscription,
-						createdAt: serverTimestamp(),
-						updatedAt: serverTimestamp(),
-					});
-				}
+				await ensureFamilyAccountCallable({
+					accountId: uid,
+					syncSubscription: true,
+					subscription: serializedData.subscription as Record<string, unknown>,
+				});
 			} catch (migrationError) {
 				console.error('Failed to migrate user account data:', migrationError);
 			}
@@ -671,25 +678,28 @@ export const getUserProfile = async (uid: string): Promise<User> => {
 };
 
 /**
- * Add a family member to an existing account
+ * Add a family member to an existing account (creates user immediately with password reset email)
  */
 export const addFamilyMember = async (
 	accountId: string,
 	email: string,
 	firstName: string,
 	lastName: string,
-	role: string = USER_ROLES.ADMIN,
-): Promise<User> => {
+	role: 'owner' | 'admin' | 'member' = 'admin',
+): Promise<{ userId: string; message: string }> => {
 	try {
-		// Check if user already exists (client-side check)
-		const existingUser = await checkEmailExists(email);
-		if (existingUser) {
-			throw new Error('User with this email already exists');
-		}
+		const createFamilyInviteFunction = httpsCallable<
+			{
+				accountId: string;
+				email: string;
+				firstName: string;
+				lastName: string;
+				role: 'owner' | 'admin' | 'member';
+			},
+			{ success: boolean; userId: string; message: string }
+		>(functions, 'createFamilyInvite');
 
-		// Call cloud function to add family member
-		const addFamilyMemberFunction = httpsCallable(functions, 'addFamilyMember');
-		const result = await addFamilyMemberFunction({
+		const result = await createFamilyInviteFunction({
 			accountId,
 			email,
 			firstName,
@@ -697,16 +707,10 @@ export const addFamilyMember = async (
 			role,
 		});
 
-		// Send password reset email so they can set their password
-		await sendPasswordResetEmail(auth, email);
-
-		// The cloud function returns the user profile
-		const response = result.data as {
-			success: boolean;
-			user: User;
-			message: string;
+		return {
+			userId: result.data.userId,
+			message: result.data.message || 'Family member added successfully',
 		};
-		return response.user;
 	} catch (error: any) {
 		console.error('Failed to add family member:', error);
 		// Re-throw the error message from the cloud function
@@ -726,29 +730,9 @@ export const removeFamilyMember = async (
 	currentUserId: string,
 ): Promise<void> => {
 	try {
-		// Verify the current user is the account owner
-		const accountDoc = await getDoc(doc(db, 'familyAccounts', accountId));
-		if (!accountDoc.exists()) {
-			throw new Error('Family account not found');
-		}
-
-		const accountData = accountDoc.data();
-		if (accountData.ownerId !== currentUserId) {
-			throw new Error('Only account owners can remove family members');
-		}
-
 		if (memberId === currentUserId) {
 			throw new Error('Cannot remove yourself from the account');
 		}
-
-		// Remove user from family account
-		const updatedMemberIds = accountData.memberIds.filter(
-			(id: string) => id !== memberId,
-		);
-		await updateDoc(doc(db, 'familyAccounts', accountId), {
-			memberIds: updatedMemberIds,
-			updatedAt: serverTimestamp(),
-		});
 
 		// Call Cloud Function to delete the family member's account
 		// This preserves their tasks and history
@@ -768,21 +752,74 @@ export const removeFamilyMember = async (
  */
 export const getFamilyMembers = async (accountId: string): Promise<User[]> => {
 	try {
-		const accountDoc = await getDoc(doc(db, 'familyAccounts', accountId));
-		if (!accountDoc.exists()) {
-			return [];
-		}
+		const getFamilyMembersCallable = httpsCallable<
+			{ accountId: string },
+			{ members: User[] }
+		>(functions, 'getFamilyMembers');
 
-		const accountData = accountDoc.data();
-		const memberPromises = accountData.memberIds.map((memberId: string) =>
-			getUserProfile(memberId),
-		);
-
-		return await Promise.all(memberPromises);
+		const result = await getFamilyMembersCallable({ accountId });
+		return Array.isArray(result.data?.members) ? result.data.members : [];
 	} catch (error: any) {
 		console.error('Failed to get family members:', error);
 		return [];
 	}
+};
+
+export const getFamilyInvites = async (
+	accountId: string,
+): Promise<FamilyInvite[]> => {
+	try {
+		const listFamilyInvitesCallable = httpsCallable<
+			{ accountId: string },
+			{ invites: FamilyInvite[] }
+		>(functions, 'listFamilyInvites');
+
+		const result = await listFamilyInvitesCallable({ accountId });
+		const invites = Array.isArray(result.data?.invites)
+			? result.data.invites
+			: [];
+
+		return invites.filter((invite) => invite.status === 'pending');
+	} catch (error: any) {
+		console.error('Failed to get family invites:', error);
+		return [];
+	}
+};
+
+export const resendPasswordReset = async (
+	accountId: string,
+	userId: string,
+): Promise<void> => {
+	const resendFunction = httpsCallable<
+		{ userId: string; accountId: string },
+		{ success: boolean; message?: string }
+	>(functions, 'resendFamilyMemberInvite');
+
+	await resendFunction({ userId, accountId });
+};
+
+export const revokeFamilyInvite = async (
+	accountId: string,
+	inviteId: string,
+): Promise<void> => {
+	const revokeInviteFunction = httpsCallable<
+		{ inviteId: string; accountId: string },
+		{ success: boolean; message?: string }
+	>(functions, 'revokeFamilyInvite');
+
+	await revokeInviteFunction({ inviteId, accountId });
+};
+
+export const acceptFamilyInvite = async (
+	inviteId: string,
+	token: string,
+): Promise<void> => {
+	const acceptInviteFunction = httpsCallable<
+		{ inviteId: string; token: string },
+		{ success: boolean; message?: string }
+	>(functions, 'acceptFamilyInvite');
+
+	await acceptInviteFunction({ inviteId, token });
 };
 
 /**

@@ -32,16 +32,13 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addFamilyMember = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
-const mail_1 = __importDefault(require("@sendgrid/mail"));
 const params_1 = require("firebase-functions/params");
-const SENDGRID_API_KEY = (0, params_1.defineSecret)(process.env.SENDGRID_API_KEY_SECRET_NAME || 'SENDGRID_API_KEY');
+const emailService_1 = require("./emailService");
+const RESEND_API_KEY = (0, params_1.defineSecret)(process.env.RESEND_API_KEY_SECRET_NAME || 'RESEND_API_KEY');
 if (!admin.apps.length) {
     admin.initializeApp();
 }
@@ -63,14 +60,11 @@ const USER_ROLES = {
  * This runs on the backend to avoid authentication state issues
  */
 exports.addFamilyMember = functions
-    .runWith({ secrets: ['SENDGRID_API_KEY'] })
+    .runWith({ secrets: ['RESEND_API_KEY'] })
     .https.onCall(async (data, context) => {
     var _a, _b;
-    // Initialize SendGrid with secret
-    const apiKey = SENDGRID_API_KEY.value();
-    if (apiKey) {
-        mail_1.default.setApiKey(apiKey);
-    }
+    const apiKey = RESEND_API_KEY.value();
+    const resend = (0, emailService_1.getResendClient)(apiKey);
     // Verify authentication
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -151,14 +145,18 @@ exports.addFamilyMember = functions
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         // Send invitation email
-        if (apiKey) {
+        if (resend) {
             try {
                 const accountOwnerDoc = await db
                     .collection('users')
                     .doc(context.auth.uid)
                     .get();
                 const ownerName = ((_b = accountOwnerDoc.data()) === null || _b === void 0 ? void 0 : _b.firstName) || 'Account Owner';
-                const inviteUrl = `${process.env.FRONTEND_URL || 'https://maintleyapp.com'}/dashboard`;
+                const frontendBaseUrl = (process.env.FRONTEND_URL || 'https://maintleyapp.com').replace(/\/+$/, '');
+                const continueUrl = `${frontendBaseUrl}/#/login`;
+                const setupPasswordUrl = await auth.generatePasswordResetLink(email, {
+                    url: continueUrl,
+                });
                 const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #10b981;">Welcome to Maintley!</h2>
@@ -166,12 +164,15 @@ exports.addFamilyMember = functions
               
             <p>${ownerName} has invited you to join their Maintley account to help manage properties, track maintenance, and keep records organized.</p>
 
-
             <p>
-              <a href="${inviteUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
-                Get Started
+							<a href="${setupPasswordUrl}" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+								Set Your Password & Get Started
               </a>
             </p>
+
+						<p style="font-size: 14px; color: #374151;">
+							This secure link lets you set your password and sign in.
+						</p>
 
             <p>If you didn't expect this invitation, you can safely ignore this email or contact ${ownerName} for more information.</p>
 
@@ -182,28 +183,24 @@ exports.addFamilyMember = functions
             </p>
           </div>
         `;
-                const msg = {
+                await (0, emailService_1.sendMaintleyEmail)(resend, {
                     to: email,
-                    from: {
-                        email: 'maintleyapp@gmail.com',
-                        name: 'Maintley',
-                    },
+                    from: (0, emailService_1.getDefaultFromAddress)(),
                     subject: `${ownerName} invited you to join Maintley`,
-                    html: html,
-                };
-                await mail_1.default.send(msg);
+                    html,
+                });
                 console.log('Family member invitation email sent successfully');
             }
             catch (emailError) {
                 console.error('Error sending family member invitation email:', emailError);
-                if (emailError.response) {
-                    console.error('SendGrid error details:', JSON.stringify(emailError.response.body));
+                if (emailError === null || emailError === void 0 ? void 0 : emailError.message) {
+                    console.error('Resend error details:', emailError.message);
                 }
                 // Don't throw - user creation was successful, just log the email error
             }
         }
         else {
-            console.log('SendGrid API key not configured, skipping invitation email');
+            console.log('Resend API key not configured, skipping invitation email');
         }
         return {
             success: true,

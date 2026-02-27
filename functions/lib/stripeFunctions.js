@@ -96,7 +96,10 @@ const syncFamilyAccountSubscription = async (userData, subscription) => {
         return;
     }
     try {
-        await db.collection('familyAccounts').doc(accountId).set({
+        await db
+            .collection('familyAccounts')
+            .doc(accountId)
+            .set({
             subscription: removeUndefinedFields(subscription),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });

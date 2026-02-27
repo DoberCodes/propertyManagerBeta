@@ -22,6 +22,8 @@ export const deleteFamilyMemberAccount = functions.https.onCall(
 			);
 		}
 
+		const callerUid = context.auth.uid;
+
 		const { memberId, accountId } = data;
 
 		if (!memberId || !accountId) {
@@ -32,33 +34,50 @@ export const deleteFamilyMemberAccount = functions.https.onCall(
 		}
 
 		try {
-			// Verify the current user is the account owner
-			const accountDoc = await db
-				.collection('familyAccounts')
-				.doc(accountId)
-				.get();
+			const accountRef = db.collection('familyAccounts').doc(accountId);
+			let accountData: FirebaseFirestore.DocumentData | undefined;
 
-			if (!accountDoc.exists) {
-				throw new functions.https.HttpsError(
-					'not-found',
-					'Family account not found',
-				);
-			}
+			await db.runTransaction(async (transaction) => {
+				const accountDoc = await transaction.get(accountRef);
 
-			const accountData = accountDoc.data();
-			if (accountData?.ownerId !== context.auth.uid) {
-				throw new functions.https.HttpsError(
-					'permission-denied',
-					'Only account owners can delete family members',
-				);
-			}
+				if (!accountDoc.exists) {
+					throw new functions.https.HttpsError(
+						'not-found',
+						'Family account not found',
+					);
+				}
 
-			if (memberId === context.auth.uid) {
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Cannot delete yourself from the account',
-				);
-			}
+				accountData = accountDoc.data();
+				if (accountData?.ownerId !== callerUid) {
+					throw new functions.https.HttpsError(
+						'permission-denied',
+						'Only account owners can delete family members',
+					);
+				}
+
+				if (memberId === callerUid) {
+					throw new functions.https.HttpsError(
+						'invalid-argument',
+						'Cannot delete yourself from the account',
+					);
+				}
+
+				const memberIds = Array.isArray(accountData?.memberIds)
+					? (accountData?.memberIds as string[])
+					: [];
+
+				if (!memberIds.includes(memberId)) {
+					throw new functions.https.HttpsError(
+						'not-found',
+						'Family member not found in account',
+					);
+				}
+
+				transaction.update(accountRef, {
+					memberIds: memberIds.filter((id) => id !== memberId),
+					updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+				});
+			});
 
 			console.log(
 				`Deleting family member account: ${memberId} from account: ${accountId}`,

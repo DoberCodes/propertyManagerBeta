@@ -1,6 +1,7 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import { collection, doc, getDoc, addDoc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions as cloudFunctions } from '../../config/firebase';
 
 // Types
 export type SharePermission = 'co-owner' | 'admin' | 'viewer';
@@ -116,7 +117,7 @@ export const apiSlice = createApi({
 			},
 		}),
 
-		// Feedback
+		// Feedback (server-side callable flow to avoid client Firestore blocker issues)
 		submitFeedback: builder.mutation<
 			{ id: string; message: string },
 			{
@@ -126,25 +127,63 @@ export const apiSlice = createApi({
 				userId?: string;
 				userEmail?: string;
 				userName?: string;
+				attachments?: Array<{
+					filename: string;
+					contentBase64: string;
+					contentType: string;
+					sizeBytes: number;
+				}>;
 			}
 		>({
 			async queryFn(feedbackData) {
 				try {
-					const feedbackRef = collection(db, 'feedback');
-					const docRef = await addDoc(feedbackRef, {
-						...feedbackData,
-						status: 'pending',
-						createdAt: new Date().toISOString(),
-						updatedAt: new Date().toISOString(),
+					const submitFeedbackFunction = httpsCallable<
+						{
+							type: 'feedback' | 'feature_request' | 'bug_report';
+							subject: string;
+							message: string;
+							userEmail?: string;
+							userName?: string;
+							attachments?: Array<{
+								filename: string;
+								contentBase64: string;
+								contentType: string;
+								sizeBytes: number;
+							}>;
+						},
+						{ id: string; message: string }
+					>(cloudFunctions, 'submitFeedback');
+
+					const result = await submitFeedbackFunction({
+						type: feedbackData.type,
+						subject: feedbackData.subject,
+						message: feedbackData.message,
+						userEmail: feedbackData.userEmail,
+						userName: feedbackData.userName,
+						attachments: feedbackData.attachments,
 					});
 
 					return {
 						data: {
-							id: docRef.id,
-							message: 'Feedback submitted successfully',
+							id: result.data.id,
+							message: result.data.message || 'Feedback submitted successfully',
 						},
 					};
 				} catch (error: any) {
+					const rawMessage = String(error?.message || '').toLowerCase();
+					const isBlockedByClient =
+						rawMessage.includes('err_blocked_by_client') ||
+						rawMessage.includes('blocked by client') ||
+						rawMessage.includes('failed to fetch') ||
+						rawMessage.includes('network request failed');
+
+					if (isBlockedByClient) {
+						return {
+							error:
+								'Your browser blocked the feedback request. Please disable ad/tracker blocking for this site (and firestore.googleapis.com) and try again.',
+						};
+					}
+
 					return { error: error.message || 'Failed to submit feedback' };
 				}
 			},

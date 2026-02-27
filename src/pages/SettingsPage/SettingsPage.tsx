@@ -34,6 +34,7 @@ import {
 	addFamilyMember,
 	removeFamilyMember,
 	getFamilyMembers,
+	resendPasswordReset,
 } from 'services/authService';
 import { NotificationPreferences } from 'Components/NotificationPreferences';
 
@@ -206,6 +207,12 @@ const AccountActions = styled.div`
 	flex-wrap: wrap;
 `;
 
+const ResourceButtons = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+`;
+
 const AccountButton = styled.button<{ disabled?: boolean }>`
 	padding: 12px 24px;
 	background: #6366f1;
@@ -302,27 +309,29 @@ export const SettingsPage: React.FC = () => {
 		firstName: '',
 		lastName: '',
 		email: '',
+		role: 'member' as 'owner' | 'admin' | 'member',
 	});
 	const [isAddingFamilyMember, setIsAddingFamilyMember] = useState(false);
 	const [addFamilyMemberError, setAddFamilyMemberError] = useState('');
+	const [familyMemberSuccess, setFamilyMemberSuccess] = useState('');
 
 	// Load family members
 	useEffect(() => {
-		const loadFamilyMembers = async () => {
+		const loadFamilyData = async () => {
 			if (currentUser?.accountId) {
 				setIsLoadingFamilyMembers(true);
 				try {
 					const members = await getFamilyMembers(currentUser.accountId);
 					setFamilyMembers(members);
 				} catch (error) {
-					console.error('Failed to load family members:', error);
+					console.error('Failed to load family account data:', error);
 				} finally {
 					setIsLoadingFamilyMembers(false);
 				}
 			}
 		};
 
-		loadFamilyMembers();
+		loadFamilyData();
 	}, [currentUser?.accountId]);
 
 	if (!currentUser?.subscription) {
@@ -338,6 +347,11 @@ export const SettingsPage: React.FC = () => {
 	const planDetails = getSubscriptionPlanDetails(subscription.plan);
 	const isOnTrial = isTrialActive(subscription);
 	const trialDaysRemaining = getTrialDaysRemaining(subscription);
+	const nonOwnerFamilyMembers = familyMembers.filter(
+		(member) => member.id !== currentUser.id,
+	);
+	const occupiedFamilySeats = nonOwnerFamilyMembers.length;
+	const canAddMoreFamilyMembers = occupiedFamilySeats < 2;
 
 	const handleAddFamilyMember = async () => {
 		if (
@@ -360,22 +374,31 @@ export const SettingsPage: React.FC = () => {
 
 		setIsAddingFamilyMember(true);
 		setAddFamilyMemberError('');
+		setFamilyMemberSuccess('');
 
 		try {
-			await addFamilyMember(
+			const memberResult = await addFamilyMember(
 				currentUser.accountId,
 				familyMemberForm.email.trim(),
 				familyMemberForm.firstName.trim(),
 				familyMemberForm.lastName.trim(),
+				familyMemberForm.role,
 			);
 
-			// Reload family members
 			const members = await getFamilyMembers(currentUser.accountId);
 			setFamilyMembers(members);
 
 			// Reset form and close modal
-			setFamilyMemberForm({ firstName: '', lastName: '', email: '' });
+			setFamilyMemberForm({
+				firstName: '',
+				lastName: '',
+				email: '',
+				role: 'member',
+			});
 			setShowAddFamilyMemberModal(false);
+			setFamilyMemberSuccess(
+				memberResult.message || 'Family member added successfully.',
+			);
 		} catch (error: any) {
 			setAddFamilyMemberError(error.message || 'Failed to add family member');
 		} finally {
@@ -408,7 +431,6 @@ export const SettingsPage: React.FC = () => {
 		try {
 			await removeFamilyMember(currentUser.accountId, memberId, currentUser.id);
 
-			// Reload family members
 			const members = await getFamilyMembers(currentUser.accountId);
 			setFamilyMembers(members);
 		} catch (error: any) {
@@ -417,7 +439,7 @@ export const SettingsPage: React.FC = () => {
 		}
 	};
 
-	const handleResendFamilyMemberInvite = async (memberId: string) => {
+	const handleResendPasswordSetup = async (memberId: string) => {
 		if (
 			!currentUser?.accountId ||
 			(!currentUser?.isAccountOwner &&
@@ -427,21 +449,14 @@ export const SettingsPage: React.FC = () => {
 		}
 
 		try {
-			const resendFunction = httpsCallable<
-				{ familyMemberId: string; accountId: string },
-				{ success: boolean; message?: string }
-			>(functions, 'resendFamilyMemberInvite');
-			const result = await resendFunction({
-				familyMemberId: memberId,
-				accountId: currentUser.accountId,
-			});
-
-			if (result.data.success) {
-				alert(`Invitation resent successfully!`);
-			}
+			await resendPasswordReset(currentUser.accountId, memberId);
+			alert('Password setup email sent successfully!');
 		} catch (error: any) {
-			console.error('Failed to resend invite:', error);
-			alert(error.message || 'Failed to resend invitation. Please try again.');
+			console.error('Failed to resend password setup email:', error);
+			alert(
+				error.message ||
+					'Failed to resend password setup email. Please try again.',
+			);
 		}
 	};
 
@@ -575,7 +590,7 @@ export const SettingsPage: React.FC = () => {
 
 		try {
 			const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
-			const result = await deleteUserAccount({ userId: currentUser.id });
+			await deleteUserAccount({ userId: currentUser.id });
 
 			// Sign out the user
 			await signOut(auth);
@@ -664,18 +679,20 @@ export const SettingsPage: React.FC = () => {
 				</ButtonContainer>
 			</SubscriptionSection>
 
-			{/* Family Members Section - COMMENTED OUT: Firebase rules for familyAccounts not yet established */}
-			{/* {(currentUser?.isAccountOwner ||
+			{(currentUser?.isAccountOwner ||
 				currentUser?.accountId === currentUser?.id) && (
 				<>
 					<AccountSection>
 						<SectionTitle>Family Members</SectionTitle>
 						<p style={{ marginBottom: '16px', color: '#6b7280' }}>
 							Add family members to share your subscription. They get full
-							access to all features without additional cost.
+							account access based on the role you assign.
 						</p>
+						{familyMemberSuccess && (
+							<SuccessMessage>{familyMemberSuccess}</SuccessMessage>
+						)}
 
-						{familyMembers.length > 0 && (
+						{nonOwnerFamilyMembers.length > 0 && (
 							<div style={{ marginBottom: '16px' }}>
 								<h4
 									style={{
@@ -686,72 +703,78 @@ export const SettingsPage: React.FC = () => {
 									}}>
 									Current Family Members:
 								</h4>
-								{familyMembers
-									.filter((member) => member.id !== currentUser.id)
-									.map((member) => (
-										<div
-											key={member.id}
-											style={{
-												display: 'flex',
-												justifyContent: 'space-between',
-												alignItems: 'center',
-												padding: '8px 12px',
-												background: '#f9fafb',
-												borderRadius: '6px',
-												marginBottom: '8px',
-											}}>
-											<div>
-												<span style={{ fontWeight: '500' }}>
-													{member.firstName} {member.lastName}
-												</span>
-												<span style={{ color: '#6b7280', marginLeft: '8px' }}>
-													{member.email}
-												</span>
-											</div>
-											<div style={{ display: 'flex', gap: '8px' }}>
-												<button
-													type='button'
-													onClick={() =>
-														handleResendFamilyMemberInvite(member.id)
-													}
-													style={{
-														background: '#3b82f6',
-														color: 'white',
-														border: 'none',
-														borderRadius: '4px',
-														padding: '4px 8px',
-														fontSize: '12px',
-														cursor: 'pointer',
-													}}>
-													Resend Invite
-												</button>
-												<button
-													type='button'
-													onClick={() => handleRemoveFamilyMember(member.id)}
-													style={{
-														background: '#ef4444',
-														color: 'white',
-														border: 'none',
-														borderRadius: '4px',
-														padding: '4px 8px',
-														fontSize: '12px',
-														cursor: 'pointer',
-													}}>
-													Remove
-												</button>
-											</div>
+								{nonOwnerFamilyMembers.map((member) => (
+									<div
+										key={member.id}
+										style={{
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center',
+											padding: '8px 12px',
+											background: '#f9fafb',
+											borderRadius: '6px',
+											marginBottom: '8px',
+										}}>
+										<div>
+											<span style={{ fontWeight: '500' }}>
+												{member.firstName} {member.lastName}
+											</span>
+											<span style={{ color: '#6b7280', marginLeft: '8px' }}>
+												{member.email}
+											</span>
+											<span
+												style={{
+													color: '#374151',
+													marginLeft: '8px',
+													fontSize: '12px',
+													fontWeight: 600,
+													textTransform: 'uppercase',
+												}}>
+												{String(member.role || 'member')}
+											</span>
 										</div>
-									))}
+										<div style={{ display: 'flex', gap: '8px' }}>
+											<button
+												type='button'
+												onClick={() => handleResendPasswordSetup(member.id)}
+												style={{
+													background: '#3b82f6',
+													color: 'white',
+													border: 'none',
+													borderRadius: '4px',
+													padding: '4px 8px',
+													fontSize: '12px',
+													cursor: 'pointer',
+												}}>
+												Resend Password Setup
+											</button>
+											<button
+												type='button'
+												onClick={() => handleRemoveFamilyMember(member.id)}
+												style={{
+													background: '#ef4444',
+													color: 'white',
+													border: 'none',
+													borderRadius: '4px',
+													padding: '4px 8px',
+													fontSize: '12px',
+													cursor: 'pointer',
+												}}>
+												Remove
+											</button>
+										</div>
+									</div>
+								))}
 							</div>
 						)}
 
-						{familyMembers.length < 2 && (
+						{canAddMoreFamilyMembers && (
 							<AccountButton onClick={() => setShowAddFamilyMemberModal(true)}>
 								Add Family Member
 							</AccountButton>
 						)}
 
-						{familyMembers.length >= 2 && (
+						{!canAddMoreFamilyMembers && (
 							<p
 								style={{
 									color: '#6b7280',
@@ -762,9 +785,20 @@ export const SettingsPage: React.FC = () => {
 								account owner).
 							</p>
 						)}
+
+						{isLoadingFamilyMembers && (
+							<p
+								style={{
+									color: '#6b7280',
+									fontSize: '14px',
+									marginTop: '8px',
+								}}>
+								Loading family account details...
+							</p>
+						)}
 					</AccountSection>
 				</>
-			)} */}
+			)}
 
 			<AccountSection>
 				<SectionTitle>Account Settings</SectionTitle>
@@ -835,9 +869,14 @@ export const SettingsPage: React.FC = () => {
 					Learn about all the features available in Maintley and get help when
 					you need it.
 				</p>
-				<AccountButton onClick={() => navigate('/features')}>
-					View All Features
-				</AccountButton>
+				<ResourceButtons>
+					<AccountButton onClick={() => navigate('/help')}>
+						Open Help Center
+					</AccountButton>
+					<AccountButton onClick={() => navigate('/features')}>
+						View All Features
+					</AccountButton>
+				</ResourceButtons>
 			</AccountSection>
 
 			<AccountSection>
@@ -1023,12 +1062,16 @@ export const SettingsPage: React.FC = () => {
 				</p>
 			</GenericModal>
 
-			{/* Add Family Member Modal - COMMENTED OUT: Firebase rules for familyAccounts not yet established */}
-			{/* <GenericModal
+			<GenericModal
 				isOpen={showAddFamilyMemberModal}
 				onClose={() => {
 					setShowAddFamilyMemberModal(false);
-					setFamilyMemberForm({ firstName: '', lastName: '', email: '' });
+					setFamilyMemberForm({
+						firstName: '',
+						lastName: '',
+						email: '',
+						role: 'member',
+					});
 					setAddFamilyMemberError('');
 				}}
 				title='Add Family Member'
@@ -1082,6 +1125,30 @@ export const SettingsPage: React.FC = () => {
 					/>
 				</FormGroup>
 
+				<FormGroup>
+					<FormLabel>Role</FormLabel>
+					<select
+						value={familyMemberForm.role}
+						onChange={(e) =>
+							setFamilyMemberForm((prev) => ({
+								...prev,
+								role: e.target.value as 'owner' | 'admin' | 'member',
+							}))
+						}
+						style={{
+							width: '100%',
+							padding: '12px',
+							border: '1px solid #d1d5db',
+							borderRadius: '8px',
+							fontSize: '14px',
+							background: '#fff',
+						}}>
+						<option value='owner'>Owner</option>
+						<option value='admin'>Admin</option>
+						<option value='member'>Member</option>
+					</select>
+				</FormGroup>
+
 				{addFamilyMemberError && (
 					<ErrorMessage style={{ marginTop: '16px' }}>
 						{addFamilyMemberError}
@@ -1089,10 +1156,10 @@ export const SettingsPage: React.FC = () => {
 				)}
 
 				<p style={{ marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
-					The family member will receive an email with instructions to set up
-					their account and access the shared subscription.
+					The family member account is created immediately and they receive a
+					password setup email to activate access.
 				</p>
-			</GenericModal> */}
+			</GenericModal>
 		</Container>
 	);
 };

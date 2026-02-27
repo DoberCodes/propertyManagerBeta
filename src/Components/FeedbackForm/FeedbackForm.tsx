@@ -21,6 +21,30 @@ export interface FeedbackData {
 	userName?: string;
 }
 
+interface FeedbackAttachment {
+	filename: string;
+	contentBase64: string;
+	contentType: string;
+	sizeBytes: number;
+}
+
+const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_SIZE_BYTES = 3 * 1024 * 1024;
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+	new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (typeof reader.result === 'string') {
+				resolve(reader.result);
+				return;
+			}
+			reject(new Error('Failed to read selected file.'));
+		};
+		reader.onerror = () => reject(new Error('Failed to read selected file.'));
+		reader.readAsDataURL(file);
+	});
+
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 	const currentUser = useSelector((state: RootState) => state.user.currentUser);
 	const [formData, setFormData] = useState<FeedbackData>({
@@ -33,6 +57,69 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [ticketId, setTicketId] = useState<string | null>(null);
 	const [error, setError] = useState('');
+	const [attachments, setAttachments] = useState<FeedbackAttachment[]>([]);
+
+	const handleAttachmentChange = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		setError('');
+
+		const selectedFiles = Array.from(e.target.files || []);
+		e.target.value = '';
+
+		if (selectedFiles.length === 0) return;
+
+		if (attachments.length + selectedFiles.length > MAX_ATTACHMENTS) {
+			setError(`You can attach up to ${MAX_ATTACHMENTS} screenshots.`);
+			return;
+		}
+
+		const invalidTypeFile = selectedFiles.find(
+			(file) => !file.type.startsWith('image/'),
+		);
+		if (invalidTypeFile) {
+			setError('Only image files are supported for attachments.');
+			return;
+		}
+
+		const oversizedFile = selectedFiles.find(
+			(file) => file.size > MAX_ATTACHMENT_SIZE_BYTES,
+		);
+		if (oversizedFile) {
+			setError('Each screenshot must be 3MB or smaller.');
+			return;
+		}
+
+		try {
+			const convertedFiles = await Promise.all(
+				selectedFiles.map(async (file): Promise<FeedbackAttachment> => {
+					const dataUrl = await readFileAsDataUrl(file);
+					const base64Data = dataUrl.includes(',')
+						? dataUrl.split(',')[1]
+						: dataUrl;
+
+					return {
+						filename: file.name,
+						contentBase64: base64Data,
+						contentType: file.type || 'application/octet-stream',
+						sizeBytes: file.size,
+					};
+				}),
+			);
+
+			setAttachments((prev) => [...prev, ...convertedFiles]);
+		} catch (conversionError) {
+			setError(
+				conversionError instanceof Error
+					? conversionError.message
+					: 'Failed to process screenshot attachment.',
+			);
+		}
+	};
+
+	const handleRemoveAttachment = (filename: string) => {
+		setAttachments((prev) => prev.filter((item) => item.filename !== filename));
+	};
 
 	const [submitFeedback] = useSubmitFeedbackMutation();
 
@@ -56,6 +143,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 					currentUser?.firstName && currentUser?.lastName
 						? `${currentUser.firstName} ${currentUser.lastName}`
 						: currentUser?.email?.split('@')[0],
+				attachments,
 			}).unwrap();
 
 			if (res && res.id) setTicketId(res.id);
@@ -157,7 +245,44 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ onClose }) => {
 				/>
 			</FormGroup>
 
+			<FormGroup>
+				<Label htmlFor='screenshots'>Screenshots (Optional)</Label>
+				<Input
+					id='screenshots'
+					type='file'
+					accept='image/*'
+					multiple
+					onChange={handleAttachmentChange}
+				/>
+				<HelpText>
+					Attach up to {MAX_ATTACHMENTS} images, max 3MB each. These are sent
+					with your feedback email.
+				</HelpText>
+				{attachments.length > 0 && (
+					<AttachmentList>
+						{attachments.map((attachment) => (
+							<AttachmentItem key={attachment.filename}>
+								<AttachmentName>{attachment.filename}</AttachmentName>
+								<AttachmentMeta>
+									{(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB
+								</AttachmentMeta>
+								<RemoveAttachmentButton
+									type='button'
+									onClick={() => handleRemoveAttachment(attachment.filename)}>
+									Remove
+								</RemoveAttachmentButton>
+							</AttachmentItem>
+						))}
+					</AttachmentList>
+				)}
+			</FormGroup>
+
 			{error && <ErrorMessage>{error}</ErrorMessage>}
+
+			<SubmissionHint>
+				If submit fails unexpectedly, please disable strict ad/privacy blocking
+				for this site and try again.
+			</SubmissionHint>
 
 			<ButtonGroup>
 				{onClose && (
@@ -349,4 +474,57 @@ const HelpText = styled.p`
 	color: #6b7280;
 	font-size: 0.75rem;
 	line-height: 1.4;
+`;
+
+const SubmissionHint = styled.p`
+	margin: 0;
+	color: #6b7280;
+	font-size: 0.75rem;
+	line-height: 1.4;
+`;
+
+const AttachmentList = styled.div`
+	margin-top: 10px;
+	display: grid;
+	gap: 8px;
+`;
+
+const AttachmentItem = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	border-radius: 6px;
+	border: 1px solid #e5e7eb;
+	background: #f9fafb;
+`;
+
+const AttachmentName = styled.span`
+	font-size: 0.825rem;
+	color: #374151;
+	font-weight: 500;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`;
+
+const AttachmentMeta = styled.span`
+	font-size: 0.75rem;
+	color: #6b7280;
+`;
+
+const RemoveAttachmentButton = styled.button`
+	border: none;
+	background: transparent;
+	color: #dc2626;
+	font-size: 0.75rem;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0;
+
+	&:hover {
+		text-decoration: underline;
+	}
 `;

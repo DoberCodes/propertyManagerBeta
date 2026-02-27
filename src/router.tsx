@@ -13,6 +13,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage/ForgotPasswordPag
 import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoutes } from './ProtectedRoutes';
 import { FeatureDocsPage } from './pages/FeatureDocs/FeatureDocsPage';
+import { HelpPage } from './pages/HelpPage';
 import LegalPage from './pages/LegalPage/LegalPage';
 import LegalDocumentPage from './pages/LegalPage/LegalDocumentPage';
 import { Layout } from './pages/Layout';
@@ -86,6 +87,7 @@ export const RouterComponent = () => {
 				{/* Feature Docs - public */}
 				<Route path='docs' element={<FeatureDocsPage />} />
 				<Route path='features' element={<FeatureDocsPage />} />
+				<Route path='help' element={<HelpPage />} />
 				{/* Legal Documents - public */}
 				<Route path='legal' element={<LegalPage />} />
 				<Route path='legal/:documentName' element={<LegalDocumentPage />} />

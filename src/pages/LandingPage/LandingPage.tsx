@@ -593,6 +593,15 @@ const LandingPageComponent = () => {
 								Benefits
 							</FooterLink>
 							<FooterLink
+								as='a'
+								href='#/help'
+								onClick={(e) => {
+									e.preventDefault();
+									window.location.href = '#/help';
+								}}>
+								Help Center
+							</FooterLink>
+							<FooterLink
 								onClick={() => {
 									document
 										.getElementById('Contact')

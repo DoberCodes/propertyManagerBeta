@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserEmail() {
+      return request.auth.token.email;
+    }
+
+    // Family membership helper for read-only access paths.
+    function isFamilyMember(accountId) {
+      return isAuthenticated() &&
+        (
+          request.auth.uid == accountId ||
+          get(/databases/$(database)/documents/familyAccounts/$(accountId)).data.ownerId == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/familyAccounts/$(accountId)).data.memberIds
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /propertyGroups/{groupId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /properties/{propertyId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /propertyShares/{shareId} {
+      allow read: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.sharedWithUserId == request.auth.uid ||
+        resource.data.sharedWithEmail == getUserEmail()
+      );
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /userInvitations/{invitationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toEmail == getUserEmail()
+      );
+      allow create: if isAuthenticated() && request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.fromUserId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.fromUserId == request.auth.uid;
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.propertyId != null
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /maintenanceHistory/{historyId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.completedBy == request.auth.uid ||
+        resource.data.propertyId != null
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.completedBy == request.auth.uid
+      );
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /teamGroups/{groupId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /teamMembers/{memberId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /devices/{deviceId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /suites/{suiteId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /units/{unitId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /contractors/{contractorId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.propertyId != null
+      );
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Family account records: client read-only for members/owners.
+    // All writes handled by Cloud Functions callables.
+    match /familyAccounts/{accountId} {
+      allow read: if isFamilyMember(accountId);
+      allow create, update, delete: if false;
+    }
+
+    // Family invites are function-managed only (list/revoke/resend/accept via callable).
+    match /familyInvites/{inviteId} {
+      allow read, write: if false;
+    }
+
+    match /tenantInvitationCodes/{codeId} {
+      allow read: if isAuthenticated() && (
+        resource.data.landlordId == request.auth.uid ||
+        resource.data.email == getUserEmail()
+      );
+      allow create: if isAuthenticated() && request.resource.data.landlordId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.landlordId == request.auth.uid;
+    }
+
+    match /tenantProfiles/{profileId} {
+      allow read: if isAuthenticated() && (
+        resource.data.tenantId == request.auth.uid ||
+        resource.data.landlordId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && request.resource.data.tenantId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.tenantId == request.auth.uid ||
+        resource.data.landlordId == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && resource.data.landlordId == request.auth.uid;
+    }
+
+    match /teamMemberInvitationCodes/{codeId} {
+      allow read: if isAuthenticated() && (
+        resource.data.createdBy == request.auth.uid ||
+        resource.data.email == getUserEmail()
+      );
+      allow create: if isAuthenticated() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
+    }
+
+    match /appConfig/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

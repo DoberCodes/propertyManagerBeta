@@ -57,27 +57,17 @@ describe.skip('Family Account Functionality', () => {
 
 	describe('addFamilyMember', () => {
 		const mockHttpsCallable = require('firebase/functions').httpsCallable;
-		const mockSendPasswordResetEmail =
-			require('firebase/auth').sendPasswordResetEmail;
 
 		beforeEach(() => {
 			mockHttpsCallable.mockReturnValue(
 				jest.fn().mockResolvedValue({
 					data: {
 						success: true,
-						user: {
-							id: mockFamilyMemberId,
-							email: 'family@example.com',
-							firstName: 'Family',
-							lastName: 'Member',
-							accountId: mockAccountId,
-							isAccountOwner: false,
-						},
-						message: 'Family member added successfully',
+						inviteId: 'invite-123',
+						message: 'Invitation sent successfully',
 					},
 				}),
 			);
-			mockSendPasswordResetEmail.mockResolvedValue(undefined);
 		});
 
 		it('should successfully add a family member', async () => {
@@ -89,21 +79,13 @@ describe.skip('Family Account Functionality', () => {
 			);
 
 			expect(result).toEqual({
-				id: mockFamilyMemberId,
-				email: 'family@example.com',
-				firstName: 'Family',
-				lastName: 'Member',
-				accountId: mockAccountId,
-				isAccountOwner: false,
+				inviteId: 'invite-123',
+				message: 'Invitation sent successfully',
 			});
 
 			expect(mockHttpsCallable).toHaveBeenCalledWith(
 				expect.any(Object),
-				'addFamilyMember',
-			);
-			expect(mockSendPasswordResetEmail).toHaveBeenCalledWith(
-				expect.any(Object),
-				'family@example.com',
+				'createFamilyInvite',
 			);
 		});
 
@@ -137,78 +119,33 @@ describe.skip('Family Account Functionality', () => {
 	});
 
 	describe('getFamilyMembers', () => {
-		const mockGetDoc = require('firebase/firestore').getDoc;
-		const mockDoc = require('firebase/firestore').doc;
+		const mockHttpsCallable = require('firebase/functions').httpsCallable;
 
 		it('should return family members for an account', async () => {
-			const mockAccountDoc = {
-				exists: () => true,
-				data: () => ({
-					memberIds: [mockAccountId, mockFamilyMemberId],
-					subscription: { plan: 'homeowner', status: 'active' },
+			mockHttpsCallable.mockReturnValue(
+				jest.fn().mockResolvedValue({
+					data: {
+						members: [
+							{
+								id: mockAccountId,
+								firstName: 'Account',
+								lastName: 'Owner',
+								email: 'owner@example.com',
+								accountId: mockAccountId,
+								isAccountOwner: true,
+							},
+							{
+								id: mockFamilyMemberId,
+								firstName: 'Family',
+								lastName: 'Member',
+								email: 'member@example.com',
+								accountId: mockAccountId,
+								isAccountOwner: false,
+							},
+						],
+					},
 				}),
-			};
-
-			const mockOwnerUserDoc = {
-				exists: () => true,
-				data: () => ({
-					firstName: 'Account',
-					lastName: 'Owner',
-					email: 'owner@example.com',
-					accountId: mockAccountId,
-					isAccountOwner: true,
-					subscription: { plan: 'homeowner', status: 'active' },
-				}),
-			};
-
-			const mockMemberUserDoc = {
-				exists: () => true,
-				data: () => ({
-					firstName: 'Family',
-					lastName: 'Member',
-					email: 'member@example.com',
-					accountId: mockAccountId,
-					isAccountOwner: false,
-					subscription: { plan: 'homeowner', status: 'active' },
-				}),
-			};
-
-			const mockFamilyAccountDoc = {
-				exists: () => true,
-				data: () => ({
-					subscription: { plan: 'homeowner', status: 'active' },
-				}),
-			};
-
-			mockDoc.mockReturnValue({ _path: { segments: ['test'] } });
-
-			// Use a smarter mock that returns the right doc based on what's being requested
-			let getDocCallCount = 0;
-			mockGetDoc.mockImplementation(() => {
-				const callIndex = getDocCallCount++;
-				// Call sequence for getFamilyMembers with 2 members (due to Promise.all parallellism):
-				// 0 - getDoc(familyAccounts, accountId) - main getFamilyMembers
-				// 1,2 - getDoc calls from first getUserProfile (owner or member - order depends on timing)
-				// 3,4 - getDoc calls from second getUserProfile
-				// 5,6 - getDoc calls from third... wait, only 2 getUserProfile calls
-
-				// More likely sequence with parallel execution:
-				// 0 - getDoc(familyAccounts, accountId) from getFamilyMembers
-				// 1 - getDoc(users, memberId1) from Promise 1
-				// 2 - getDoc(users, memberId2) from Promise 2
-				// 3 - getDoc(familyAccounts, accountId) from Promise 1
-				// 4 - getDoc(familyAccounts, accountId) from Promise 2
-
-				const docs = [
-					mockAccountDoc, // 0 - family account for getFamilyMembers
-					mockOwnerUserDoc, // 1 - owner user doc
-					mockMemberUserDoc, // 2 - member user doc
-					mockFamilyAccountDoc, // 3 - family account from owner's getUserProfile
-					mockFamilyAccountDoc, // 4 - family account from member's getUserProfile
-				];
-
-				return Promise.resolve(docs[callIndex] || mockFamilyAccountDoc);
-			});
+			);
 
 			const result = await getFamilyMembers(mockAccountId);
 
@@ -236,9 +173,9 @@ describe.skip('Family Account Functionality', () => {
 		});
 
 		it('should return empty array for account with no members', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-			});
+			mockHttpsCallable.mockReturnValue(
+				jest.fn().mockResolvedValue({ data: { members: [] } }),
+			);
 
 			const result = await getFamilyMembers(mockAccountId);
 			expect(result).toEqual([]);
@@ -246,9 +183,6 @@ describe.skip('Family Account Functionality', () => {
 	});
 
 	describe('removeFamilyMember', () => {
-		const mockGetDoc = require('firebase/firestore').getDoc;
-		const mockUpdateDoc = require('firebase/firestore').updateDoc;
-		const mockDoc = require('firebase/firestore').doc;
 		const mockHttpsCallable = require('firebase/functions').httpsCallable;
 
 		beforeEach(() => {
@@ -259,72 +193,12 @@ describe.skip('Family Account Functionality', () => {
 		});
 
 		it('should successfully remove a family member', async () => {
-			const mockAccountDoc = {
-				exists: () => true,
-				data: () => ({
-					ownerId: mockAccountId,
-					memberIds: [mockAccountId, mockFamilyMemberId],
-					subscription: { plan: 'homeowner', status: 'active' },
-				}),
-			};
-			const mockMemberDoc = {
-				exists: () => true,
-				data: () => ({
-					email: 'member@example.com',
-				}),
-			};
-
-			mockGetDoc
-				.mockResolvedValueOnce(mockAccountDoc)
-				.mockResolvedValueOnce(mockMemberDoc);
-			mockUpdateDoc.mockResolvedValue(undefined);
-
 			await expect(
 				removeFamilyMember(mockAccountId, mockFamilyMemberId, mockAccountId),
 			).resolves.not.toThrow();
-
-			expect(mockUpdateDoc).toHaveBeenCalled();
-			const updateCall = mockUpdateDoc.mock.calls.find(
-				([, payload]) => payload?.memberIds,
-			);
-			expect(updateCall?.[1]).toEqual(
-				expect.objectContaining({
-					memberIds: [mockAccountId], // Should only contain the owner
-				}),
-			);
-		});
-
-		it('should throw error when non-owner tries to remove member', async () => {
-			const mockAccountDoc = {
-				exists: () => true,
-				data: () => ({
-					ownerId: mockAccountId,
-					memberIds: [mockAccountId, mockFamilyMemberId],
-				}),
-			};
-
-			mockGetDoc.mockResolvedValue(mockAccountDoc);
-
-			await expect(
-				removeFamilyMember(
-					mockAccountId,
-					mockFamilyMemberId,
-					'different-user-id',
-				),
-			).rejects.toThrow('Only account owners can remove family members');
 		});
 
 		it('should throw error when trying to remove self', async () => {
-			const mockAccountDoc = {
-				exists: () => true,
-				data: () => ({
-					ownerId: mockAccountId,
-					memberIds: [mockAccountId, mockFamilyMemberId],
-					subscription: { plan: 'homeowner', status: 'active' },
-				}),
-			};
-			mockGetDoc.mockResolvedValue(mockAccountDoc);
-
 			await expect(
 				removeFamilyMember(mockAccountId, mockAccountId, mockAccountId),
 			).rejects.toThrow('Cannot remove yourself from the account');

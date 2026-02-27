@@ -7,12 +7,18 @@ export {
 	stripeWebhook,
 	createTrialSubscription,
 } from './stripeFunctions';
-export { sendFeedbackEmail } from './sendFeedbackEmail';
+// Centralized server-side feedback + email handling path.
+export { submitFeedback } from './submitFeedback';
 export { markTasksAsOverdue } from './markTasksAsOverdue';
 export { deleteUserAccount } from './deleteUserAccount';
 export { deleteFamilyMemberAccount } from './deleteFamilyMemberAccount';
-export { addFamilyMember } from './addFamilyMember';
 export { resendFamilyMemberInvite } from './resendFamilyMemberInvite';
+export { getFamilyMembers } from './getFamilyMembers';
+export { createFamilyInvite } from './createFamilyInvite';
+export { listFamilyInvites } from './listFamilyInvites';
+export { revokeFamilyInvite } from './revokeFamilyInvite';
+export { acceptFamilyInvite } from './acceptFamilyInvite';
+export { ensureFamilyAccount } from './ensureFamilyAccount';
 // Temporarily disabled due to missing utils/taskNotificationScheduler module
 // export {
 // 	scheduledTaskNotifications,

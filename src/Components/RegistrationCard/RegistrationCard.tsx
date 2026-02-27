@@ -216,6 +216,7 @@ export const RegistrationCard = () => {
 			// Map userType to appropriate role
 			const userRole = getRoleFromUserType(userType);
 			const agreedAt = new Date().toISOString();
+			const signupPlan = selectedPlan;
 
 			// Register with Firebase - use mapped role, trim values
 			const user = await signUpWithEmail(
@@ -224,7 +225,7 @@ export const RegistrationCard = () => {
 				firstName.trim(),
 				lastName.trim(),
 				userRole,
-				selectedPlan,
+				signupPlan,
 				promoCode.trim() || undefined,
 				{
 					agreedToTerms: true,
